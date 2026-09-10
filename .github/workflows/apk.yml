@@ -63,7 +63,10 @@ jobs:
             grep -q "application-label:'ArcaenBox'" /tmp/apk-badging.txt
             grep -q "package: name='com.arcaenbox.android'" /tmp/apk-badging.txt
             "$ANDROID_HOME/build-tools/35.0.1/aapt" dump xmltree "$apk" AndroidManifest.xml > /tmp/apk-manifest.txt
-            "$ANDROID_HOME/build-tools/35.0.1/aapt" dump xmltree "$apk" res/xml/shortcuts.xml > /tmp/apk-shortcuts.txt
+            "$ANDROID_HOME/build-tools/35.0.1/aapt" dump --values resources "$apk" > /tmp/apk-resources.txt
+            shortcuts_path=$(awk '/^[[:space:]]*resource .*:xml\/shortcuts:/ { found=1; next } found && /\(string(8|16)\)/ { split($0, parts, "\""); print parts[2]; exit }' /tmp/apk-resources.txt)
+            test -n "$shortcuts_path"
+            "$ANDROID_HOME/build-tools/35.0.1/aapt" dump xmltree "$apk" "$shortcuts_path" > /tmp/apk-shortcuts.txt
             grep -q 'com.arcaenbox.android.SERVICE' /tmp/apk-manifest.txt
             grep -q 'com.arcaenbox.android.cache' /tmp/apk-manifest.txt
             test "$(grep -c 'targetPackage.*com.arcaenbox.android' /tmp/apk-shortcuts.txt)" -eq 4
