@@ -214,7 +214,7 @@ def traffic(name, library, udp=False):
                 datagram=b'\0\0\0\x01'+socket.inet_aton('127.0.0.1')+struct.pack('!H',18889)+PAYLOAD
                 packet=OUT/'udp.bin'; packet.write_bytes(datagram)
                 ui.adb('push',str(packet),'/data/local/tmp/arcaenbox-udp.bin')
-                response=ui.adb('exec-out','sh','-c',f'toybox nc -u -w 5 127.0.0.1 {port} < /data/local/tmp/arcaenbox-udp.bin',binary=True)
+                response=ui.adb('exec-out','sh','-c',f'toybox nc -u -w 5 -W 5 -q 5 127.0.0.1 {port} < /data/local/tmp/arcaenbox-udp.bin',binary=True)
                 assert response.endswith(PAYLOAD), 'UDP relay returned no echo: '+response.hex()
         (OUT/(name+'.png')).write_bytes(ui.adb('exec-out','screencap','-p',binary=True))
         RESULTS.append({'profile':name,'tcp':True,'udp':udp,'library':library})
@@ -285,6 +285,9 @@ def main():
         ui.tap(ui.scroll_for(resource_id=P+':id/core_preview'))
         ui.tap(ui.scroll_for(resource_id=P+':id/core_apply'))
         ui.tap(ui.wait_for(resource_id='android:id/button1')); time.sleep(4)
+        state=json.loads(ui.adb('shell','cat','/data/user/0/'+P+'/no_backup/cores/state.json'))
+        assert state['channel']=='preview', state
+        (OUT/'preview-core-state.json').write_text(json.dumps(state))
         check_traffic('Snell-v5','libmihomo.so',True)
         assert not failures, 'Failed protocols: '+', '.join(failures)
         print('PROTOCOL SMOKE PASSED',flush=True)
