@@ -14,6 +14,11 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      - name: Remove dangling optional development link
+        run: |
+          if [ -L buildScript/nkmr ] && [ ! -e buildScript/nkmr ]; then
+            rm buildScript/nkmr
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
