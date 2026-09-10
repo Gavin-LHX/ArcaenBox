@@ -143,7 +143,9 @@ try:
 
     # A local-only profile exercises the editor without starting a VPN or using an external server.
     adb('shell','am','start','-W','-a','android.intent.action.VIEW','-d','socks://127.0.0.1:1080','-p',PACKAGE)
-    time.sleep(1)
+    wait_for(text=STRINGS['profile_import'])
+    capture('05-light-profile-import-dialog')
+    tap(wait_for(resource_id='android:id/button1'))
     wait_for(resource_id=PACKAGE + ':id/edit')
     tap(find(tree(),resource_id=PACKAGE + ':id/edit'))
     wait_for(text=STRINGS['server_address'])
