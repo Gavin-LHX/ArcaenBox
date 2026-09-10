@@ -462,48 +462,54 @@ def run_check(name, check):
         adb('shell','am','force-stop',PACKAGE)
 
 
-try:
-    # The isolated Google APIs emulator permits root diagnostics. Android 15
-    # denies netlink interface inspection to shell; the app still runs as its own UID.
-    adb('root')
-    adb('wait-for-device')
-    apk=next(Path('dist').glob('*x86_64*.apk'))
-    adb('install','-r','-g',str(apk))
-    adb('shell','logcat','-c')
-    adb('shell','cmd','uimode','night','no')
-    run_check('startup', startup)
-    for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about','nav_po0']:
-        run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
-    run_check('settings', settings)
-    run_check('profile', profile)
-    run_check('service', service)
-    run_check('backup', backup)
-    run_check('whitelist', whitelist)
-    run_check('launcher', launcher_icon)
-    run_check('app-updates', app_updates)
-    run_check('core-switch', core_switch)
-    if 'core-download' in ONLY_CHECKS:
-        run_check('core-download', core_download)
-    adb('shell','cmd','uimode','night','yes')
-    for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about','nav_po0']:
-        run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))
 
-    adb('shell','cmd','uimode','night','no')
-    adb('shell','wm','size','720x1280')
-    adb('shell','wm','density','320')
-    adb('shell','settings','put','system','font_scale','1.3')
-    run_check('compact', compact)
-    adb('shell','wm','size','1280x720')
-    adb('shell','wm','density','240')
-    run_check('landscape', landscape)
-    assert not FAILURES, FAILURES
-    print('UI SMOKE PASSED:', ', '.join(RESULTS))
-finally:
-    (OUT/'results.json').write_text(json.dumps(RESULTS,indent=2),encoding='utf-8')
-    (OUT/'failures.json').write_text(json.dumps(FAILURES,indent=2),encoding='utf-8')
-    (OUT/'logcat.txt').write_text(adb('shell','logcat','-d',check=False),encoding='utf-8')
+def main():
     try:
-        (OUT/'last-screen.png').write_bytes(adb('exec-out','screencap','-p',binary=True,check=False))
-        (OUT/'last-screen.xml').write_text(ET.tostring(tree(),encoding='unicode'),encoding='utf-8')
-    except Exception:
-        pass
+        # The isolated Google APIs emulator permits root diagnostics. Android 15
+        # denies netlink interface inspection to shell; the app still runs as its own UID.
+        adb('root')
+        adb('wait-for-device')
+        apk=next(Path('dist').glob('*x86_64*.apk'))
+        adb('install','-r','-g',str(apk))
+        adb('shell','logcat','-c')
+        adb('shell','cmd','uimode','night','no')
+        run_check('startup', startup)
+        for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about','nav_po0']:
+            run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
+        run_check('settings', settings)
+        run_check('profile', profile)
+        run_check('service', service)
+        run_check('backup', backup)
+        run_check('whitelist', whitelist)
+        run_check('launcher', launcher_icon)
+        run_check('app-updates', app_updates)
+        run_check('core-switch', core_switch)
+        if 'core-download' in ONLY_CHECKS:
+            run_check('core-download', core_download)
+        adb('shell','cmd','uimode','night','yes')
+        for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about','nav_po0']:
+            run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))
+
+        adb('shell','cmd','uimode','night','no')
+        adb('shell','wm','size','720x1280')
+        adb('shell','wm','density','320')
+        adb('shell','settings','put','system','font_scale','1.3')
+        run_check('compact', compact)
+        adb('shell','wm','size','1280x720')
+        adb('shell','wm','density','240')
+        run_check('landscape', landscape)
+        assert not FAILURES, FAILURES
+        print('UI SMOKE PASSED:', ', '.join(RESULTS))
+    finally:
+        (OUT/'results.json').write_text(json.dumps(RESULTS,indent=2),encoding='utf-8')
+        (OUT/'failures.json').write_text(json.dumps(FAILURES,indent=2),encoding='utf-8')
+        (OUT/'logcat.txt').write_text(adb('shell','logcat','-d',check=False),encoding='utf-8')
+        try:
+            (OUT/'last-screen.png').write_bytes(adb('exec-out','screencap','-p',binary=True,check=False))
+            (OUT/'last-screen.xml').write_text(ET.tostring(tree(),encoding='unicode'),encoding='utf-8')
+        except Exception:
+            pass
+
+
+if __name__ == "__main__":
+    main()

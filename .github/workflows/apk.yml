@@ -116,6 +116,15 @@ jobs:
           name: ArcaenBox-Core-Updates
           path: core-build/dist/
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArcaenBox-build-provenance
+          path: |
+            app/schemas/
+            app/build/test-results/
+            app/src/main/assets/builtins/manifest.json
+            buildScript/builtins/versions.json
+          if-no-files-found: error
       - name: Enable emulator acceleration
         run: sudo chmod a+rw /dev/kvm
       - name: Verify Material 3 screens on Android 15

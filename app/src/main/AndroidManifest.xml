@@ -130,6 +130,7 @@
                 <data android:scheme="vmess" />
                 <data android:scheme="trojan" />
                 <data android:scheme="trojan-go" />
+                <data android:scheme="snell" />
                 <data android:scheme="naive+https" />
                 <data android:scheme="naive+quic" />
                 <data android:scheme="hysteria" />

@@ -1,0 +1,55 @@
+name: ArcaenBox Built-in Protocol Verification
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Signed APK run to test, including upgrade from v1.4.2-arcaenbox.6
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  protocols:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: actions/download-artifact@v4
+        with:
+          name: ArcaenBox-APKs
+          path: dist
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify exact APK artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.run_id }}
+        run: |
+          mkdir -p protocol-smoke
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" --jq '{id, head_sha, html_url}' > protocol-smoke/apk-source.json
+          cd dist
+          sha256sum -c SHA256SUMS.txt
+      - name: Prepare isolated protocol servers
+        run: python3 .github/scripts/prepare_protocol_tests.py
+      - run: sudo chmod a+rw /dev/kvm
+      - name: Test built-in clients, traffic, version selection and database upgrade
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: python3 .github/scripts/protocol_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ArcaenBox-protocol-verification
+          path: protocol-smoke/
+          if-no-files-found: warn

@@ -6,8 +6,8 @@
         <EditTextPreference app:dialogLayout="@layout/layout_password_dialog" app:icon="@drawable/ic_settings_password" app:key="serverPassword" app:title="@string/snell_psk" />
         <moe.matsuri.nb4a.ui.SimpleMenuPreference app:defaultValue="4" app:entries="@array/snell_versions" app:entryValues="@array/snell_version_values" app:key="protocolVersion" app:title="@string/snell_version" app:useSimpleSummaryProvider="true" />
         <Preference app:selectable="false" app:summary="@string/snell_version_help" />
-        <SwitchPreferenceCompat app:key="snellUDP" app:defaultValue="true" app:title="@string/snell_udp" />
-        <SwitchPreferenceCompat app:key="snellReuse" app:defaultValue="false" app:title="@string/snell_reuse" />
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="snellUDP" app:defaultValue="true" app:title="@string/snell_udp" />
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="snellReuse" app:defaultValue="false" app:title="@string/snell_reuse" />
         <moe.matsuri.nb4a.ui.SimpleMenuPreference app:defaultValue="none" app:entries="@array/snell_obfs" app:entryValues="@array/snell_obfs" app:key="serverObfs" app:title="@string/snell_obfs" app:useSimpleSummaryProvider="true" />
         <EditTextPreference app:key="snellObfsHost" app:title="@string/snell_obfs_host" app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
