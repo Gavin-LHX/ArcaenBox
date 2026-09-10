@@ -5,6 +5,7 @@ import re
 import subprocess
 import time
 import traceback
+import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -340,6 +341,81 @@ def core_switch():
     capture('22-core-restored')
 
 
+def core_download():
+    """Opt-in live Release download, JNI loading, corruption recovery and rollback."""
+    profile()
+    adb('root')
+    adb('wait-for-device')
+    core_root='/data/user/0/'+PACKAGE+'/no_backup/cores'
+    def state():
+        return json.loads(adb('shell','cat',core_root+'/state.json'))
+    def wait_status(text, timeout=210):
+        deadline=time.monotonic()+timeout
+        while time.monotonic()<deadline:
+            n=find(tree(),resource_id=PACKAGE+':id/core_status')
+            if n is not None and n.get('text')==text:
+                return
+            time.sleep(1)
+        raise AssertionError('Core update did not finish: '+text)
+    def apply():
+        tap(scroll_for(resource_id=PACKAGE+':id/core_apply'))
+        tap(wait_for(resource_id='android:id/button1'))
+        time.sleep(4)
+        wait_for(resource_id=PACKAGE+':id/toolbar')
+        open_core()
+    def fetch_core(channel):
+        tap(scroll_for(resource_id=PACKAGE+':id/core_'+channel))
+        tap(scroll_for(resource_id=PACKAGE+':id/core_check'))
+        tap(wait_for(resource_id=PACKAGE+':id/core_download'))
+        wait_status(STRINGS['core_ready'])
+    for channel,version in [('stable','1.14.0'),('preview','1.15.0-alpha.2')]:
+        launch(); open_core()
+        before={}
+        if adb('shell','ls',core_root+'/state.json',check=False).strip():
+            before=state().get('enabled',{})
+        fetch_core(channel)
+        saved=state()
+        assert saved.get('enabled',{})==before, 'Download activated the core before restart'
+        assert channel in saved['installed']
+        apply()
+        text=find(tree(),resource_id=PACKAGE+':id/core_running').get('text','')
+        assert STRINGS['core_downloaded'] in text and version in text, text
+        pid=adb('shell','pidof',PACKAGE).strip()
+        maps=adb('shell','cat','/proc/'+pid+'/maps')
+        path=core_root+'/packages/'+state()['enabled'][channel]+'/libgojni.so'
+        assert '/no_backup/cores/packages/'+state()['enabled'][channel]+'/libgojni.so' in maps, 'Application did not load downloaded native code'
+        (OUT/('core-runtime-maps-'+channel+'.txt')).write_text('\n'.join(line for line in maps.splitlines() if 'libgojni' in line))
+        capture('23-core-downloaded-'+channel)
+        service()
+        bg=adb('shell','pidof',PACKAGE+':bg').strip()
+        assert '/no_backup/cores/packages/'+saved['installed'][channel]+'/libgojni.so' in adb('shell','cat','/proc/'+bg+'/maps'), 'VPN process used a different native core'
+    launch(); open_core()
+    selected=state()['enabled']['preview']
+    binary=core_root+'/packages/'+selected+'/libgojni.so'
+    adb('shell','am','force-stop',PACKAGE)
+    adb('shell','chmod','600',binary)
+    adb('shell','dd','if=/dev/zero','of='+binary,'bs=1','count=1','conv=notrunc')
+    adb('shell','chmod','444',binary)
+    launch(); open_core()
+    assert STRINGS['core_builtin'] in find(tree(),resource_id=PACKAGE+':id/core_running').get('text','')
+    assert 'preview' not in state().get('enabled',{})
+    capture('24-core-corruption-recovered')
+    # Re-download repairs the existing bad cache entry rather than getting stuck on its hash directory.
+    fetch_core('preview'); apply()
+    assert STRINGS['core_downloaded'] in find(tree(),resource_id=PACKAGE+':id/core_running').get('text','')
+    capture('25-core-cache-repaired')
+    adb('shell','am','force-stop',PACKAGE)
+    marker=OUT/'boot-marker.txt'; marker.write_text('interrupted initialization')
+    adb('push',str(marker),core_root+'/boot-main.json')
+    owner=adb('shell','stat','-c','%u:%g',core_root).strip()
+    adb('shell','chown',owner,core_root+'/boot-main.json')
+    launch(); open_core()
+    current=state()
+    assert current['channel']=='stable' and not current.get('enabled')
+    assert STRINGS['core_builtin'] in find(tree(),resource_id=PACKAGE+':id/core_running').get('text','')
+    capture('26-core-startup-rollback')
+
+
 def compact():
     launch()
     capture('10-compact-main-large-text')
@@ -391,6 +467,8 @@ try:
     run_check('launcher', launcher_icon)
     run_check('app-updates', app_updates)
     run_check('core-switch', core_switch)
+    if 'core-download' in ONLY_CHECKS:
+        run_check('core-download', core_download)
     adb('shell','cmd','uimode','night','yes')
     for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about','nav_po0']:
         run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))
