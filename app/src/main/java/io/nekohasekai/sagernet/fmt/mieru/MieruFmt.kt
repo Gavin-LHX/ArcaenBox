@@ -37,7 +37,7 @@ fun MieruBean.buildMieruConfig(port: Int): String {
     return JSONObject().apply {
         put("activeProfile", "default")
         put("socks5Port", port)
-        // TODO: follow NekoBox logging level.
+        // TODO: follow ArcaenBox logging level.
         put("loggingLevel", "INFO")
         put("profiles", JSONArray().apply {
             put(JSONObject().apply {

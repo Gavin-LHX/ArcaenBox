@@ -83,7 +83,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .subText(SagerNet.appVersionNameForDisplay)
                                 .setOnClickAction {
                                     requireContext().launchCustomTab(
-                                        "https://github.com/MatsuriDayo/NekoBoxForAndroid/releases"
+                                        "https://github.com/Gavin-LHX/ArcaenBox/releases"
                                     )
                                 }
                                 .build())
@@ -183,7 +183,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .text(R.string.github)
                                 .setOnClickAction {
                                     requireContext().launchCustomTab(
-                                        "https://github.com/MatsuriDayo/NekoBoxForAndroid"
+                                        "https://github.com/Gavin-LHX/ArcaenBox"
 
                                     )
                                 }
@@ -220,9 +220,9 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                     }
                     val response = client.newRequest().apply {
                         if (checkPreview) {
-                            setURL("https://api.github.com/repos/MatsuriDayo/NekoBoxForAndroid/releases/tags/preview")
+                            setURL("https://api.github.com/repos/Gavin-LHX/ArcaenBox/releases/tags/preview")
                         } else {
-                            setURL("https://api.github.com/repos/MatsuriDayo/NekoBoxForAndroid/releases/latest")
+                            setURL("https://api.github.com/repos/Gavin-LHX/ArcaenBox/releases/latest")
                         }
                     }.execute()
                     val release = JSONObject(Util.getStringBox(response.contentString))

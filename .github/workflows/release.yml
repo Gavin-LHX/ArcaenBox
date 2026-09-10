@@ -1,4 +1,4 @@
-name: Release Build
+name: ArcaenBox Release Build
 on:
   workflow_dispatch:
     inputs:
@@ -74,7 +74,7 @@ jobs:
           echo "APK=$APK" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v4
         with:
-          name: APKs
+          name: ArcaenBox-APKs
           path: ${{ env.APK }}
   publish:
     name: Publish Release
@@ -87,7 +87,7 @@ jobs:
       - name: Donwload Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: APKs
+          name: ArcaenBox-APKs
           path: artifacts
       - name: Release
         run: |
@@ -133,5 +133,5 @@ jobs:
           ./gradlew bundlePlayRelease
       - uses: actions/upload-artifact@v3
         with:
-          name: AAB
+          name: ArcaenBox-AAB
           path: app/build/outputs/bundle/playRelease/app-play-release.aab

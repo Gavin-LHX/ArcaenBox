@@ -1,7 +1,7 @@
-# NekoBox for Android
+# ArcaenBox for Android
 
 [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
-[![Releases](https://img.shields.io/github/v/release/MatsuriDayo/NekoBoxForAndroid)](https://github.com/MatsuriDayo/NekoBoxForAndroid/releases)
+[![Releases](https://img.shields.io/github/v/release/Gavin-LHX/ArcaenBox)](https://github.com/Gavin-LHX/ArcaenBox/releases)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 sing-box / universal proxy toolchain for Android.
@@ -10,20 +10,24 @@ sing-box / universal proxy toolchain for Android.
 
 ## 下载 / Downloads
 
-[![GitHub All Releases](https://img.shields.io/github/downloads/Matsuridayo/NekoBoxForAndroid/total?label=downloads-total&logo=github&style=flat-square)](https://github.com/Matsuridayo/NekoBoxForAndroid/releases)
+[![GitHub All Releases](https://img.shields.io/github/downloads/Gavin-LHX/ArcaenBox/total?label=downloads-total&logo=github&style=flat-square)](https://github.com/Gavin-LHX/ArcaenBox/releases)
 
-[GitHub Releases 下载](https://github.com/Matsuridayo/NekoBoxForAndroid/releases)
+[GitHub Releases 下载](https://github.com/Gavin-LHX/ArcaenBox/releases)
 
-**Google Play 版本自 2024 年 5 月起已被第三方控制，为非开源版本，请不要下载。**
+**上游项目的 Google Play 版本自 2024 年 5 月起已被第三方控制，为非开源版本，请不要下载。**
 
-**The Google Play version has been controlled by a third party since May 2024 and is a non-open
+**The upstream Google Play version has been controlled by a third party since May 2024 and is a non-open
 source version. Please do not download it.**
 
-## 更新日志 & Telegram 发布频道 / Changelog & Telegram Channel
+## 更新日志 / Changelog
 
-https://t.me/Matsuridayo
+https://github.com/Gavin-LHX/ArcaenBox/releases
 
-## 项目主页 & 文档 / Homepage & Documents
+## 项目主页 / Homepage
+
+https://github.com/Gavin-LHX/ArcaenBox
+
+## 上游文档 / Upstream Documentation
 
 https://matsuridayo.github.io
 
@@ -62,7 +66,7 @@ supports.
 
 Only resolving outbound, i.e. nodes, is supported. Information such as diversion rules are ignored.
 
-## 捐助 / Donate
+## 捐助上游项目 / Donate to the Upstream Project
 
 <details>
 

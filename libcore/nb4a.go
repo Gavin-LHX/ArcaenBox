@@ -40,6 +40,7 @@ func InitCore(process, cachePath, internalAssets, externalAssets string,
 	defer device.DeferPanicToError("InitCore", func(err error) { log.Println(err) })
 	isBgProcess = strings.HasSuffix(process, ":bg")
 
+	// Keep the external libneko Android mode identifier for core compatibility.
 	neko_common.RunMode = neko_common.RunMode_NekoBoxForAndroid
 	intfNB4A = if1
 	intfBox = if2

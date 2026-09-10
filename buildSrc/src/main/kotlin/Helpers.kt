@@ -197,10 +197,10 @@ fun Project.setupApp() {
                 outputFileName = if (isPreview) {
                     outputFileName.replace(
                         project.name,
-                        "NekoBox-" + requireMetadata().getProperty("PRE_VERSION_NAME")
+                        "ArcaenBox-" + requireMetadata().getProperty("PRE_VERSION_NAME")
                     ).replace("-preview", "")
                 } else {
-                    outputFileName.replace(project.name, "NekoBox-$versionName")
+                    outputFileName.replace(project.name, "ArcaenBox-$versionName")
                         .replace("-release", "")
                         .replace("-oss", "")
                 }
