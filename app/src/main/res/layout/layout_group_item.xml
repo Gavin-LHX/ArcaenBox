@@ -5,8 +5,11 @@
     android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardElevation="2dp">
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -42,7 +45,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textStyle="bold"
                     tools:text="@string/group_name" />
@@ -51,7 +54,7 @@
                     android:id="@+id/group_user"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?android:attr/textColorSecondary"
                     tools:text="user name" />
             </LinearLayout>
@@ -102,7 +105,7 @@
                     android:id="@+id/group_traffic"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/accentOrTextSecondary"
                     android:visibility="gone"
                     tools:text="@string/subscription_traffic" />
@@ -111,7 +114,7 @@
                     android:id="@+id/group_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/accentOrTextSecondary"
                     tools:text="@string/group_status_empty" />
 

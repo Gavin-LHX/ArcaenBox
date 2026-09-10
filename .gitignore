@@ -19,3 +19,5 @@ jniLibs/
 # submodules
 /external
 /.signing/
+/ui-smoke/
+__pycache__/

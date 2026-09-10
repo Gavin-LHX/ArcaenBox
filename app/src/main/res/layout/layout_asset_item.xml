@@ -9,7 +9,7 @@
     android:layout_marginRight="8dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardElevation="2dp">
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -45,7 +45,7 @@
                     android:id="@+id/asset_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -72,7 +72,7 @@
                     android:id="@+id/asset_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/accentOrTextSecondary" />
 
             </LinearLayout>

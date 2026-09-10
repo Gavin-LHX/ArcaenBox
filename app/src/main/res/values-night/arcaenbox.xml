@@ -1,4 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="arcaenbox_accent">#AED6DF</color>
+    <color name="md3_primary">#9CCFDB</color>
+    <color name="md3_on_primary">#00363F</color>
+    <color name="md3_primary_container">#234C54</color>
+    <color name="md3_on_primary_container">#DCEEF1</color>
+    <color name="md3_secondary">#B7CCD1</color>
+    <color name="md3_on_secondary">#21363C</color>
+    <color name="md3_secondary_container">#384D53</color>
+    <color name="md3_on_secondary_container">#D3E7EC</color>
+    <color name="md3_tertiary">#D3BFDF</color>
+    <color name="md3_on_tertiary">#382B45</color>
+    <color name="md3_tertiary_container">#4F425D</color>
+    <color name="md3_on_tertiary_container">#EFDBFC</color>
+    <color name="md3_surface">#101416</color>
+    <color name="md3_on_surface">#DFE4E6</color>
+    <color name="md3_surface_variant">#40494C</color>
+    <color name="md3_on_surface_variant">#BFC9CC</color>
+    <color name="md3_outline">#899397</color>
+    <color name="md3_outline_variant">#40494C</color>
+    <color name="md3_surface_container_lowest">#0B1012</color>
+    <color name="md3_surface_container_low">#181D1F</color>
+    <color name="md3_surface_container">#1C2224</color>
+    <color name="md3_surface_container_high">#262D2F</color>
+    <color name="md3_surface_container_highest">#31383B</color>
+    <color name="md3_error">#FFB4AB</color>
+    <color name="md3_on_error">#690005</color>
+    <color name="md3_error_container">#93000A</color>
+    <color name="md3_on_error_container">#FFDAD6</color>
+    <color name="md3_inverse_surface">#DFE4E6</color>
+    <color name="md3_inverse_on_surface">#2E3132</color>
+    <color name="md3_inverse_primary">#36656F</color>
+    <color name="arcaenbox_primary">#DCEEF1</color>
+    <color name="arcaenbox_accent">@color/md3_primary</color>
 </resources>

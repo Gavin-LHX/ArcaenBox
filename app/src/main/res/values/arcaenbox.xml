@@ -1,62 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="md3_primary">#36656F</color>
+    <color name="md3_on_primary">#FFFFFF</color>
+    <color name="md3_primary_container">#DCEEF1</color>
+    <color name="md3_on_primary_container">#173B43</color>
+    <color name="md3_secondary">#50646A</color>
+    <color name="md3_on_secondary">#FFFFFF</color>
+    <color name="md3_secondary_container">#D3E7EC</color>
+    <color name="md3_on_secondary_container">#0D343C</color>
+    <color name="md3_tertiary">#685B76</color>
+    <color name="md3_on_tertiary">#FFFFFF</color>
+    <color name="md3_tertiary_container">#EFDBFC</color>
+    <color name="md3_on_tertiary_container">#221830</color>
+    <color name="md3_surface">#F7FAFB</color>
+    <color name="md3_on_surface">#191C1D</color>
+    <color name="md3_surface_variant">#DCE4E6</color>
+    <color name="md3_on_surface_variant">#40494C</color>
+    <color name="md3_outline">#707A7D</color>
+    <color name="md3_outline_variant">#BFC9CC</color>
+    <color name="md3_surface_container_lowest">#FFFFFF</color>
+    <color name="md3_surface_container_low">#F1F6F7</color>
+    <color name="md3_surface_container">#EBF1F2</color>
+    <color name="md3_surface_container_high">#E5ECEE</color>
+    <color name="md3_surface_container_highest">#DFE6E8</color>
+    <color name="md3_error">#BA1A1A</color>
+    <color name="md3_on_error">#FFFFFF</color>
+    <color name="md3_error_container">#FFDAD6</color>
+    <color name="md3_on_error_container">#410002</color>
+    <color name="md3_inverse_surface">#2E3132</color>
+    <color name="md3_inverse_on_surface">#EFF1F2</color>
+    <color name="md3_inverse_primary">#9CCFDB</color>
     <color name="arcaenbox_primary">#DCEEF1</color>
-    <color name="arcaenbox_primary_dark">#BCDCE2</color>
-    <color name="arcaenbox_on_primary">#20383D</color>
-    <color name="arcaenbox_accent">#36656F</color>
-    <color name="arcaenbox_surface_tint">#EFF7F9</color>
-
-    <style name="Theme.SagerNet.ArcaenBox" parent="Theme.SagerNet">
-        <item name="colorPrimary">@color/arcaenbox_primary</item>
-        <item name="colorPrimaryDark">@color/arcaenbox_primary_dark</item>
-        <item name="colorOnPrimary">@color/arcaenbox_on_primary</item>
-        <item name="colorOnPrimarySurface">@color/arcaenbox_on_primary</item>
-        <item name="colorAccent">@color/arcaenbox_accent</item>
-        <item name="colorSecondary">@color/arcaenbox_accent</item>
-        <item name="colorOnSecondary">@color/arcaenbox_surface_tint</item>
-        <item name="colorMaterial100">@color/arcaenbox_surface_tint</item>
-        <item name="colorMaterial300">@color/arcaenbox_primary</item>
-        <item name="primaryOrTextPrimary">@color/arcaenbox_accent</item>
-        <item name="primaryOrTextSecondary">@color/arcaenbox_accent</item>
-        <item name="whiteOrTextPrimary">@color/arcaenbox_on_primary</item>
-        <item name="selectedColorPrimary">@color/arcaenbox_accent</item>
-        <item name="fabColorBackground">@color/arcaenbox_primary</item>
-        <item name="actionBarTheme">@style/ThemeOverlay.ArcaenBox.Toolbar</item>
-        <item name="tabTextColor">@color/arcaenbox_on_primary</item>
-        <item name="tabSelectedTextColor">@color/arcaenbox_on_primary</item>
-        <item name="tabIndicatorColor">@color/arcaenbox_on_primary</item>
-        <item name="tabRippleColor">@color/arcaenbox_primary_dark</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
-    </style>
-
-    <style name="Theme.SagerNet.Dialog.ArcaenBox" parent="Theme.SagerNet.Dialog">
-        <item name="colorPrimary">@color/arcaenbox_primary</item>
-        <item name="colorPrimaryDark">@color/arcaenbox_primary_dark</item>
-        <item name="colorOnPrimary">@color/arcaenbox_on_primary</item>
-        <item name="colorOnPrimarySurface">@color/arcaenbox_on_primary</item>
-        <item name="colorAccent">@color/arcaenbox_accent</item>
-        <item name="colorSecondary">@color/arcaenbox_accent</item>
-        <item name="colorOnSecondary">@color/arcaenbox_surface_tint</item>
-        <item name="colorMaterial100">@color/arcaenbox_surface_tint</item>
-        <item name="colorMaterial300">@color/arcaenbox_primary</item>
-        <item name="primaryOrTextPrimary">@color/arcaenbox_accent</item>
-        <item name="primaryOrTextSecondary">@color/arcaenbox_accent</item>
-        <item name="whiteOrTextPrimary">@color/arcaenbox_on_primary</item>
-        <item name="selectedColorPrimary">@color/arcaenbox_accent</item>
-        <item name="fabColorBackground">@color/arcaenbox_primary</item>
-        <item name="actionBarTheme">@style/ThemeOverlay.ArcaenBox.Toolbar</item>
-        <item name="tabTextColor">@color/arcaenbox_on_primary</item>
-        <item name="tabSelectedTextColor">@color/arcaenbox_on_primary</item>
-        <item name="tabIndicatorColor">@color/arcaenbox_on_primary</item>
-        <item name="tabRippleColor">@color/arcaenbox_primary_dark</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
-    </style>
-
-    <style name="ThemeOverlay.ArcaenBox.Toolbar" parent="ThemeOverlay.AppCompat.Light">
-        <item name="android:textColorPrimary">@color/arcaenbox_on_primary</item>
-        <item name="android:textColorSecondary">@color/arcaenbox_on_primary</item>
-        <item name="colorControlNormal">@color/arcaenbox_on_primary</item>
-    </style>
+    <color name="arcaenbox_accent">@color/md3_primary</color>
 </resources>

@@ -1,54 +1,54 @@
-<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/reset_settings"
-        style="@style/Widget.AppCompat.Button.Colored"
+        style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/reset_settings"
         android:textColor="?whiteOrTextPrimary" />
 
-    <CheckBox
+    <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/backup_configurations"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
         android:text="@string/backup_groups_and_configurations"
-        android:textAppearance="?attr/textAppearanceSubtitle2" />
+        android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-    <CheckBox
+    <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/backup_rules"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
         android:text="@string/backup_rules"
-        android:textAppearance="?attr/textAppearanceSubtitle2" />
+        android:textAppearance="?attr/textAppearanceTitleSmall" />
 
 
-    <CheckBox
+    <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/backup_settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
         android:text="@string/backup_settings"
-        android:textAppearance="?attr/textAppearanceSubtitle2" />
+        android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/action_export"
-        style="@style/Widget.AppCompat.Button.Colored"
+        style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/action_export"
         android:textColor="?whiteOrTextPrimary" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/action_share"
-        style="@style/Widget.AppCompat.Button.Colored"
+        style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/share"
@@ -61,9 +61,9 @@
         android:text="@string/backup_summary"
         android:textColor="?android:textColorTertiary" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/action_import_file"
-        style="@style/Widget.AppCompat.Button.Colored"
+        style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -72,3 +72,4 @@
 
 
 </LinearLayout>
+</androidx.core.widget.NestedScrollView>

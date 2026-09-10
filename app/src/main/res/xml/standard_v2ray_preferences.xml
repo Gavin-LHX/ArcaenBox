@@ -113,7 +113,7 @@
             app:key="certificates"
             app:title="@string/certificates"
             app:useSimpleSummaryProvider="true" />
-        <SwitchPreference
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference
             app:icon="@drawable/ic_notification_enhanced_encryption"
             app:key="allowInsecure"
             app:summary="@string/allow_insecure_sum"
@@ -146,7 +146,7 @@
     <PreferenceCategory
         app:key="serverMuxCategory"
         app:title="@string/mux_preference">
-        <SwitchPreference
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference
             app:icon="@drawable/ic_baseline_compare_arrows_24"
             app:key="enableMux"
             app:summary="@string/mux_sum"
@@ -164,7 +164,7 @@
             app:key="muxConcurrency"
             app:title="@string/mux_concurrency"
             app:useSimpleSummaryProvider="true" />
-        <SwitchPreference
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference
             app:icon="@drawable/baseline_developer_board_24"
             app:key="muxPadding"
             app:title="@string/padding" />
@@ -173,7 +173,7 @@
     <PreferenceCategory
         app:key="serverECHCategory"
         app:title="ECH">
-        <SwitchPreference
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference
             app:icon="@drawable/ic_baseline_security_24"
             app:key="enableECH"
             app:title="@string/enable" />

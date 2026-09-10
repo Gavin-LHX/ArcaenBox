@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:max="1"
             android:visibility="invisible"
-            app:indicatorColor="?colorMaterial100"
+            app:indicatorColor="?colorPrimary"
             app:layout_anchor="@+id/fab"
             app:layout_anchorGravity="center"
             app:layout_behavior="io.nekohasekai.sagernet.widget.FabProgressBehavior"
@@ -39,7 +39,7 @@
             android:elevation="6dp"
             android:nextFocusDown="@+id/stats"
             app:backgroundTint="?fabColorBackground"
-            app:tint="?colorOnPrimary"
+            app:tint="?colorOnPrimaryContainer"
             app:layout_anchor="@id/stats"
             app:pressedTranslationZ="6dp"
             app:srcCompat="@drawable/ic_service_idle" />
@@ -52,6 +52,7 @@
             android:nextFocusUp="@+id/fab"
             app:backgroundTint="?colorMaterial300"
             app:contentInsetStart="0dp"
+            app:fabAlignmentMode="end"
             app:hideOnScroll="true"
             app:layout_scrollFlags="enterAlways|scroll">
 
@@ -60,7 +61,10 @@
                 android:layout_height="wrap_content"
                 android:background="?android:attr/selectableItemBackground"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="96dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp">
 
                 <TextView
                     android:id="@+id/tx"
@@ -71,7 +75,7 @@
                     android:ellipsize="marquee"
                     android:singleLine="true"
                     android:textColor="?whiteOrTextPrimary"
-                    android:textSize="14sp" />
+                    android:textAppearance="?attr/textAppearanceBodySmall" />
 
                 <TextView
                     android:id="@+id/rx"
@@ -82,7 +86,7 @@
                     android:ellipsize="marquee"
                     android:singleLine="true"
                     android:textColor="?whiteOrTextPrimary"
-                    android:textSize="14sp" />
+                    android:textAppearance="?attr/textAppearanceBodySmall" />
 
                 <TextView
                     android:id="@+id/status"
@@ -92,7 +96,7 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textColor="?whiteOrTextPrimary"
-                    android:textSize="16sp"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
                     tools:text="@string/connection_test_available" />
 
             </LinearLayout>
@@ -103,24 +107,12 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
-        style="@style/Widget.Design.NavigationView"
+        style="@style/Widget.Material3.NavigationView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:itemIconTint="@color/navigation_icon"
-        app:itemTextColor="@color/navigation_icon"
+        app:headerLayout="@layout/layout_drawer_header"
         app:menu="@menu/main_drawer_menu" />
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view_black"
-        style="@style/Widget.Design.NavigationView"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        app:itemIconTint="@color/navigation_icon"
-        app:itemShapeAppearance="@style/ShapeAppearance.MaterialComponents.MediumComponent"
-        app:itemShapeFillColor="@color/navigation_item"
-        app:itemTextColor="@color/navigation_icon"
-        app:menu="@menu/main_drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

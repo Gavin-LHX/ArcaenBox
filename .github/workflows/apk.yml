@@ -5,7 +5,11 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.4.2-arcaenbox.3
+        default: v1.4.2-arcaenbox.4
+      publish:
+        description: Publish the verified APKs as a release
+        type: boolean
+        default: true
 permissions:
   contents: write
 jobs:
@@ -84,7 +88,27 @@ jobs:
           name: ArcaenBox-APKs
           path: dist/*
           if-no-files-found: error
+      - name: Enable emulator acceleration
+        run: sudo chmod a+rw /dev/kvm
+      - name: Verify Material 3 screens on Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: python3 .github/scripts/ui_smoke.py
+      - name: Upload UI verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArcaenBox-UI-verification
+          path: ui-smoke/
+          if-no-files-found: warn
       - name: Publish APKs
+        if: inputs.publish
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}

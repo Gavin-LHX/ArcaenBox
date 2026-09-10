@@ -55,7 +55,7 @@ object Theme {
         return when (theme) {
             ARCAENBOX -> R.style.Theme_SagerNet_ArcaenBox
             RED -> R.style.Theme_SagerNet_Red
-            PINK -> R.style.Theme_SagerNet
+            PINK -> R.style.Theme_SagerNet_Pink
             PINK_SSR -> R.style.Theme_SagerNet_Pink_SSR
             PURPLE -> R.style.Theme_SagerNet_Purple
             DEEP_PURPLE -> R.style.Theme_SagerNet_DeepPurple
@@ -83,7 +83,7 @@ object Theme {
         return when (theme) {
             ARCAENBOX -> R.style.Theme_SagerNet_Dialog_ArcaenBox
             RED -> R.style.Theme_SagerNet_Dialog_Red
-            PINK -> R.style.Theme_SagerNet_Dialog
+            PINK -> R.style.Theme_SagerNet_Dialog_Pink
             PINK_SSR -> R.style.Theme_SagerNet_Dialog_Pink_SSR
             PURPLE -> R.style.Theme_SagerNet_Dialog_Purple
             DEEP_PURPLE -> R.style.Theme_SagerNet_Dialog_DeepPurple

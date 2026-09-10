@@ -1,0 +1,35 @@
+<resources>
+    <style name="Widget.ArcaenBox.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextAppearance">@style/TextAppearance.Material3.TitleLarge</item>
+        <item name="titleTextColor">?colorOnSurface</item>
+        <item name="navigationIconTint">?colorOnSurface</item>
+    </style>
+    <style name="Widget.ArcaenBox.Card" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?colorSurfaceContainerLow</item>
+        <item name="cardElevation">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.Medium</item>
+    </style>
+    <style name="PreferenceThemeOverlay.ArcaenBox" parent="PreferenceThemeOverlay.v14.Material">
+        <item name="preferenceCategoryTitleTextAppearance">@style/TextAppearance.Material3.TitleSmall</item>
+        <item name="preferenceCategoryTitleTextColor">?colorPrimary</item>
+        <item name="preferenceStyle">@style/Preference.ArcaenBox</item>
+        <item name="editTextPreferenceStyle">@style/Preference.ArcaenBox.EditText</item>
+        <item name="switchPreferenceStyle">@style/Preference.ArcaenBox.Switch</item>
+    </style>
+    <style name="Preference.ArcaenBox" parent="Preference.Material">
+        <item name="singleLineTitle">false</item>
+        <item name="allowDividerAbove">false</item>
+        <item name="allowDividerBelow">false</item>
+    </style>
+    <style name="Preference.ArcaenBox.Switch" parent="Preference.SwitchPreference.Material">
+        <item name="singleLineTitle">false</item>
+        <item name="allowDividerAbove">false</item>
+        <item name="allowDividerBelow">false</item>
+    </style>
+    <style name="Preference.ArcaenBox.EditText" parent="Preference.DialogPreference.EditTextPreference.Material">
+        <item name="android:dialogLayout">@layout/layout_md3_preference_edit</item>
+        <item name="singleLineTitle">false</item>
+        <item name="allowDividerAbove">false</item>
+        <item name="allowDividerBelow">false</item>
+    </style>
+</resources>

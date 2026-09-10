@@ -36,7 +36,7 @@
                 android:visibility="gone">
 
                 <TextView
-                    style="?android:attr/textAppearanceSmall"
+                    style="?attr/textAppearanceBodySmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/test_concurrency"
