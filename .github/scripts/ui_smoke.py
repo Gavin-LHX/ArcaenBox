@@ -275,6 +275,9 @@ def service():
     else:
         raise AssertionError('VPN did not establish a TUN interface and foreground service')
     time.sleep(3)
+    services=adb('shell','dumpsys','activity','services',PACKAGE)
+    interfaces=adb('shell','ip','-o','link','show')
+    assert 'isForeground=true' in services and re.search(r'\btun\d+:', interfaces), 'VPN stopped during native initialization'
     # Continuous speed updates prevent uiautomator from becoming idle here.
     # Record the real service state and screenshot, then reuse the unchanged FAB bounds.
     (OUT/'06-light-service-started.txt').write_text(services,encoding='utf-8')
