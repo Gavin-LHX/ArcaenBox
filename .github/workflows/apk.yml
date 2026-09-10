@@ -22,6 +22,7 @@ jobs:
         with:
           go-version: '1.25'
           cache-dependency-path: libcore/go.sum
+      - uses: android-actions/setup-android@v3
       - name: Install Android build tools
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.1' 'ndk;25.0.8775105'
       - name: Cache native core
