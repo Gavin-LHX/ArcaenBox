@@ -5,6 +5,11 @@ on:
       run_id:
         description: Signed APK run to test, including upgrade from v1.4.2-arcaenbox.6
         required: true
+      scope:
+        description: Protocols to verify (rerun a failed Mieru fixture independently)
+        type: choice
+        default: all
+        options: [all, mieru]
 permissions:
   contents: read
   actions: read
@@ -38,6 +43,8 @@ jobs:
         run: python3 .github/scripts/prepare_protocol_tests.py
       - run: sudo chmod a+rw /dev/kvm
       - name: Test built-in clients, traffic, version selection and database upgrade
+        env:
+          PROTOCOL_SMOKE_SCOPE: ${{ inputs.scope }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35

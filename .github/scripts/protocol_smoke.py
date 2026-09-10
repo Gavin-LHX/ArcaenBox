@@ -24,6 +24,7 @@ P = ui.PACKAGE
 PROCESSES = []
 SOCKET_DIR = tempfile.TemporaryDirectory(prefix='arcaenbox-protocol-')
 RESULTS = []
+FAILURES = []
 SECRET = 'arcaenbox-ci-only'
 PAYLOAD = b'arcaenbox-built-in-protocol-proof'
 
@@ -61,7 +62,9 @@ def setup_servers():
         server(name,[str(BIN/'trojan-go'),'-config',str(config)])
     config=OUT/'mita.json'
     config.write_text(json.dumps({'portBindings':[{'port':18088,'protocol':'TCP'},{'port':18089,'protocol':'UDP'}],
-                                 'users':[{'name':'test','password':SECRET}],'loggingLevel':'INFO'}))
+                                 # The test origin is loopback-only. Mita rejects loopback
+                                 # destinations unless this isolated test user permits them.
+                                 'users':[{'name':'test','password':SECRET,'allowLoopbackIP':True}],'loggingLevel':'INFO'}))
     server('mieru',[str(BIN/'mita'),'run'],{'MITA_CONFIG_JSON_FILE':str(config.resolve()),'MITA_UDS_PATH':str(Path(SOCKET_DIR.name)/'mita.sock'),'MITA_INSECURE_UDS':'1'})
     config=OUT/'Caddyfile'
     site=OUT/'site'; site.mkdir(exist_ok=True)
@@ -230,6 +233,17 @@ def traffic(name, library, udp=False):
         else: raise AssertionError(name+': component or TUN leaked after stop')
 
 
+def check_traffic(name,lib,udp):
+    try:
+        traffic(name,lib,udp)
+    except Exception:
+        FAILURES.append(name)
+        (OUT/(name+'-failure.txt')).write_text(traceback.format_exc())
+        (OUT/(name+'-failure-logcat.txt')).write_text(ui.adb('shell','logcat','-d',check=False))
+        print('FAIL traffic:',name,traceback.format_exc(),flush=True)
+        ui.adb('shell','am','force-stop',P)
+
+
 def main():
     try:
         setup_servers()
@@ -252,6 +266,12 @@ def main():
         ui.adb('install','-r','-g',str(apk))
         ui.launch(); ui.wait_for(text='Mieru-TCP'); ui.capture('upgrade-preserved-mieru')
         create_mieru('Mieru-UDP','UDP',18089)
+        if os.environ.get('PROTOCOL_SMOKE_SCOPE')=='mieru':
+            for name in ['Mieru-TCP','Mieru-UDP']:
+                check_traffic(name,'libmieru.so',True)
+            assert not FAILURES, FAILURES
+            print('MIERU SMOKE PASSED',flush=True)
+            return
         for version in [4,5]:
             import_uri(f'snell://{SECRET}@10.0.2.2:{18080+version}?version={version}&udp=true',f'Snell-v{version}')
         edit_profile('Snell-v5')
@@ -266,16 +286,6 @@ def main():
             edit_profile(name); ui.tap(ui.scroll_for(text=ui.STRINGS['allow_insecure'])); save()
         cert=urllib.parse.quote((OUT/'cert.pem').read_text(),safe='')
         import_uri(f'naive+https://test:{SECRET}@10.0.2.2:18090?sni=localhost&cert={cert}','NaiveProxy')
-        failures=[]
-        def check_traffic(name,lib,udp):
-            try:
-                traffic(name,lib,udp)
-            except Exception:
-                failures.append(name)
-                (OUT/(name+'-failure.txt')).write_text(traceback.format_exc())
-                (OUT/(name+'-failure-logcat.txt')).write_text(ui.adb('shell','logcat','-d',check=False))
-                print('FAIL traffic:',name,traceback.format_exc(),flush=True)
-                ui.adb('shell','am','force-stop',P)
         for name,lib,udp in [('Snell-v4','libmihomo.so',True),('Snell-v5','libmihomo.so',True),
                              ('Trojan-Go','libtrojan-go.so',True),('Trojan-Go-WS-SS','libtrojan-go.so',False),
                              ('Mieru-TCP','libmieru.so',True),('Mieru-UDP','libmieru.so',True),
@@ -289,7 +299,7 @@ def main():
         assert state['channel']=='preview', state
         (OUT/'preview-core-state.json').write_text(json.dumps(state))
         check_traffic('Snell-v5','libmihomo.so',True)
-        assert not failures, 'Failed protocols: '+', '.join(failures)
+        assert not FAILURES, 'Failed protocols: '+', '.join(FAILURES)
         print('PROTOCOL SMOKE PASSED',flush=True)
     except Exception as error:
         (OUT/'failure.txt').write_text(traceback.format_exc())
