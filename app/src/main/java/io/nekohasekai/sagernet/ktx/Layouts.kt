@@ -28,7 +28,7 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
         // SagerNet Style
         val scrollRange = super.scrollVerticallyBy(dx, recycler, state)
         if (listenerDisabled) return scrollRange
-        val activity = recyclerView.context as? MainActivity
+        val activity = recyclerView.context.findActivity() as? MainActivity
         if (activity == null) {
             listenerDisabled = true
             return scrollRange

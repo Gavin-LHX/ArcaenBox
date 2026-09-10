@@ -160,6 +160,17 @@ try:
     adb('shell','input','keyevent','BACK')
     launch()
 
+    # Exercise the themed FAB animation and VPN consent; no real proxy is used.
+    tap(wait_for(resource_id=PACKAGE + ':id/fab'))
+    consent=find(tree(),resource_id='android:id/button1')
+    if consent is not None:
+        tap(consent)
+    wait_for(content_desc=STRINGS['stop'])
+    time.sleep(3)
+    capture('06-light-service-started')
+    tap(wait_for(resource_id=PACKAGE + ':id/fab'))
+    wait_for(content_desc=STRINGS['connect'])
+
     navigate('nav_tools')
     tap(wait_for(text=STRINGS['backup']))
     wait_for(resource_id=PACKAGE + ':id/action_export')
