@@ -21,7 +21,10 @@ object Po0Whitelist {
     private const val IMMEDIATE = "arcaenbox.po0.immediate"
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var initialized = false
-    private val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+    // WorkManager CONNECTED checks the default (possibly blocked VPN) network's
+    // validation. The worker checks the physical network itself so it can repair
+    // a whitelist even when the VPN currently has no working Internet access.
+    private val constraints = Constraints.Builder().build()
 
     @Synchronized
     fun initialize(context: Context, mainProcess: Boolean) {
@@ -87,10 +90,22 @@ class Po0Worker(context: Context, parameters: WorkerParameters) : CoroutineWorke
             return@withContext Result.failure()
         }
         if (tokens.isEmpty()) return@withContext Result.success()
-        val network = withTimeoutOrNull(10_000) {
+        val preferred = withTimeoutOrNull(10_000) {
             DefaultNetworkListener.start(this@Po0Worker) {}
             try { DefaultNetworkListener.get() } finally { DefaultNetworkListener.stop(this@Po0Worker) }
         }
+        fun physical(network: Network): Boolean = SagerNet.connectivity.getNetworkCapabilities(network)?.let {
+            it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                it.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
+                !it.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        } == true
+        // Android 7/8 default callbacks may report the VPN instead of its transport.
+        val network = preferred?.takeIf(::physical) ?: SagerNet.connectivity.allNetworks
+            .filter(::physical).maxByOrNull { candidate ->
+                val c = SagerNet.connectivity.getNetworkCapabilities(candidate)!!
+                (if (android.os.Build.VERSION.SDK_INT >= 23 && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) 10 else 0) +
+                    (if (c.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) 3 else if (c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) 2 else 1)
+            }
         val caps = network?.let { SagerNet.connectivity.getNetworkCapabilities(it) }
         if (network == null || caps == null || !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
             || caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
