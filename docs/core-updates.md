@@ -26,8 +26,12 @@
 1. `buildScript/lib/core/get_source_env.sh` 固定上游提交、渠道、版本、适配修订号和编译标签。稳定版基于 MatsuriDayo 的 Android 分支，测试版基于 SagerNet 官方标签并应用同一组 Android 补丁。补丁在 `buildScript/lib/core/patches/`。
 2. 运行 `ArcaenBox Native Cores` 工作流。两种渠道分别执行配置、实际代理请求和流量统计回归测试，再编译四种 Android 架构，生成 `core-stable` / `core-preview` AAR 附件。
 3. 运行 `ArcaenBox Signed APK`，填写对应原生工作流运行 ID。工作流校验绑定一致性和实际内核版本，内置双内核，生成独立签名更新包，运行应用单元测试和 Android 15 UI/代理启动/切换验证。`ArcaenBox Android Checks` 可单独检查 Kotlin 和更新验证单元测试。
-4. 经验证的 APK 发布为 `v1.4.2-arcaenbox.6` 这类应用标签；独立内核发布为 `core-stable-1.14.0-2`、`core-preview-1.15.0-alpha.2-2`。每个内核发布上传该渠道目录下的四个 `.so`、`manifest.json` 和 `manifest.sig`。内核发布不要设为仓库 Latest；测试内核设置 prerelease。
+4. APK 工作流成功后，运行 `ArcaenBox Publish Verified Cores` 并填写该 APK 工作流 ID。发布流程读取原始签名附件，验证签名与所有二进制哈希，再发布两个渠道，拒绝覆盖现有标签。经验证的 APK 发布为 `v1.4.2-arcaenbox.6` 这类应用标签；独立内核发布为 `core-stable-1.14.0-2`、`core-preview-1.15.0-alpha.2-2`。每个内核发布包含四个 `.so`、`manifest.json` 和 `manifest.sig`。内核发布不设为仓库 Latest；测试内核设置 prerelease。
 5. 后续升级内核时，先修改固定提交和版本，递增适配包修订号，完成测试后发布新的内核附件。桥接口变化时必须同时发布新版应用，不能仅强改清单中的桥标识。
+
+`libcore/init.sh` 将目标模块的 `golang.org/x/mobile` 指向已打补丁的本地 gomobile 源码。gobind 根据目标模块查找 `Seq.java`，只修改构建工具源码而不修改模块解析路径，会错误地使用模块缓存中的固定加载器。原生构建和 APK 打包都检查最终 `go/Seq.class` 确实调用 `CoreRuntime`。
+
+核心包发布后，可运行 `ArcaenBox APK UI Verification`，指定原始 APK 运行 ID 和 `checks=core-download`，验证真实 Release 下载、主进程/后台进程加载路径、未应用前不切换、损坏文件回退、重新下载修复和初始化失败回退。该检查只操作隔离的 Android 模拟器。
 
 上游：
 - https://github.com/SagerNet/sing-box/releases/tag/v1.14.0
