@@ -214,7 +214,7 @@ def traffic(name, library, udp=False):
                 datagram=b'\0\0\0\x01'+socket.inet_aton('127.0.0.1')+struct.pack('!H',18889)+PAYLOAD
                 packet=OUT/'udp.bin'; packet.write_bytes(datagram)
                 ui.adb('push',str(packet),'/data/local/tmp/arcaenbox-udp.bin')
-                response=ui.adb('exec-out','sh','-c',shlex.quote(f'toybox nc -u -w 5 127.0.0.1 {port} < /data/local/tmp/arcaenbox-udp.bin'),binary=True)
+                response=ui.adb('exec-out','sh','-c',f'toybox nc -u -w 5 127.0.0.1 {port} < /data/local/tmp/arcaenbox-udp.bin',binary=True)
                 assert response.endswith(PAYLOAD), 'UDP relay returned no echo: '+response.hex()
         (OUT/(name+'.png')).write_bytes(ui.adb('exec-out','screencap','-p',binary=True))
         RESULTS.append({'profile':name,'tcp':True,'udp':udp,'library':library})
@@ -266,16 +266,27 @@ def main():
             edit_profile(name); ui.tap(ui.scroll_for(text=ui.STRINGS['allow_insecure'])); save()
         cert=urllib.parse.quote((OUT/'cert.pem').read_text(),safe='')
         import_uri(f'naive+https://test:{SECRET}@10.0.2.2:18090?sni=localhost&cert={cert}','NaiveProxy')
+        failures=[]
+        def check_traffic(name,lib,udp):
+            try:
+                traffic(name,lib,udp)
+            except Exception:
+                failures.append(name)
+                (OUT/(name+'-failure.txt')).write_text(traceback.format_exc())
+                (OUT/(name+'-failure-logcat.txt')).write_text(ui.adb('shell','logcat','-d',check=False))
+                print('FAIL traffic:',name,traceback.format_exc(),flush=True)
+                ui.adb('shell','am','force-stop',P)
         for name,lib,udp in [('Snell-v4','libmihomo.so',True),('Snell-v5','libmihomo.so',True),
                              ('Trojan-Go','libtrojan-go.so',True),('Trojan-Go-WS-SS','libtrojan-go.so',False),
                              ('Mieru-TCP','libmieru.so',True),('Mieru-UDP','libmieru.so',True),
                              ('NaiveProxy','libnaive.so',False)]:
-            traffic(name,lib,udp)
+            check_traffic(name,lib,udp)
         ui.launch(); ui.open_core()
         ui.tap(ui.scroll_for(resource_id=P+':id/core_preview'))
         ui.tap(ui.scroll_for(resource_id=P+':id/core_apply'))
         ui.tap(ui.wait_for(resource_id='android:id/button1')); time.sleep(4)
-        traffic('Snell-v5','libmihomo.so',True)
+        check_traffic('Snell-v5','libmihomo.so',True)
+        assert not failures, 'Failed protocols: '+', '.join(failures)
         print('PROTOCOL SMOKE PASSED',flush=True)
     except Exception as error:
         (OUT/'failure.txt').write_text(traceback.format_exc())
