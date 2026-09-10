@@ -1,6 +1,8 @@
 package io.nekohasekai.sagernet.ui
 
 import android.content.res.Configuration
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.widget.TextView
 import androidx.annotation.StringRes
@@ -40,6 +42,9 @@ abstract class ThemedActivity : AppCompatActivity {
         if (!isDialog) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.decorView.setBackgroundColor(getColorAttr(R.attr.colorSurface))
+            // Older Android versions cannot draw dark system-bar icons.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) window.statusBarColor = Color.BLACK
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) window.navigationBarColor = Color.BLACK
             val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
             WindowInsetsControllerCompat(window, window.decorView).apply {
                 isAppearanceLightStatusBars = !night

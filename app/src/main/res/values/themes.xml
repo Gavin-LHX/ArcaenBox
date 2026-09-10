@@ -584,23 +584,23 @@
     </style>
 
     <style name="Theme.SagerNet.Black" parent="Theme.SagerNet">
-        <item name="colorPrimary">@color/color_ng_black_primary</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimary">?colorOnSurface</item>
+        <item name="colorOnPrimary">?colorSurface</item>
         <item name="colorPrimaryContainer">@color/color_ng_black_primary</item>
         <item name="colorOnPrimaryContainer">#FFFFFF</item>
-        <item name="colorSecondary">@color/color_ng_black_primary</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondary">?colorOnSurface</item>
+        <item name="colorOnSecondary">?colorSurface</item>
         <item name="colorSecondaryContainer">@color/color_ng_black_primary</item>
         <item name="colorOnSecondaryContainer">#FFFFFF</item>
     </style>
 
     <style name="Theme.SagerNet.Dialog.Black" parent="Theme.SagerNet.Dialog">
-        <item name="colorPrimary">@color/color_ng_black_primary</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimary">?colorOnSurface</item>
+        <item name="colorOnPrimary">?colorSurface</item>
         <item name="colorPrimaryContainer">@color/color_ng_black_primary</item>
         <item name="colorOnPrimaryContainer">#FFFFFF</item>
-        <item name="colorSecondary">@color/color_ng_black_primary</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondary">?colorOnSurface</item>
+        <item name="colorOnSecondary">?colorSurface</item>
         <item name="colorSecondaryContainer">@color/color_ng_black_primary</item>
         <item name="colorOnSecondaryContainer">#FFFFFF</item>
     </style>

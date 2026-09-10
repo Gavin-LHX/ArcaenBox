@@ -136,6 +136,10 @@ try:
     tap(auto_connect_switch())
     assert auto_connect_switch().get('checked') == original, 'Switch did not restore'
     capture('04-light-settings-switch')
+    tap(wait_for(text=STRINGS['service_mode']))
+    wait_for(resource_id='android:id/select_dialog_listview')
+    capture('04-light-single-choice-dialog')
+    adb('shell','input','keyevent','BACK')
 
     # A local-only profile exercises the editor without starting a VPN or using an external server.
     adb('shell','am','start','-W','-a','android.intent.action.VIEW','-d','socks://127.0.0.1:1080','-p',PACKAGE)

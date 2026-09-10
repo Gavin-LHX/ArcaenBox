@@ -64,13 +64,18 @@
                             android:text="@string/nat_stun_server_hint"
                             android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-                        <EditText
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp">
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/nat_stun_server"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:ems="10"
                             android:inputType="text"
                             android:text="stun.voipgate.com:3478" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

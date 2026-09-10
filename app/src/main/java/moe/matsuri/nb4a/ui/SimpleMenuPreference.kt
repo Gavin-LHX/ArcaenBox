@@ -22,9 +22,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import androidx.core.content.ContextCompat
 import androidx.preference.DropDownPreference
 import androidx.preference.PreferenceViewHolder
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.ktx.getColorAttr
 
@@ -43,6 +43,18 @@ open class SimpleMenuPreference
 ) : DropDownPreference(context!!, attrs, defStyleAttr, defStyleRes) {
 
     private lateinit var mAdapter: SimpleMenuAdapter
+
+    override fun onClick() {
+        MaterialAlertDialogBuilder(context)
+            .setTitle(dialogTitle ?: title)
+            .setSingleChoiceItems(entries, findIndexOfValue(value)) { dialog, index ->
+                val selected = entryValues[index].toString()
+                if (callChangeListener(selected)) value = selected
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
@@ -73,12 +85,7 @@ open class SimpleMenuPreference
             if (position == currentPosition) {
                 view.setBackgroundColor(context.getColorAttr(R.attr.colorMaterial100))
             } else {
-                view.setBackgroundColor(
-                    ContextCompat.getColor(
-                        context,
-                        R.color.preference_simple_menu_background
-                    )
-                )
+                view.setBackgroundColor(context.getColorAttr(R.attr.colorSurfaceContainerHigh))
             }
             return view
         }
