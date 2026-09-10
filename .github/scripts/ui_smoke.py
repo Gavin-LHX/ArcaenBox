@@ -62,6 +62,19 @@ def wait_for(**attrs):
     raise AssertionError(f'Control did not appear: {attrs}')
 
 
+def scroll_for(**attrs):
+    """Reach controls and validation messages in the variable-height Po0 form."""
+    for direction in [None, 'top', 'top', 'bottom', 'bottom', 'bottom', 'bottom', 'bottom']:
+        if direction:
+            width,height=map(int,re.findall(r'(\d+)x(\d+)',adb('shell','wm','size'))[-1])
+            start,end=(height//3,3*height//4) if direction == 'top' else (3*height//4,height//3)
+            adb('shell','input','swipe',str(width//2),str(start),str(width//2),str(end),'350')
+        node=find(tree(),**attrs)
+        if node is not None:
+            return node
+    raise AssertionError(f'Scrollable control did not appear: {attrs}')
+
+
 def launch():
     adb('shell', 'am', 'force-stop', PACKAGE)
     adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/io.nekohasekai.sagernet.ui.MainActivity')
@@ -131,43 +144,43 @@ def whitelist():
     launch()
     navigate('nav_po0')
     capture('15-po0-empty')
-    tap(wait_for(resource_id=PACKAGE + ':id/po0_add'))
-    wait_for(text=STRINGS['po0_tokens_required'])
-    field=wait_for(resource_id=PACKAGE + ':id/po0_tokens')
+    tap(scroll_for(resource_id=PACKAGE + ':id/po0_add'))
+    scroll_for(text=STRINGS['po0_tokens_required'])
+    field=scroll_for(resource_id=PACKAGE + ':id/po0_tokens')
     tap(field)
     adb('shell','input','text','invalid_token')
     adb('shell','input','keyevent','BACK')
-    tap(wait_for(resource_id=PACKAGE + ':id/po0_save'))
-    wait_for(text=STRINGS['po0_invalid_tokens'])
+    tap(scroll_for(resource_id=PACKAGE + ':id/po0_save'))
+    scroll_for(text=STRINGS['po0_invalid_tokens'])
     capture('16-po0-validation')
     # Save with automatic updates OFF: this fixture must never reach the remote API.
-    tap(wait_for(resource_id=PACKAGE + ':id/po0_tokens'))
+    tap(scroll_for(resource_id=PACKAGE + ':id/po0_tokens'))
     adb('shell','input','keyevent','KEYCODE_MOVE_END')
     for _ in 'invalid_token': adb('shell','input','keyevent','KEYCODE_DEL')
     fixture='pgnfw_emulator_fixture@0,pgnfw_second_fixture'
     adb('shell','input','text',fixture)
     adb('shell','input','keyevent','BACK')
-    assert wait_for(resource_id=PACKAGE + ':id/po0_automatic').get('checked') == 'false'
-    tap(wait_for(resource_id=PACKAGE + ':id/po0_save'))
+    assert scroll_for(resource_id=PACKAGE + ':id/po0_automatic').get('checked') == 'false'
+    tap(scroll_for(resource_id=PACKAGE + ':id/po0_save'))
     time.sleep(2)
     launch()
     navigate('nav_po0')
-    field=wait_for(resource_id=PACKAGE + ':id/po0_tokens')
+    field=scroll_for(resource_id=PACKAGE + ':id/po0_tokens')
     assert field.get('password') == 'true', 'Token must be masked'
     assert fixture not in ET.tostring(tree(),encoding='unicode'), 'Token leaked in normal UI'
     capture('17-po0-saved-masked')
-    tap(wait_for(content_desc='Show password'))
-    assert wait_for(resource_id=PACKAGE + ':id/po0_tokens').get('text') == fixture, 'Encrypted token failed to round trip after process restart'
+    tap(scroll_for(content_desc='Show password'))
+    assert scroll_for(resource_id=PACKAGE + ':id/po0_tokens').get('text') == fixture, 'Encrypted token failed to round trip after process restart'
     # Clear fixtures before other checks and leave no configured machines behind.
-    tap(wait_for(resource_id=PACKAGE + ':id/po0_tokens'))
+    tap(scroll_for(resource_id=PACKAGE + ':id/po0_tokens'))
     adb('shell','input','keyevent','KEYCODE_MOVE_END')
     for _ in fixture: adb('shell','input','keyevent','KEYCODE_DEL')
     adb('shell','input','keyevent','BACK')
-    tap(wait_for(resource_id=PACKAGE + ':id/po0_save'))
+    tap(scroll_for(resource_id=PACKAGE + ':id/po0_save'))
     time.sleep(1)
     launch()
     navigate('nav_po0')
-    assert wait_for(resource_id=PACKAGE + ':id/po0_tokens').get('text') in ('', STRINGS['po0_tokens'])
+    assert scroll_for(resource_id=PACKAGE + ':id/po0_tokens').get('text') in ('', STRINGS['po0_tokens'])
 
 
 def launcher_icon():
