@@ -1,5 +1,6 @@
 """Exercise the signed release on an isolated emulator and save UI evidence."""
 import json
+import os
 import re
 import subprocess
 import time
@@ -15,6 +16,7 @@ ANDROID = '{http://schemas.android.com/apk/res/android}'
 MENU = {e.get(ANDROID + 'id').split('/')[-1]: STRINGS[e.get(ANDROID + 'title').split('/')[-1]] for e in ET.parse('app/src/main/res/menu/main_drawer_menu.xml').iter('item')}
 RESULTS = []
 FAILURES = []
+ONLY_CHECKS = set(os.environ.get('UI_SMOKE_CHECKS', '').split(',')) - {''}
 
 
 def adb(*args, binary=False, check=True):
@@ -160,10 +162,13 @@ def profile():
     wait_for(text=STRINGS['server_address'])
     capture('05-light-profile-editor')
     tap(find(tree(),text=STRINGS['server_address']))
-    field=wait_for(resource_id='android:id/edit')
-    tap(field)
+    wait_for(resource_id='android:id/edit')
+    # EditTextPreference opens the keyboard itself. A second tap can hit outside
+    # the dialog while the keyboard moves it and accidentally dismiss it.
     time.sleep(.7)
+    wait_for(resource_id='android:id/edit')
     capture('06-light-editor-keyboard')
+    assert find(tree(),resource_id='android:id/edit') is not None, 'Editor dialog was dismissed'
     adb('shell','input','keyevent','BACK')
     adb('shell','input','keyevent','BACK')
     adb('shell','input','keyevent','BACK')
@@ -222,6 +227,8 @@ def landscape():
 
 
 def run_check(name, check):
+    if ONLY_CHECKS and name not in ONLY_CHECKS:
+        return
     try:
         check()
         print('PASS:', name, flush=True)

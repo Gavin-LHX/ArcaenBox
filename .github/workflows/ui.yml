@@ -5,6 +5,9 @@ on:
       run_id:
         description: Signed APK workflow run whose immutable artifact should be tested
         required: true
+      checks:
+        description: Optional comma-separated checks to repeat (blank runs all)
+        required: false
 permissions:
   contents: read
   actions: read
@@ -38,6 +41,8 @@ jobs:
         run: sudo chmod a+rw /dev/kvm
       - name: Verify signed APK screens on Android 15
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          UI_SMOKE_CHECKS: ${{ inputs.checks }}
         with:
           api-level: 35
           arch: x86_64
