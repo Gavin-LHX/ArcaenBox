@@ -1,6 +1,6 @@
 # ArcaenBox for Android
 
-<img src="app/src/main/res/drawable-nodpi/arcaenbox_artwork.jpg" alt="ArcaenBox" width="128" />
+<img src="app/src/main/res/drawable-nodpi/arcaenbox_artwork.png" alt="ArcaenBox" width="128" />
 
 [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
 [![Releases](https://img.shields.io/github/v/release/Gavin-LHX/ArcaenBox)](https://github.com/Gavin-LHX/ArcaenBox/releases)
@@ -9,6 +9,8 @@
 sing-box / universal proxy toolchain for Android.
 
 一款使用 sing-box 的 Android 通用代理软件.
+
+侧栏提供 [Po0 防火墙白名单](docs/po0-whitelist.md)，支持多机器 Token、手动加白与自动更新。
 
 ## 下载 / Downloads
 
