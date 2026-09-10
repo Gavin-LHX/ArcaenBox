@@ -1,0 +1,54 @@
+name: ArcaenBox APK UI Verification
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Signed APK workflow run whose immutable artifact should be tested
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  ui:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: actions/download-artifact@v4
+        with:
+          name: ArcaenBox-APKs
+          path: dist
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Record APK source and verify checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.run_id }}
+        run: |
+          mkdir -p ui-smoke
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" --jq '{id, head_sha, html_url}' > ui-smoke/apk-source.json
+          cd dist
+          sha256sum -c SHA256SUMS.txt
+      - name: Enable emulator acceleration
+        run: sudo chmod a+rw /dev/kvm
+      - name: Verify signed APK screens on Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: python3 .github/scripts/ui_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ArcaenBox-UI-verification
+          path: ui-smoke/
+          if-no-files-found: warn

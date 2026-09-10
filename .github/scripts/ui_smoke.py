@@ -142,7 +142,7 @@ def settings():
     assert auto_connect_switch().get('checked') == original, 'Switch did not restore'
     capture('04-light-settings-switch')
     tap(wait_for(text=STRINGS['service_mode']))
-    wait_for(resource_id='android:id/select_dialog_listview')
+    wait_for(resource_id=PACKAGE + ':id/select_dialog_listview')
     capture('04-light-single-choice-dialog')
     adb('shell','input','keyevent','BACK')
 
@@ -171,6 +171,7 @@ def profile():
 def service():
     launch()
     # Exercise the themed FAB animation and VPN consent; no real proxy is used.
+    tap(wait_for(resource_id=PACKAGE + ':id/profile_name'))
     tap(wait_for(resource_id=PACKAGE + ':id/fab'))
     consent=find(tree(),resource_id='android:id/button1')
     if consent is not None:
