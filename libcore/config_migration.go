@@ -170,13 +170,16 @@ func migrateConfig(input string) ([]byte, error) {
 				matches := array(take(rule, "outbound"))
 				if len(matches) == 1 && matches[0] == "any" && len(rule) <= 2 {
 					if route["default_domain_resolver"] == nil {
-						route["default_domain_resolver"] = rule["server"]
+						route["default_domain_resolver"] = dnsResolver(str(rule["server"]), dnsStrategies)
 					}
 					continue
 				}
 				return nil, fmt.Errorf("legacy outbound DNS rule requires a domain_resolver on the outbound")
 			}
 			migrateDNSRule(rule, dnsStrategies, rcodeServers, fakeTags)
+			if blocked := dnsStrategyRule(rule); blocked != nil {
+				rules = append(rules, blocked)
+			}
 			rules = append(rules, rule)
 		}
 		final := str(dns["final"])
@@ -186,6 +189,9 @@ func migrateConfig(input string) ([]byte, error) {
 		}
 		if strategy := dnsStrategies[final]; strategy != "" {
 			dns["strategy"] = strategy
+			if blocked := dnsStrategyRule(configObject{"strategy": strategy}); blocked != nil {
+				rules = append(rules, blocked)
+			}
 		}
 		if len(rules) > 0 {
 			dns["rules"] = rules
@@ -196,7 +202,7 @@ func migrateConfig(input string) ([]byte, error) {
 	if route["default_domain_resolver"] == nil && dns != nil {
 		for _, s := range array(dns["servers"]) {
 			if object(s)["tag"] == "dns-direct" {
-				route["default_domain_resolver"] = "dns-direct"
+				route["default_domain_resolver"] = dnsResolver("dns-direct", dnsStrategies)
 				break
 			}
 		}
@@ -266,6 +272,9 @@ func migrateConfig(input string) ([]byte, error) {
 		}
 		if strategy := str(take(out, "domain_strategy")); strategy != "" && strategy != "as_is" && out["domain_resolver"] == nil {
 			resolver := str(route["default_domain_resolver"])
+			if resolver == "" {
+				resolver = str(object(route["default_domain_resolver"])["server"])
+			}
 			if resolver == "" && dns != nil {
 				resolver = str(dns["final"])
 			}
@@ -310,10 +319,46 @@ func migrateDNSRule(rule configObject, strategies map[string]string, rcodes map[
 	for _, tag := range fakeTags {
 		if server == tag && rule["query_type"] == nil {
 			rule["query_type"] = []any{"A", "AAAA"}
-			delete(rule, "strategy")
 		}
 	}
 }
+
+func dnsResolver(server string, strategies map[string]string) any {
+	if strategy := strategies[server]; strategy != "" && strategy != "as_is" {
+		return configObject{"server": server, "strategy": strategy}
+	}
+	return server
+}
+
+// Modern DNS rules evaluate individual A/AAAA requests. Keep lookup preference
+// in dns.strategy/domain_resolver, and express family exclusions as empty replies.
+// A legacy rule-action strategy cannot coexist with FakeIP query_type rules.
+func dnsStrategyRule(rule configObject) configObject {
+	strategy := str(take(rule, "strategy"))
+	var excluded string
+	switch strategy {
+	case "ipv4_only":
+		excluded = "AAAA"
+	case "ipv6_only":
+		excluded = "A"
+	default:
+		return nil
+	}
+	match := configObject{}
+	for key, value := range rule {
+		switch key {
+		case "action", "server", "disable_cache", "disable_optimistic_cache", "rewrite_ttl", "timeout", "client_subnet", "remove_client_subnet", "speculative":
+		default:
+			match[key] = value
+		}
+	}
+	blocked := configObject{"query_type": []any{excluded}, "action": "predefined", "rcode": "NOERROR"}
+	if len(match) == 0 {
+		return blocked
+	}
+	return configObject{"type": "logical", "mode": "and", "rules": []any{match, configObject{"query_type": []any{excluded}}}, "action": "predefined", "rcode": "NOERROR"}
+}
+
 func migrateRouteRule(rule configObject, special map[string]string) {
 	for _, child := range array(rule["rules"]) {
 		migrateRouteRule(object(child), special)

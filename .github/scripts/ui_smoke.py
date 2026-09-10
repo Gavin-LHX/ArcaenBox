@@ -268,11 +268,12 @@ def service():
     deadline=time.monotonic()+25
     while time.monotonic()<deadline:
         services=adb('shell','dumpsys','activity','services',PACKAGE)
-        if 'isForeground=true' in services:
+        interfaces=adb('shell','ip','-o','link','show')
+        if 'isForeground=true' in services and re.search(r'\btun\d+:', interfaces):
             break
         time.sleep(.5)
     else:
-        raise AssertionError('VPN foreground service did not start')
+        raise AssertionError('VPN did not establish a TUN interface and foreground service')
     time.sleep(3)
     # Continuous speed updates prevent uiautomator from becoming idle here.
     # Record the real service state and screenshot, then reuse the unchanged FAB bounds.
@@ -281,8 +282,15 @@ def service():
     RESULTS.append('06-light-service-started')
     tap(button)
     wait_for(content_desc=STRINGS['connect'])
-    services=adb('shell','dumpsys','activity','services',PACKAGE)
-    assert 'isForeground=true' not in services, 'VPN foreground service did not stop'
+    deadline=time.monotonic()+15
+    while time.monotonic()<deadline:
+        services=adb('shell','dumpsys','activity','services',PACKAGE)
+        interfaces=adb('shell','ip','-o','link','show')
+        if 'isForeground=true' not in services and not re.search(r'\btun\d+:', interfaces):
+            break
+        time.sleep(.5)
+    else:
+        raise AssertionError('VPN foreground service or TUN interface did not stop')
 
 
 def backup():

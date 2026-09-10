@@ -13,10 +13,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/miekg/dns"
 	box "github.com/sagernet/sing-box"
+	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/adapter/certificate"
 	"github.com/sagernet/sing-box/boxapi"
 	"github.com/sagernet/sing-box/option"
+	"github.com/sagernet/sing/service"
 )
 
 const oldConfig = `{
@@ -53,7 +56,7 @@ func TestLegacyDNSAndTunMigration(t *testing.T) {
 	_, _, m := parseMigrated(t, oldConfig)
 	route := object(m["route"])
 	dns := object(m["dns"])
-	if route["default_domain_resolver"] != "dns-direct" {
+	if object(route["default_domain_resolver"])["server"] != "dns-direct" || object(route["default_domain_resolver"])["strategy"] != "prefer_ipv4" {
 		t.Fatal("lost node DNS resolver")
 	}
 	if dns["fakeip"] != nil || dns["independent_cache"] != nil {
@@ -67,7 +70,7 @@ func TestLegacyDNSAndTunMigration(t *testing.T) {
 	if object(rules[0])["rcode"] != "NOERROR" {
 		t.Fatal("blocking DNS response changed")
 	}
-	if len(array(object(rules[1])["query_type"])) != 2 {
+	if len(array(object(rules[len(rules)-1])["query_type"])) != 2 {
 		t.Fatal("fake DNS must only handle A/AAAA")
 	}
 	in := object(array(m["inbounds"])[0])
@@ -125,6 +128,10 @@ func TestMigratedCoreProxyTraffic(t *testing.T) {
 	listener.Close()
 	var raw configObject
 	_ = json.Unmarshal([]byte(oldConfig), &raw)
+	// The application forces the remote DoH hostname through direct DNS. This
+	// must coexist with FakeIP and its query_type rules in the modern DNS router.
+	dnsOptions := object(raw["dns"])
+	dnsOptions["rules"] = append([]any{configObject{"domain": []any{"dns.example"}, "server": "dns-direct"}}, array(dnsOptions["rules"])...)
 	raw["inbounds"] = []any{configObject{"type": "mixed", "tag": "mixed-in", "listen": "127.0.0.1", "listen_port": port, "sniff": true}}
 	ctx, options, _ := parseMigrated(t, string(mustJSON(raw)))
 	b, err := box.New(box.Options{Context: ctx, Options: options})
@@ -192,5 +199,42 @@ func TestLegacyWireguardPeersAndBlockSelector(t *testing.T) {
 	}
 	if len(array(m["outbounds"])) != 2 || object(array(m["outbounds"])[1])["type"] != "block" {
 		t.Fatal("block selector target removed")
+	}
+}
+
+func TestModernFakeDNSPreservesIPv4Only(t *testing.T) {
+	var raw configObject
+	_ = json.Unmarshal([]byte(oldConfig), &raw)
+	delete(raw, "inbounds") // Exercise the real DNS router without requiring a host TUN device.
+	dnsOptions := object(raw["dns"])
+	dnsOptions["rules"] = append([]any{configObject{"domain": []any{"dns.example"}, "server": "dns-direct"}}, array(dnsOptions["rules"])...)
+	ctx, options, _ := parseMigrated(t, string(mustJSON(raw)))
+	b, err := box.New(box.Options{Context: ctx, Options: options})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer b.Close()
+	if err = b.Start(); err != nil {
+		t.Fatal(err)
+	}
+	router := service.FromContext[adapter.DNSRouter](ctx)
+	for _, qtype := range []uint16{dns.TypeA, dns.TypeAAAA} {
+		query := new(dns.Msg)
+		query.SetQuestion("fake.example.", qtype)
+		queryContext, cancel := context.WithTimeout(adapter.WithContext(ctx, &adapter.InboundContext{Inbound: "tun-in"}), time.Second)
+		response, err := router.Exchange(queryContext, query, adapter.DNSQueryOptions{})
+		cancel()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response.Rcode != dns.RcodeSuccess {
+			t.Fatalf("unexpected DNS code: %v", response)
+		}
+		if qtype == dns.TypeAAAA && len(response.Answer) != 0 {
+			t.Fatal("IPv4-only FakeIP returned IPv6")
+		}
+		if qtype == dns.TypeA && len(response.Answer) == 0 {
+			t.Fatal("FakeIP stopped answering IPv4")
+		}
 	}
 }
