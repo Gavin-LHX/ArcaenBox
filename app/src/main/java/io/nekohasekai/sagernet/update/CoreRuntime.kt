@@ -146,8 +146,15 @@ object CoreRuntime {
             locked {
                 val destination = File(root,"packages/$id")
                 destination.parentFile!!.mkdirs()
-                if (destination.exists()) { installed(update.manifest.channel,id) }
-                else if (!stage.renameTo(destination)) throw UpdateException("storage")
+                if (destination.exists()) {
+                    try { installed(update.manifest.channel,id) } catch (_: Exception) {
+                        // Preserve any mapped inode while replacing a damaged cache entry.
+                        val rejected = File(root,"rejected-${UUID.randomUUID()}")
+                        if (!destination.renameTo(rejected)) throw UpdateException("storage")
+                        if (!stage.renameTo(destination)) { rejected.renameTo(destination); throw UpdateException("storage") }
+                        rejected.deleteRecursively()
+                    }
+                } else if (!stage.renameTo(destination)) throw UpdateException("storage")
                 val state = readState(); state.installed[update.manifest.channel] = id; writeState(state)
             }
         } finally { stage.deleteRecursively() }
