@@ -15,7 +15,15 @@ pushd sing-box
 git fetch --depth 1 "$SING_BOX_REPO" "$COMMIT_SING_BOX"
 git checkout --detach "$COMMIT_SING_BOX"
 if [ "$CORE_CHANNEL" = "preview" ]; then
-  git apply "$SRC_ROOT/buildScript/lib/core/patches/android-preview.patch"
+  git apply --exclude=box.go "$SRC_ROOT/buildScript/lib/core/patches/android-preview.patch"
+  python3 - <<'PY'
+from pathlib import Path
+p=Path('box.go')
+s=p.read_text()
+old='experimentalOptions.CacheFile.Enabled || options.PlatformLogWriter != nil'
+assert old in s
+p.write_text(s.replace(old,'experimentalOptions.CacheFile.Enabled'))
+PY
 fi
 git apply "$SRC_ROOT/buildScript/lib/core/patches/core-compat.patch"
 popd

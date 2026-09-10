@@ -1,6 +1,11 @@
 name: ArcaenBox Native Cores
 on:
   workflow_dispatch:
+    inputs:
+      channels:
+        description: JSON array of core channels to build
+        default: '["stable", "preview"]'
+        required: true
 permissions:
   contents: read
 jobs:
@@ -8,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        channel: [stable, preview]
+        channel: ${{ fromJSON(inputs.channels) }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     env:
