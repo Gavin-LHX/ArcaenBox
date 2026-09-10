@@ -6,12 +6,17 @@ import android.net.NetworkCapabilities
 import androidx.work.*
 import androidx.work.multiprocess.RemoteWorkManager
 import io.nekohasekai.sagernet.SagerNet
+import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.utils.DefaultNetworkListener
 import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.net.Proxy
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
+import javax.net.SocketFactory
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -102,7 +107,7 @@ class Po0Worker(context: Context, parameters: WorkerParameters) : CoroutineWorke
         // Android 7/8 default callbacks may report the VPN instead of its transport.
         val network = preferred?.takeIf(::physical) ?: SagerNet.connectivity.allNetworks
             .filter(::physical).maxByOrNull { candidate ->
-                val c = SagerNet.connectivity.getNetworkCapabilities(candidate)!!
+                val c = SagerNet.connectivity.getNetworkCapabilities(candidate) ?: return@maxByOrNull -1
                 (if (android.os.Build.VERSION.SDK_INT >= 23 && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) 10 else 0) +
                     (if (c.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) 3 else if (c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) 2 else 1)
             }
@@ -113,7 +118,7 @@ class Po0Worker(context: Context, parameters: WorkerParameters) : CoroutineWorke
             return@withContext if (runAttemptCount < 2) Result.retry() else Result.failure()
         }
         val client = OkHttpClient.Builder()
-            .socketFactory(network.socketFactory)
+            .socketFactory(PhysicalSocketFactory(network))
             .dns { hostname -> network.getAllByName(hostname).toList() }
             .proxy(Proxy.NO_PROXY)
             .followRedirects(false).followSslRedirects(false)
@@ -133,6 +138,29 @@ class Po0Worker(context: Context, parameters: WorkerParameters) : CoroutineWorke
             client.connectionPool.evictAll()
             client.dispatcher.executorService.shutdown()
         }
+    }
+
+    private class PhysicalSocketFactory(private val network: Network) : SocketFactory() {
+        override fun createSocket(): Socket = network.socketFactory.createSocket().also { socket ->
+            // Jobs run in :bg, alongside our VpnService. Protect before connecting
+            // so a blocked ArcaenBox tunnel cannot swallow the recovery request.
+            if (DataStore.vpnService?.protect(socket) == false) {
+                socket.close()
+                throw IOException("Direct network unavailable")
+            }
+        }
+        private fun connect(address: InetAddress, port: Int, local: InetAddress? = null, localPort: Int = 0): Socket {
+            val socket = createSocket()
+            try {
+                if (local != null) socket.bind(InetSocketAddress(local, localPort))
+                socket.connect(InetSocketAddress(address, port), 10_000)
+                return socket
+            } catch (e: Exception) { socket.close(); throw e }
+        }
+        override fun createSocket(host: String, port: Int) = connect(network.getByName(host), port)
+        override fun createSocket(host: String, port: Int, local: InetAddress, localPort: Int) = connect(network.getByName(host), port, local, localPort)
+        override fun createSocket(address: InetAddress, port: Int) = connect(address, port)
+        override fun createSocket(address: InetAddress, port: Int, local: InetAddress, localPort: Int) = connect(address, port, local, localPort)
     }
 
     private suspend fun call(client: OkHttpClient, token: Po0Token): Po0Result {

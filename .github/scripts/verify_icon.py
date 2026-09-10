@@ -13,7 +13,15 @@ with ZipFile(sys.argv[1]) as apk:
         if not name.endswith('.png'):
             continue
         candidate = Image.open(BytesIO(apk.read(name))).convert('RGBA')
-        if candidate.size == source.size and candidate.tobytes() == source.tobytes():
+        if candidate.size != source.size:
+            continue
+        # AAPT discards RGB data in fully transparent pixels. Compare alpha and
+        # visible pixels over both black and white, not invisible RGB padding.
+        assert candidate.getchannel('A').tobytes() == source.getchannel('A').tobytes(), 'Artwork alpha changed'
+        for color in ('black', 'white'):
+            background = Image.new('RGBA', source.size, color)
+            assert Image.alpha_composite(background, candidate).tobytes() == Image.alpha_composite(background, source).tobytes(), 'Visible artwork changed'
+        if candidate.size == source.size:
             print('Verified transparent artwork:', name)
             break
     else:

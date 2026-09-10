@@ -108,6 +108,15 @@ jobs:
           name: ArcaenBox-UI-verification
           path: ui-smoke/
           if-no-files-found: warn
+      - name: Upload failed-build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArcaenBox-build-diagnostics
+          path: |
+            app/build/outputs/apk/oss/release/*.apk
+            app/build/test-results/
+          if-no-files-found: warn
       - name: Publish APKs
         if: inputs.publish
         env:
