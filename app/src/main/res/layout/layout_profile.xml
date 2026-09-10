@@ -56,7 +56,7 @@
                         android:id="@+id/profile_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
                         android:textColor="?android:attr/textColorPrimary"
                         android:textStyle="bold"
                         tools:text="@string/profile_name" />

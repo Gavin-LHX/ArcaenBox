@@ -29,6 +29,7 @@ def bounds(node):
 
 
 def tree():
+    adb('shell', 'rm', '-f', '/sdcard/arcaenbox-ui.xml')
     adb('shell', 'uiautomator', 'dump', '/sdcard/arcaenbox-ui.xml')
     return ET.fromstring(adb('shell', 'cat', '/sdcard/arcaenbox-ui.xml'))
 
@@ -170,17 +171,29 @@ def profile():
 
 def service():
     launch()
-    # Exercise the themed FAB animation and VPN consent; no real proxy is used.
+    # Only the isolated emulator grants VPN consent. No real proxy is used.
+    adb('shell', 'appops', 'set', PACKAGE, 'ACTIVATE_VPN', 'allow')
     tap(wait_for(resource_id=PACKAGE + ':id/profile_name'))
-    tap(wait_for(resource_id=PACKAGE + ':id/fab'))
-    consent=find(tree(),resource_id='android:id/button1')
-    if consent is not None:
-        tap(consent)
-    wait_for(content_desc=STRINGS['stop'])
+    button=wait_for(resource_id=PACKAGE + ':id/fab')
+    tap(button)
+    deadline=time.monotonic()+25
+    while time.monotonic()<deadline:
+        services=adb('shell','dumpsys','activity','services',PACKAGE)
+        if 'isForeground=true' in services:
+            break
+        time.sleep(.5)
+    else:
+        raise AssertionError('VPN foreground service did not start')
     time.sleep(3)
-    capture('06-light-service-started')
-    tap(wait_for(resource_id=PACKAGE + ':id/fab'))
+    # Continuous speed updates prevent uiautomator from becoming idle here.
+    # Record the real service state and screenshot, then reuse the unchanged FAB bounds.
+    (OUT/'06-light-service-started.txt').write_text(services,encoding='utf-8')
+    (OUT/'06-light-service-started.png').write_bytes(adb('exec-out','screencap','-p',binary=True))
+    RESULTS.append('06-light-service-started')
+    tap(button)
     wait_for(content_desc=STRINGS['connect'])
+    services=adb('shell','dumpsys','activity','services',PACKAGE)
+    assert 'isForeground=true' not in services, 'VPN foreground service did not stop'
 
 
 def backup():

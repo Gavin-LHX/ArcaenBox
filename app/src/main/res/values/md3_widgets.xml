@@ -1,4 +1,8 @@
 <resources>
+    <!-- AndroidX preference dialogs use AppCompat's builder, so supply its window shape too. -->
+    <style name="ThemeOverlay.ArcaenBox.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:windowBackground">@drawable/md3_dialog_background</item>
+    </style>
     <style name="Widget.ArcaenBox.Toolbar" parent="Widget.Material3.Toolbar">
         <item name="titleTextAppearance">@style/TextAppearance.Material3.TitleLarge</item>
         <item name="titleTextColor">?colorOnSurface</item>

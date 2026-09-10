@@ -63,7 +63,7 @@
         <item name="chipStyle">@style/Widget.Material3.Chip.Filter</item>
         <item name="navigationViewStyle">@style/Widget.Material3.NavigationView</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Material3.BottomSheetDialog</item>
-        <item name="alertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.ArcaenBox.AlertDialog</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.ArcaenBox</item>
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Material3.Corner.Small</item>
@@ -142,7 +142,7 @@
         <item name="chipStyle">@style/Widget.Material3.Chip.Filter</item>
         <item name="navigationViewStyle">@style/Widget.Material3.NavigationView</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Material3.BottomSheetDialog</item>
-        <item name="alertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.ArcaenBox.AlertDialog</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.ArcaenBox</item>
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Material3.Corner.Small</item>
