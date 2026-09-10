@@ -36,6 +36,14 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <ImageView
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_marginBottom="16dp"
+                        android:contentDescription="@string/app_name"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/arcaenbox_artwork" />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

@@ -190,7 +190,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .build())
                         .addItem(
                             MaterialAboutActionItem.Builder()
-                                .icon(R.drawable.ic_qu_shadowsocks_foreground)
+                                .icon(R.drawable.ic_arcaenbox)
                                 .text(R.string.telegram)
                                 .setOnClickAction {
                                     requireContext().launchCustomTab(

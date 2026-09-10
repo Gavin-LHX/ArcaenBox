@@ -1,5 +1,7 @@
 # ArcaenBox for Android
 
+<img src="app/src/main/res/drawable-nodpi/arcaenbox_artwork.jpg" alt="ArcaenBox" width="128" />
+
 [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
 [![Releases](https://img.shields.io/github/v/release/Gavin-LHX/ArcaenBox)](https://github.com/Gavin-LHX/ArcaenBox/releases)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange.svg)](https://www.gnu.org/licenses/gpl-3.0)

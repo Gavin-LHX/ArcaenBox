@@ -5,7 +5,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.4.2-arcaenbox.2
+        default: v1.4.2-arcaenbox.3
 permissions:
   contents: write
 jobs:
@@ -74,6 +74,7 @@ jobs:
               echo 'Old application ID remains in compiled resources'
               exit 1
             fi
+            python3 -c 'import sys, zipfile; from pathlib import Path; expected = Path(sys.argv[2]).read_bytes(); z = zipfile.ZipFile(sys.argv[1]); assert any(z.read(n) == expected for n in z.namelist() if n.lower().endswith((".jpg", ".jpeg"))), "Original ArcaenBox artwork missing from APK"' "$apk" app/src/main/res/drawable-nodpi/arcaenbox_artwork.jpg
             cp "$apk" dist/
           done
           cd dist

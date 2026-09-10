@@ -47,7 +47,7 @@ class QuickToggleShortcut : Activity(), SagerConnection.Callback {
                     .setIntent(Intent(this,
                         QuickToggleShortcut::class.java).setAction(Intent.ACTION_MAIN))
                     .setIcon(IconCompat.createWithResource(this,
-                        R.drawable.ic_qu_shadowsocks_launcher))
+                        R.mipmap.ic_launcher))
                     .setShortLabel(getString(R.string.quick_toggle))
                     .build()))
             finish()

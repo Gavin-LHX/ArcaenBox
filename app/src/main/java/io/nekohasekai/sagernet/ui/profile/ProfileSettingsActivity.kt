@@ -319,7 +319,7 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
                     .setLongLabel(ent.displayName())
                     .setIcon(
                         IconCompat.createWithResource(
-                            activity, R.drawable.ic_qu_shadowsocks_launcher
+                            activity, R.mipmap.ic_launcher
                         )
                     ).setIntent(Intent(
                         context, QuickToggleShortcut::class.java
