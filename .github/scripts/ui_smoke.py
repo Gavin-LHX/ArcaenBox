@@ -463,6 +463,10 @@ def run_check(name, check):
 
 
 try:
+    # The isolated Google APIs emulator permits root diagnostics. Android 15
+    # denies netlink interface inspection to shell; the app still runs as its own UID.
+    adb('root')
+    adb('wait-for-device')
     apk=next(Path('dist').glob('*x86_64*.apk'))
     adb('install','-r','-g',str(apk))
     adb('shell','logcat','-c')
