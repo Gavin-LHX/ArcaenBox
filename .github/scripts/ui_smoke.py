@@ -12,6 +12,7 @@ PACKAGE = 'com.arcaenbox.android'
 OUT = Path('ui-smoke')
 OUT.mkdir(exist_ok=True)
 STRINGS = {e.get('name'): ''.join(e.itertext()) for e in ET.parse('app/src/main/res/values/strings.xml').getroot() if e.tag == 'string'}
+STRINGS.update({e.get('name'): ''.join(e.itertext()) for e in ET.parse('app/src/main/res/values/core_updates.xml').getroot() if e.tag == 'string'})
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 MENU = {e.get(ANDROID + 'id').split('/')[-1]: STRINGS[e.get(ANDROID + 'title').split('/')[-1]] for e in ET.parse('app/src/main/res/menu/main_drawer_menu.xml').iter('item')}
 RESULTS = []
@@ -291,6 +292,54 @@ def backup():
     capture('07-light-backup')
 
 
+def open_core():
+    navigate('nav_about')
+    tap(scroll_for(text=STRINGS['core_manager']))
+    wait_for(resource_id=PACKAGE+':id/core_running')
+
+
+def app_updates():
+    launch()
+    navigate('nav_about')
+    for key in ['check_update_release','check_update_preview']:
+        tap(scroll_for(text=STRINGS[key]))
+        wait_for(resource_id='android:id/button1')
+        doc=tree()
+        text=' '.join(n.get('text','') for n in doc.iter('node'))
+        assert '404' not in text and 'Not Found' not in text and 'documentation_url' not in text, text
+        expected=STRINGS['update_no_preview'] if key.endswith('preview') else STRINGS['check_update_no']
+        assert expected in text, text
+        capture('19-'+key)
+        tap(find(doc,resource_id='android:id/button1'))
+
+
+def core_switch():
+    launch()
+    open_core()
+    assert '1.14.0' in find(tree(),resource_id=PACKAGE+':id/core_details').get('text','')
+    capture('20-core-stable')
+    for channel,version in [('preview','1.15.0-alpha.2'),('stable','1.14.0')]:
+        tap(scroll_for(resource_id=PACKAGE+':id/core_'+channel))
+        tap(scroll_for(resource_id=PACKAGE+':id/core_apply'))
+        tap(wait_for(resource_id='android:id/button1'))
+        time.sleep(4)
+        wait_for(resource_id=PACKAGE+':id/toolbar')
+        open_core()
+        assert version in find(tree(),resource_id=PACKAGE+':id/core_details').get('text','')
+        capture('21-core-switched-'+channel)
+        # The persisted selection must also be used by a fresh VPN background process.
+        service()
+        open_core()
+        assert version in find(tree(),resource_id=PACKAGE+':id/core_details').get('text','')
+    tap(scroll_for(resource_id=PACKAGE+':id/core_restore'))
+    tap(wait_for(resource_id='android:id/button1'))
+    time.sleep(4)
+    launch()
+    open_core()
+    assert STRINGS['core_builtin'] in find(tree(),resource_id=PACKAGE+':id/core_running').get('text','')
+    capture('22-core-restored')
+
+
 def compact():
     launch()
     capture('10-compact-main-large-text')
@@ -340,6 +389,8 @@ try:
     run_check('backup', backup)
     run_check('whitelist', whitelist)
     run_check('launcher', launcher_icon)
+    run_check('app-updates', app_updates)
+    run_check('core-switch', core_switch)
     adb('shell','cmd','uimode','night','yes')
     for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about','nav_po0']:
         run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_manager">sing-box updates and channels</string>
+    <string name="core_running">Running core</string>
+    <string name="core_stable">Stable</string>
+    <string name="core_preview">Preview</string>
+    <string name="core_builtin">Built in</string>
+    <string name="core_downloaded">Downloaded</string>
+    <string name="core_channel_help">Choose a channel, then switch and restart. Preview builds may contain bugs. Profiles and app settings are kept.</string>
+    <string name="core_check">Check core updates</string>
+    <string name="core_download">Download core update</string>
+    <string name="core_switch">Apply and restart</string>
+    <string name="core_restore">Restore built-in core</string>
+    <string name="core_restart_title">Restart ArcaenBox?</string>
+    <string name="core_restart_message">The proxy will stop. ArcaenBox will restart with %1$s. Your profiles and settings will be kept.</string>
+    <string name="core_ready">Core verified and saved. Apply and restart to use it.</string>
+    <string name="core_latest">No newer compatible core is available for this channel.</string>
+    <string name="core_available">Available: %1$s</string>
+    <string name="core_recovered">The previous core failed to initialize. A built-in core has been restored.</string>
+    <string name="core_status">%1$s · %2$s / r%3$d · %4$s</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_no_preview">No application preview release is currently available.</string>
+    <string name="update_no_release">No application release is currently available.</string>
+    <string name="update_network">Could not connect. Check your network or proxy and try again.</string>
+    <string name="update_rate_limit">GitHub temporarily limited update requests. Please try again later.</string>
+    <string name="update_missing">This download is no longer available. Check for updates again.</string>
+    <string name="update_invalid">The update data is invalid. No changes were applied.</string>
+    <string name="update_signature">Core signature verification failed. The download was rejected.</string>
+    <string name="update_checksum">The core download is incomplete or damaged. Please download it again.</string>
+    <string name="update_incompatible">This core requires a newer ArcaenBox app. Update the app first.</string>
+    <string name="update_storage">Could not save the core. Check available storage and try again.</string>
+    <string name="update_stop_failed">The proxy has not stopped yet. Stop it and try again.</string>
+    <string name="update_downloading">Downloading: %1$d%%</string>
+</resources>

@@ -42,6 +42,7 @@ class SagerNet : Application(),
         super.attachBaseContext(base)
 
         application = this
+        io.nekohasekai.sagernet.update.CoreRuntime.initialize(this)
     }
 
     private val nativeInterface = NativeInterface()
@@ -68,6 +69,8 @@ class SagerNet : Application(),
                 DataStore.logLevel > 0,
                 nativeInterface, nativeInterface, LocalResolverImpl
             )
+            check(Libcore.versionBox().substringBefore('\n').contains(io.nekohasekai.sagernet.update.CoreRuntime.active.version))
+            io.nekohasekai.sagernet.update.CoreRuntime.markReady()
 
             // fix multi process issue in Android 9+
             JavaUtil.handleWebviewDir(this)

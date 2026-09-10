@@ -32,9 +32,9 @@ import moe.matsuri.nb4a.plugin.Plugins
 import androidx.core.net.toUri
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.nekohasekai.sagernet.SagerNet
-import io.nekohasekai.sagernet.database.DataStore
-import moe.matsuri.nb4a.utils.Util
-import org.json.JSONObject
+import androidx.lifecycle.lifecycleScope
+import io.nekohasekai.sagernet.update.*
+import kotlinx.coroutines.*
 
 class AboutFragment : ToolbarFragment(R.layout.layout_about) {
 
@@ -106,8 +106,12 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .icon(R.drawable.ic_baseline_layers_24)
                                 .text(getString(R.string.version_x, "sing-box"))
                                 .subText(Libcore.versionBox())
-                                .setOnClickAction { }
+                                .setOnClickAction { (requireActivity() as MainActivity).displayFragment(CoreUpdatesFragment()) }
                                 .build())
+                        .addItem(MaterialAboutActionItem.Builder()
+                            .text(R.string.core_manager)
+                            .setOnClickAction { (requireActivity() as MainActivity).displayFragment(CoreUpdatesFragment()) }
+                            .build())
 
                         .apply {
                             PackageCache.awaitLoadSync()
@@ -201,69 +205,38 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
             }
         }
 
+        private var checking = false
+        private fun updateMessage(message: Int) {
+            MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.update_dialog_title)
+                .setMessage(message).setPositiveButton(android.R.string.ok,null).show()
+        }
         fun checkUpdate(checkPreview: Boolean) {
-            runOnIoDispatcher {
+            if (checking) return
+            checking = true
+            Toast.makeText(requireContext(),R.string.update_checking,Toast.LENGTH_SHORT).show()
+            viewLifecycleOwner.lifecycleScope.launch {
                 try {
-                    val client = Libcore.newHttpClient().apply {
-                        modernTLS()
-                        trySocks5(DataStore.mixedPort)
+                    val release = ReleaseService.applicationRelease(ReleaseService.releases(),checkPreview)
+                    val context = requireContext()
+                    if (release == null) {
+                        updateMessage(if (checkPreview) R.string.update_no_preview else R.string.update_no_release)
+                        return@launch
                     }
-                    val response = client.newRequest().apply {
-                        if (checkPreview) {
-                            setURL("https://api.github.com/repos/Gavin-LHX/ArcaenBox/releases/tags/preview")
-                        } else {
-                            setURL("https://api.github.com/repos/Gavin-LHX/ArcaenBox/releases/latest")
-                        }
-                    }.execute()
-                    val release = JSONObject(Util.getStringBox(response.contentString))
-                    val releaseName = release.getString("name")
-                    val releaseUrl = release.getString("html_url")
-                    var haveUpdate = releaseName.isNotBlank()
-                    haveUpdate = if (isPreview) {
-                        if (checkPreview) {
-                            haveUpdate && releaseName != BuildConfig.PRE_VERSION_NAME
-                        } else {
-                            // User: 1.3.9 pre-1.4.0 Stable: 1.3.9 -> No update
-                            haveUpdate && releaseName != BuildConfig.VERSION_NAME
-                        }
+                    val current = ReleaseVersion.parse(BuildConfig.VERSION_NAME)
+                    val available = ReleaseVersion.parse(release.tag)
+                    if (available != null && (current == null || available > current)) {
+                        MaterialAlertDialogBuilder(context)
+                            .setTitle(R.string.update_dialog_title)
+                            .setMessage(getString(R.string.update_dialog_message,SagerNet.appVersionNameForDisplay,release.tag))
+                            .setPositiveButton(R.string.yes) { _, _ -> context.startActivity(Intent(Intent.ACTION_VIEW,release.url.toUri())) }
+                            .setNegativeButton(R.string.no,null).show()
                     } else {
-                        // User: 1.4.0 Preview: pre-1.4.0 -> No update
-                        // User: 1.4.0 Preview: pre-1.4.1 -> Update
-                        // User: 1.4.0 Stable: 1.4.0 -> No update
-                        // User: 1.4.0 Stable: 1.4.1 -> Update
-                        haveUpdate && !releaseName.contains(BuildConfig.VERSION_NAME)
+                        updateMessage(R.string.check_update_no)
                     }
-                    runOnMainDispatcher {
-                        if (haveUpdate) {
-                            val context = requireContext()
-                            MaterialAlertDialogBuilder(context)
-                                .setTitle(R.string.update_dialog_title)
-                                .setMessage(
-                                    context.getString(
-                                        R.string.update_dialog_message,
-                                        SagerNet.appVersionNameForDisplay,
-                                        releaseName
-                                    )
-                                )
-                                .setPositiveButton(R.string.yes) { _, _ ->
-                                    val intent = Intent(Intent.ACTION_VIEW, releaseUrl.toUri())
-                                    context.startActivity(intent)
-                                }
-                                .setNegativeButton(R.string.no, null)
-                                .show()
-                        } else {
-                            Toast.makeText(app, R.string.check_update_no, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Logs.w(e)
-                    runOnMainDispatcher {
-                        Toast.makeText(app, e.readableMessage, Toast.LENGTH_SHORT).show()
-                    }
-                }
+                } catch (e: CancellationException) { throw e }
+                catch (e: Exception) { if (isAdded) updateMessage(UpdateMessages.resource(e)) }
+                finally { checking = false }
             }
         }
-
     }
-
 }

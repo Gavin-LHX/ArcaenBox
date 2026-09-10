@@ -5,13 +5,20 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.4.2-arcaenbox.5
+        default: v1.4.2-arcaenbox.6
+      stable_core_run:
+        description: Native Cores run containing the verified stable AAR
+        required: true
+      preview_core_run:
+        description: Native Cores run containing the verified preview AAR
+        required: true
       publish:
         description: Publish the verified APKs as a release
         type: boolean
         default: true
 permissions:
   contents: write
+  actions: read
 jobs:
   apk:
     runs-on: ubuntu-22.04
@@ -34,15 +41,20 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Install Android build tools
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.1' 'ndk;25.0.8775105'
-      - name: Cache native core
-        id: core
-        uses: actions/cache@v4
+      - name: Download verified stable core
+        uses: actions/download-artifact@v4
         with:
-          path: app/libs/libcore.aar
-          key: arcaenbox-core-${{ runner.os }}-${{ hashFiles('libcore/**', 'buildScript/**') }}
-      - name: Build native core
-        if: steps.core.outputs.cache-hit != 'true'
-        run: ./run lib core
+          name: core-stable
+          path: core-build/stable
+          run-id: ${{ inputs.stable_core_run }}
+          github-token: ${{ github.token }}
+      - name: Download verified preview core
+        uses: actions/download-artifact@v4
+        with:
+          name: core-preview
+          path: core-build/preview
+          run-id: ${{ inputs.preview_core_run }}
+          github-token: ${{ github.token }}
       - uses: gradle/actions/setup-gradle@v4
       - name: Prepare assets
         run: ./run init action gradle
@@ -56,6 +68,8 @@ jobs:
           set -euo pipefail
           test -n "$SIGNING_KEYSTORE"
           printf '%s' "$SIGNING_KEYSTORE" | base64 --decode > release.keystore
+          python3 -m pip install cryptography
+          python3 .github/scripts/package_cores.py --stable core-build/stable/libcore.aar --preview core-build/preview/libcore.aar --keystore release.keystore
           ./gradlew --no-daemon app:testOssReleaseUnitTest app:assembleOssRelease
       - name: Verify APK signatures, application name and package
         run: |
@@ -88,6 +102,11 @@ jobs:
         with:
           name: ArcaenBox-APKs
           path: dist/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArcaenBox-Core-Updates
+          path: core-build/dist/
           if-no-files-found: error
       - name: Enable emulator acceleration
         run: sudo chmod a+rw /dev/kvm
