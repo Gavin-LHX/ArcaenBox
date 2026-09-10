@@ -5,7 +5,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.4.2-arcaenbox.4
+        default: v1.4.2-arcaenbox.5
       publish:
         description: Publish the verified APKs as a release
         type: boolean
@@ -56,10 +56,11 @@ jobs:
           set -euo pipefail
           test -n "$SIGNING_KEYSTORE"
           printf '%s' "$SIGNING_KEYSTORE" | base64 --decode > release.keystore
-          ./gradlew --no-daemon app:assembleOssRelease
+          ./gradlew --no-daemon app:testOssReleaseUnitTest app:assembleOssRelease
       - name: Verify APK signatures, application name and package
         run: |
           set -euo pipefail
+          python3 -m pip install Pillow
           mkdir -p dist
           for apk in app/build/outputs/apk/oss/release/*.apk; do
             "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose "$apk"
@@ -78,7 +79,7 @@ jobs:
               echo 'Old application ID remains in compiled resources'
               exit 1
             fi
-            python3 -c 'import sys, zipfile; from pathlib import Path; expected = Path(sys.argv[2]).read_bytes(); z = zipfile.ZipFile(sys.argv[1]); assert any(z.read(n) == expected for n in z.namelist() if n.lower().endswith((".jpg", ".jpeg"))), "Original ArcaenBox artwork missing from APK"' "$apk" app/src/main/res/drawable-nodpi/arcaenbox_artwork.jpg
+            python3 .github/scripts/verify_icon.py "$apk"
             cp "$apk" dist/
           done
           cd dist

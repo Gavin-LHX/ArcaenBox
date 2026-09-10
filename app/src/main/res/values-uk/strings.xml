@@ -276,8 +276,8 @@
     <string name="no_proxies_found_in_file">У файлі не знайдено проксі</string>
     <string name="no_proxies_found_in_clipboard">У буфері обміну не знайдено проксі</string>
     <string name="deduplication">Дедуплікація</string>
-    <string name="donate">Пожертвувати</string>
-    <string name="donate_info">Я люблю гроші</string>
+
+
     <string name="ignore_battery_optimizations">Ігнорувати оптимізацію батареї</string>
     <string name="ignore_battery_optimizations_sum">Зняти деякі обмеження</string>
     <!-- plugin -->
@@ -486,7 +486,7 @@
     <string name="log_level">Рівень журналу</string>
     <string name="enable_clash_api_summary">Надати Clash API та панель yacd за адресою 127.0.0.1:9090</string>
     <string name="xtls_flow">Flow (підпротокол VLESS)</string>
-    <string name="ads">Реклама</string>
+
     <string name="bypass_lan_in_core">Обходити ЛВС в ядрі</string>
     <string name="need_restart">Перезапустіть програму, щоб застосувати зміни</string>
     <string name="use_selector">Використовувати селектор</string>

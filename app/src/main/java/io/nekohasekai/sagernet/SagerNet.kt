@@ -78,6 +78,10 @@ class SagerNet : Application(),
             }
         }
 
+        if (isMainProcess || isBgProcess) {
+            io.nekohasekai.sagernet.po0.Po0Whitelist.initialize(this, isMainProcess)
+        }
+
         if (isMainProcess) {
             Theme.apply(this)
             Theme.applyNightTheme()

@@ -24,7 +24,7 @@
 <string name="add_profile">Добавить профиль</string>
 <string name="add_profile_methods_manual_settings">Ручные настройки</string>
 <string name="add_profile_methods_scan_qr_code">Отсканировать QR-код</string>
-<string name="ads">Реклама</string>
+
 <string name="allow_access">Разрешить подключения из локальной сети</string>
 <string name="allow_access_sum">Привязать входящие серверы к 0.0.0.0</string>
 <string name="allow_insecure">Разрешить небезопасное подключение</string>
@@ -131,8 +131,8 @@
 <string name="domain_strategy_for_direct">Правило домена для Прямого</string>
 <string name="domain_strategy_for_remote">Правило домена для Удаленного</string>
 <string name="domain_strategy_for_server">Правило домена для Адреса сервера</string>
-<string name="donate">Пожертвовать</string>
-<string name="donate_info">Я люблю деньги</string>
+
+
 <string name="download">Скачать</string>
 <string name="early_data_header_name">Имя заголовка ранних данных</string>
 <string name="ech_config">Конфигурация ECH</string>

@@ -38,15 +38,12 @@
             android:id="@+id/nav_tools"
             android:icon="@drawable/baseline_construction_24"
             android:title="@string/menu_tools" />
+        <item android:id="@+id/nav_po0" android:icon="@drawable/ic_po0_shield" android:title="@string/po0_title" />
     </group>
 
     <group
         android:id="@+id/about"
         android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_tuiguang"
-            android:icon="@drawable/ic_social_share"
-            android:title="@string/ads" />
         <item
             android:id="@+id/nav_faq"
             android:icon="@drawable/ic_device_data_usage"

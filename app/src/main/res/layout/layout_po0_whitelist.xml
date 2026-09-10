@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+    <include layout="@layout/layout_appbar" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:fillViewport="true" android:clipToPadding="false">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="20dp" android:paddingBottom="96dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/po0_intro" android:textAppearance="?textAppearanceBodyLarge" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/po0_token_input" style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp"
+                android:hint="@string/po0_tokens" app:endIconMode="password_toggle" app:helperText="@string/po0_token_help">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/po0_tokens" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:inputType="textPassword|textNoSuggestions" android:maxLength="11000"
+                    android:importantForAutofill="no" android:saveEnabled="false" android:singleLine="true" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/po0_automatic"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp"
+                android:layout_marginTop="12dp" android:text="@string/po0_automatic" android:paddingVertical="8dp"
+                android:textAppearance="?textAppearanceTitleMedium" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/po0_automatic_help" android:textAppearance="?textAppearanceBodyMedium"
+                android:textColor="?colorOnSurfaceVariant" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/po0_save"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:text="@string/po0_save" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/po0_add"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/po0_add" />
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Material3.CardView.Filled"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="20dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="@string/po0_result" android:textAppearance="?textAppearanceTitleMedium" />
+                    <TextView android:id="@+id/po0_status" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" android:text="@string/po0_no_result"
+                        android:textAppearance="?textAppearanceBodyMedium" android:textIsSelectable="true" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:text="@string/po0_slot_help"
+                android:textAppearance="?textAppearanceBodySmall" android:textColor="?colorOnSurfaceVariant" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/po0_guide"
+                style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/po0_guide" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

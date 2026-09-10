@@ -272,8 +272,8 @@
     <string name="no_proxies_found_in_file">هیچ پراکسی در فایل مورد نظر یافت نشد.</string>
     <string name="no_proxies_found_in_clipboard">هیچ پراکسی در بریده‌دان یافت نشد.</string>
     <string name="deduplication">حذف موارد تکراری</string>
-    <string name="donate">حمایت از برنامه‌نویس</string>
-    <string name="donate_info">عاشق پول هستم!</string>
+
+
     <string name="ignore_battery_optimizations">بهینه‌سازی باتری را برای این برنامه غیرفعال کنید</string>
     <string name="ignore_battery_optimizations_sum">چند محدودیت برداشته می‌شود</string>
     <!-- plugin -->
@@ -497,7 +497,7 @@
     <string name="log_level">سطح ثبت آمار</string>
     <string name="enable_clash_api_summary">ارائه Clash api و صفحه yacd را در 127.0.0.1: 9090</string>
     <string name="xtls_flow">Flow (VLESS دستورالعمل فرعی)</string>
-    <string name="ads">تبلیغات</string>
+
     <string name="bypass_lan_in_core">دورزدن شبکه محلی در هسته برنامه</string>
     <string name="need_restart">برای اجرای تغییرات، برنامه را دوباره راه‌اندازی کنید</string>
     <string name="use_selector">استفاده از انتخاب‌گر</string>

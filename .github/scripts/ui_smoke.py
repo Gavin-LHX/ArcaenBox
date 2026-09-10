@@ -120,9 +120,67 @@ def startup():
     launch()
     capture('01-light-main')
     open_drawer()
+    doc = tree()
+    assert find(doc, text='Promote') is None and find(doc, text='Ads') is None
     capture('02-light-drawer')
     adb('shell','input','keyevent','BACK')
     wait_for(resource_id=PACKAGE + ':id/toolbar')
+
+
+def whitelist():
+    launch()
+    navigate('nav_po0')
+    capture('15-po0-empty')
+    tap(wait_for(resource_id=PACKAGE + ':id/po0_add'))
+    wait_for(text=STRINGS['po0_tokens_required'])
+    field=wait_for(resource_id=PACKAGE + ':id/po0_tokens')
+    tap(field)
+    adb('shell','input','text','invalid_token')
+    adb('shell','input','keyevent','BACK')
+    tap(wait_for(resource_id=PACKAGE + ':id/po0_save'))
+    wait_for(text=STRINGS['po0_invalid_tokens'])
+    capture('16-po0-validation')
+    # Save with automatic updates OFF: this fixture must never reach the remote API.
+    tap(wait_for(resource_id=PACKAGE + ':id/po0_tokens'))
+    adb('shell','input','keyevent','KEYCODE_MOVE_END')
+    for _ in 'invalid_token': adb('shell','input','keyevent','KEYCODE_DEL')
+    fixture='pgnfw_emulator_fixture@0,pgnfw_second_fixture'
+    adb('shell','input','text',fixture)
+    adb('shell','input','keyevent','BACK')
+    assert wait_for(resource_id=PACKAGE + ':id/po0_automatic').get('checked') == 'false'
+    tap(wait_for(resource_id=PACKAGE + ':id/po0_save'))
+    time.sleep(2)
+    launch()
+    navigate('nav_po0')
+    field=wait_for(resource_id=PACKAGE + ':id/po0_tokens')
+    assert field.get('password') == 'true', 'Token must be masked'
+    assert fixture not in ET.tostring(tree(),encoding='unicode'), 'Token leaked in normal UI'
+    capture('17-po0-saved-masked')
+    tap(wait_for(content_desc='Show password'))
+    assert wait_for(resource_id=PACKAGE + ':id/po0_tokens').get('text') == fixture, 'Encrypted token failed to round trip after process restart'
+    # Clear fixtures before other checks and leave no configured machines behind.
+    tap(wait_for(resource_id=PACKAGE + ':id/po0_tokens'))
+    adb('shell','input','keyevent','KEYCODE_MOVE_END')
+    for _ in fixture: adb('shell','input','keyevent','KEYCODE_DEL')
+    adb('shell','input','keyevent','BACK')
+    tap(wait_for(resource_id=PACKAGE + ':id/po0_save'))
+    time.sleep(1)
+    launch()
+    navigate('nav_po0')
+    assert wait_for(resource_id=PACKAGE + ':id/po0_tokens').get('text') in ('', STRINGS['po0_tokens'])
+
+
+def launcher_icon():
+    adb('shell','input','keyevent','HOME')
+    time.sleep(1)
+    dimensions=adb('shell','wm','size')
+    width,height=map(int,re.findall(r'(\d+)x(\d+)',dimensions)[-1])
+    adb('shell','input','swipe',str(width//2),str(height-80),str(width//2),str(height//4),'500')
+    time.sleep(1)
+    wait_for(text='ArcaenBox')
+    (OUT/'18-launcher-icon.png').write_bytes(adb('exec-out','screencap','-p',binary=True))
+    (OUT/'18-launcher-icon.xml').write_text(ET.tostring(tree(),encoding='unicode'),encoding='utf-8')
+    RESULTS.append('18-launcher-icon')
 
 
 def destination(name, prefix):
@@ -250,14 +308,16 @@ try:
     adb('shell','logcat','-c')
     adb('shell','cmd','uimode','night','no')
     run_check('startup', startup)
-    for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about']:
+    for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about','nav_po0']:
         run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
     run_check('settings', settings)
     run_check('profile', profile)
     run_check('service', service)
     run_check('backup', backup)
+    run_check('whitelist', whitelist)
+    run_check('launcher', launcher_icon)
     adb('shell','cmd','uimode','night','yes')
-    for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about']:
+    for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about','nav_po0']:
         run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))
 
     adb('shell','cmd','uimode','night','no')

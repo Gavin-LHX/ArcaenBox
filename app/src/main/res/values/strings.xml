@@ -281,8 +281,8 @@
     <string name="no_proxies_found_in_file">No proxies found in the file</string>
     <string name="no_proxies_found_in_clipboard">No proxies found in the clipboard</string>
     <string name="deduplication">Deduplication</string>
-    <string name="donate">Donate</string>
-    <string name="donate_info">I love money</string>
+
+
     <string name="ignore_battery_optimizations">Ignore battery optimizations</string>
     <string name="ignore_battery_optimizations_sum">Remove some restrictions</string>
     <!-- plugin -->
@@ -530,7 +530,7 @@
     <string name="log_level">Log Level</string>
     <string name="enable_clash_api_summary">Provide clash api and yacd dashboard at 127.0.0.1:9090</string>
     <string name="xtls_flow">Flow (VLESS Sub-protocol)</string>
-    <string name="ads">Ads</string>
+
     <string name="bypass_lan_in_core">Bypass LAN in Core</string>
     <string name="need_restart">Restart APP to apply changes</string>
     <string name="use_selector">Use selector</string>
@@ -579,4 +579,37 @@
     <string name="minimize">Minimize</string>
     <string name="app_list_permission_denied">Unable to read installed apps.\nThis is usually because the system has restricted app read permissions.\nPlease grant permissions in the system settings.</string>
     <string name="open_app_settings">Open System Settings</string>
+
+    <string name="po0_title">Po0 firewall whitelist</string>
+    <string name="po0_intro">Keep this device connected to your Po0 servers when its public IP changes.</string>
+    <string name="po0_tokens">Machine tokens</string>
+    <string name="po0_token_help">Copy the pgnfw_ token from the firewall add script in the Po0 console. Separate machines with commas. Stored encrypted on this device; excluded from backups.</string>
+    <string name="po0_automatic">Automatic whitelisting</string>
+    <string name="po0_automatic_help">Update on network changes while ArcaenBox is running, with a background check about every 15 minutes. Android battery restrictions may delay background checks. Requests use the underlying network directly, including while the VPN is connected.</string>
+    <string name="po0_save">Save settings</string>
+    <string name="po0_add">Save and whitelist now</string>
+    <string name="po0_saved">Whitelist settings saved</string>
+    <string name="po0_result">Latest result</string>
+    <string name="po0_no_result">No request yet. Enter a token to get started.</string>
+    <string name="po0_queued">Waiting for a network and background execution…</string>
+    <string name="po0_last_check">Last check: %1$s</string>
+    <string name="po0_machine">Machine %1$d</string>
+    <string name="po0_exit">Current exit: %1$s</string>
+    <string name="po0_entries">Whitelist: %1$d / %2$d</string>
+    <string name="po0_slot">Slot %1$d</string>
+    <string name="po0_success">Whitelisting verified</string>
+    <string name="po0_disabled">Firewall is disabled in the Po0 console</string>
+    <string name="po0_not_applied">Current exit is absent from the returned whitelist</string>
+    <string name="po0_slot_mismatch">Current exit is not in the requested slot</string>
+    <string name="po0_forbidden">Access denied or slot conflict. Check the token and remove conflicting slots in the Po0 console.</string>
+    <string name="po0_http">Server rejected the request; check the token or try again later</string>
+    <string name="po0_tls">Secure connection failed; check device time and network</string>
+    <string name="po0_network">Connection failed or timed out; a temporary failure will be retried</string>
+    <string name="po0_no_network">No direct underlying network is available</string>
+    <string name="po0_invalid_response">The server response could not be verified</string>
+    <string name="po0_storage">Could not read or save the protected settings. Re-enter the tokens and save again.</string>
+    <string name="po0_invalid_tokens">Use pgnfw_ tokens, optionally followed by @0 through @4. Separate up to 20 machines with commas; do not assign conflicting slots to the same machine.</string>
+    <string name="po0_tokens_required">Enter at least one machine token</string>
+    <string name="po0_slot_help">Po0 whitelists IPv4 /24 networks, normally up to 5 entries. Full lists evict the oldest ordinary entry. An optional @0–@4 token suffix pins a slot and can replace its old network; use a dedicated slot and remove any conflicting old slot in the console first. Mobile devices normally do not need a fixed slot. Clear tokens, turn off automatic updates and save to remove this setup.</string>
+    <string name="po0_guide">Token setup and tutorial</string>
 </resources>

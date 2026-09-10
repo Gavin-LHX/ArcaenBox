@@ -225,8 +225,8 @@
     <string name="file_manager_missing">您的设备缺少 Android 标准文件选择器, 请安装一个, 如 Material Files.</string>
     <string name="need_reload">重载代理服务以应用修改</string>
     <string name="theme">主题颜色</string>
-    <string name="donate">捐款</string>
-    <string name="donate_info">猫猫很可爱 请给猫猫钱</string>
+
+
     <string name="extra_headers">附加标头</string>
     <string name="username">用户名</string>
     <string name="key_opt">密码 (可选)</string>
@@ -456,7 +456,7 @@
     <string name="enable_clash_api_summary">在 127.0.0.1:9090 提供 clash api 和 yacd 仪表板</string>
     <string name="xtls_flow">Flow（VLESS 子协议）</string>
     <string name="log_level">日志级别</string>
-    <string name="ads">推广</string>
+
     <string name="need_restart">重新启动应用程序以应用更改</string>
     <string name="use_selector">启用 selector （免重载切换节点）</string>
     <string name="front_proxy">前置代理</string>
@@ -499,4 +499,37 @@
     <string name="minimize">最小化</string>
     <string name="app_list_permission_denied">无法读取已安装的应用。\n这通常是由于系统限制了应用的读取权限（例如某些中国厂商系统）。\n请在系统设置中授予权限。</string>
     <string name="open_app_settings">打开系统设置</string>
+
+    <string name="po0_title">Po0 防火墙白名单</string>
+    <string name="po0_intro">公网 IP 变化后，自动将本机出口加入 Po0 服务器的防火墙白名单。</string>
+    <string name="po0_tokens">机器 Token</string>
+    <string name="po0_token_help">从 Po0 控制台的防火墙「复制添加脚本」中取出 pgnfw_ 开头的 Token，多台机器用逗号分隔。仅在本机加密保存，不随备份导出。</string>
+    <string name="po0_automatic">自动加白</string>
+    <string name="po0_automatic_help">ArcaenBox 运行时切换网络立即更新，并约每 15 分钟后台补查。系统省电限制可能延迟后台任务。VPN 连接时也通过手机实际网络直连加白。</string>
+    <string name="po0_save">保存设置</string>
+    <string name="po0_add">保存并立即加白</string>
+    <string name="po0_saved">白名单设置已保存</string>
+    <string name="po0_result">最近结果</string>
+    <string name="po0_no_result">尚无请求记录。填写 Token 后即可使用。</string>
+    <string name="po0_queued">正在等待网络及后台任务执行…</string>
+    <string name="po0_last_check">最近检查：%1$s</string>
+    <string name="po0_machine">机器 %1$d</string>
+    <string name="po0_exit">当前出口：%1$s</string>
+    <string name="po0_entries">白名单：%1$d / %2$d</string>
+    <string name="po0_slot">槽位 %1$d</string>
+    <string name="po0_success">加白已确认生效</string>
+    <string name="po0_disabled">Po0 控制台尚未启用防火墙</string>
+    <string name="po0_not_applied">返回的白名单中没有当前出口，加白未生效</string>
+    <string name="po0_slot_mismatch">当前出口未写入指定槽位</string>
+    <string name="po0_forbidden">访问被拒绝或槽位冲突。请检查 Token，并在 Po0 控制台删除冲突的旧槽位。</string>
+    <string name="po0_http">服务器拒绝请求，请检查 Token 或稍后重试</string>
+    <string name="po0_tls">安全连接失败，请检查设备时间和网络</string>
+    <string name="po0_network">连接失败或超时，临时故障将自动重试</string>
+    <string name="po0_no_network">没有可直连的实际网络</string>
+    <string name="po0_invalid_response">无法验证服务器返回的结果</string>
+    <string name="po0_storage">无法读取或保存受保护的设置，请重新填写 Token 并保存。</string>
+    <string name="po0_invalid_tokens">请填写 pgnfw_ 开头的 Token，可选后缀 @0 至 @4。最多 20 台机器，用逗号分隔；同一机器不能指定多个不同槽位。</string>
+    <string name="po0_tokens_required">请至少填写一个机器 Token</string>
+    <string name="po0_slot_help">Po0 按 IPv4 /24 网段加白，通常最多 5 条；满额后淘汰最旧的普通记录。Token 后可加 @0–@4 固定槽位，会替换该槽位的旧网段；请使用独立槽位，并先在控制台删除冲突的旧槽位。手机通常无需固定槽位。清空 Token、关闭自动加白并保存即可移除配置。</string>
+    <string name="po0_guide">Token 获取与使用教程</string>
 </resources>
