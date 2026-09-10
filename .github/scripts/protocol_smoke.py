@@ -230,6 +230,11 @@ def main():
     try:
         setup_servers()
         ui.adb('root'); ui.adb('wait-for-device')
+        # A fresh emulator may still show its boot lock screen. Keep this isolated
+        # test device awake while exercising long-running protocol transfers.
+        ui.adb('shell','svc','power','stayon','true')
+        ui.adb('shell','input','keyevent','KEYCODE_WAKEUP')
+        ui.adb('shell','wm','dismiss-keyguard')
         ui.adb('install','-r','-g',str(BIN/'previous.apk'))
         ui.adb('shell','logcat','-c')
         ui.adb('shell','cmd','uimode','night','no')
@@ -274,7 +279,10 @@ def main():
     finally:
         (OUT/'results.json').write_text(json.dumps(RESULTS,indent=2))
         (OUT/'logcat.txt').write_text(ui.adb('shell','logcat','-d',check=False))
-        try: ui.capture('last-screen')
+        try:
+            (OUT/'last-screen.png').write_bytes(ui.adb('exec-out','screencap','-p',binary=True,check=False))
+            (OUT/'last-screen.xml').write_text(ET.tostring(ui.tree(),encoding='unicode'))
+            (OUT/'activities.txt').write_text(ui.adb('shell','dumpsys','activity','activities',check=False))
         except Exception: pass
         for process,log in PROCESSES:
             process.terminate()
