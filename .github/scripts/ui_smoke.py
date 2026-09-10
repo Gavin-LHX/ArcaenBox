@@ -3,6 +3,7 @@ import json
 import re
 import subprocess
 import time
+import traceback
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -13,6 +14,7 @@ STRINGS = {e.get('name'): ''.join(e.itertext()) for e in ET.parse('app/src/main/
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 MENU = {e.get(ANDROID + 'id').split('/')[-1]: STRINGS[e.get(ANDROID + 'title').split('/')[-1]] for e in ET.parse('app/src/main/res/menu/main_drawer_menu.xml').iter('item')}
 RESULTS = []
+FAILURES = []
 
 
 def adb(*args, binary=False, check=True):
@@ -111,20 +113,23 @@ def auto_connect_switch():
     raise AssertionError('MD3 switch missing from preference row')
 
 
-try:
-    apk=next(Path('dist').glob('*x86_64*.apk'))
-    adb('install','-r','-g',str(apk))
-    adb('shell','logcat','-c')
-    adb('shell','cmd','uimode','night','no')
+def startup():
     launch()
     capture('01-light-main')
     open_drawer()
     capture('02-light-drawer')
     adb('shell','input','keyevent','BACK')
-    for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about']:
-        navigate(name)
-        capture('03-light-' + name)
+    wait_for(resource_id=PACKAGE + ':id/toolbar')
 
+
+def destination(name, prefix):
+    launch()
+    navigate(name)
+    capture(prefix + name)
+
+
+def settings():
+    launch()
     navigate('nav_settings')
     switch=auto_connect_switch()
     original=switch.get('checked')
@@ -141,6 +146,9 @@ try:
     capture('04-light-single-choice-dialog')
     adb('shell','input','keyevent','BACK')
 
+
+def profile():
+    launch()
     # A local-only profile exercises the editor without starting a VPN or using an external server.
     adb('shell','am','start','-W','-a','android.intent.action.VIEW','-d','socks://127.0.0.1:1080','-p',PACKAGE)
     wait_for(text=STRINGS['profile_import'])
@@ -158,8 +166,10 @@ try:
     adb('shell','input','keyevent','BACK')
     adb('shell','input','keyevent','BACK')
     adb('shell','input','keyevent','BACK')
-    launch()
 
+
+def service():
+    launch()
     # Exercise the themed FAB animation and VPN consent; no real proxy is used.
     tap(wait_for(resource_id=PACKAGE + ':id/fab'))
     consent=find(tree(),resource_id='android:id/button1')
@@ -171,22 +181,16 @@ try:
     tap(wait_for(resource_id=PACKAGE + ':id/fab'))
     wait_for(content_desc=STRINGS['connect'])
 
+
+def backup():
+    launch()
     navigate('nav_tools')
     tap(wait_for(text=STRINGS['backup']))
     wait_for(resource_id=PACKAGE + ':id/action_export')
     capture('07-light-backup')
 
-    adb('shell','cmd','uimode','night','yes')
-    launch()
-    capture('08-dark-main')
-    for name in ['nav_group','nav_settings','nav_tools','nav_about']:
-        navigate(name)
-        capture('09-dark-' + name)
 
-    adb('shell','cmd','uimode','night','no')
-    adb('shell','wm','size','720x1280')
-    adb('shell','wm','density','320')
-    adb('shell','settings','put','system','font_scale','1.3')
+def compact():
     launch()
     capture('10-compact-main-large-text')
     navigate('nav_settings')
@@ -194,15 +198,60 @@ try:
     open_drawer()
     capture('12-compact-drawer-large-text')
     adb('shell','input','keyevent','BACK')
-    adb('shell','wm','size','1280x720')
-    adb('shell','wm','density','240')
+
+
+def landscape():
     launch()
     capture('13-landscape-main')
     navigate('nav_tools')
     capture('14-landscape-tools')
+
+
+def run_check(name, check):
+    try:
+        check()
+        print('PASS:', name, flush=True)
+    except Exception as error:
+        FAILURES.append({'check': name, 'error': str(error)})
+        traceback.print_exc()
+        (OUT / ('failure-' + name + '.png')).write_bytes(adb('exec-out', 'screencap', '-p', binary=True, check=False))
+        try:
+            (OUT / ('failure-' + name + '.xml')).write_text(ET.tostring(tree(), encoding='unicode'), encoding='utf-8')
+        except Exception:
+            pass
+    finally:
+        adb('shell','am','force-stop',PACKAGE)
+
+
+try:
+    apk=next(Path('dist').glob('*x86_64*.apk'))
+    adb('install','-r','-g',str(apk))
+    adb('shell','logcat','-c')
+    adb('shell','cmd','uimode','night','no')
+    run_check('startup', startup)
+    for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about']:
+        run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
+    run_check('settings', settings)
+    run_check('profile', profile)
+    run_check('service', service)
+    run_check('backup', backup)
+    adb('shell','cmd','uimode','night','yes')
+    for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about']:
+        run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))
+
+    adb('shell','cmd','uimode','night','no')
+    adb('shell','wm','size','720x1280')
+    adb('shell','wm','density','320')
+    adb('shell','settings','put','system','font_scale','1.3')
+    run_check('compact', compact)
+    adb('shell','wm','size','1280x720')
+    adb('shell','wm','density','240')
+    run_check('landscape', landscape)
+    assert not FAILURES, FAILURES
     print('UI SMOKE PASSED:', ', '.join(RESULTS))
 finally:
     (OUT/'results.json').write_text(json.dumps(RESULTS,indent=2),encoding='utf-8')
+    (OUT/'failures.json').write_text(json.dumps(FAILURES,indent=2),encoding='utf-8')
     (OUT/'logcat.txt').write_text(adb('shell','logcat','-d',check=False),encoding='utf-8')
     try:
         (OUT/'last-screen.png').write_bytes(adb('exec-out','screencap','-p',binary=True,check=False))
