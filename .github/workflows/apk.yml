@@ -5,7 +5,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.4.2-arcaenbox.1
+        default: v1.4.2-arcaenbox.2
 permissions:
   contents: write
 jobs:
@@ -53,7 +53,7 @@ jobs:
           test -n "$SIGNING_KEYSTORE"
           printf '%s' "$SIGNING_KEYSTORE" | base64 --decode > release.keystore
           ./gradlew --no-daemon app:assembleOssRelease
-      - name: Verify APK signatures and application name
+      - name: Verify APK signatures, application name and package
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -61,6 +61,16 @@ jobs:
             "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose "$apk"
             "$ANDROID_HOME/build-tools/35.0.1/aapt" dump badging "$apk" | tee /tmp/apk-badging.txt
             grep -q "application-label:'ArcaenBox'" /tmp/apk-badging.txt
+            grep -q "package: name='com.arcaenbox.android'" /tmp/apk-badging.txt
+            "$ANDROID_HOME/build-tools/35.0.1/aapt" dump xmltree "$apk" AndroidManifest.xml > /tmp/apk-manifest.txt
+            "$ANDROID_HOME/build-tools/35.0.1/aapt" dump xmltree "$apk" res/xml/shortcuts.xml > /tmp/apk-shortcuts.txt
+            grep -q 'com.arcaenbox.android.SERVICE' /tmp/apk-manifest.txt
+            grep -q 'com.arcaenbox.android.cache' /tmp/apk-manifest.txt
+            test "$(grep -c 'targetPackage.*com.arcaenbox.android' /tmp/apk-shortcuts.txt)" -eq 4
+            if grep -F 'moe.nb4a' /tmp/apk-manifest.txt /tmp/apk-shortcuts.txt; then
+              echo 'Old application ID remains in compiled resources'
+              exit 1
+            fi
             cp "$apk" dist/
           done
           cd dist
@@ -76,5 +86,5 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          printf '%s\n' 'ArcaenBox for Android. Default primary color: #DCEEF1.' 'Signed release APKs for arm64-v8a, armeabi-v7a, x86, and x86_64.' 'This build uses a dedicated ArcaenBox signing key.' > /tmp/release-notes.md
+          printf '%s\n' 'ArcaenBox for Android. Default primary color: #DCEEF1.' 'Package: com.arcaenbox.android. Can be installed alongside the old moe.nb4a application; export and import configuration to migrate.' 'Signed release APKs for arm64-v8a, armeabi-v7a, x86, and x86_64.' 'This build uses the existing dedicated ArcaenBox signing key.' > /tmp/release-notes.md
           gh release create "$RELEASE_TAG" dist/* --target "$GITHUB_SHA" --title "ArcaenBox $RELEASE_TAG" --notes-file /tmp/release-notes.md
