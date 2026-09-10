@@ -11,6 +11,7 @@ import io.nekohasekai.sagernet.fmt.http.HttpBean
 import io.nekohasekai.sagernet.fmt.http.toUri
 import io.nekohasekai.sagernet.fmt.hysteria.*
 import io.nekohasekai.sagernet.fmt.internal.ChainBean
+import io.nekohasekai.sagernet.fmt.snell.*
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
@@ -61,6 +62,7 @@ data class ProxyEntity(
     var trojanBean: TrojanBean? = null,
     var trojanGoBean: TrojanGoBean? = null,
     var mieruBean: MieruBean? = null,
+    var snellBean: SnellBean? = null,
     var naiveBean: NaiveBean? = null,
     var hysteriaBean: HysteriaBean? = null,
     var tuicBean: TuicBean? = null,
@@ -90,6 +92,7 @@ data class ProxyEntity(
         const val TYPE_TUIC = 20
         const val TYPE_MIERU = 21
         const val TYPE_ANYTLS = 22
+        const val TYPE_SNELL = 23
 
         const val TYPE_CONFIG = 998
         const val TYPE_NEKO = 999
@@ -166,6 +169,7 @@ data class ProxyEntity(
             TYPE_VMESS -> vmessBean = KryoConverters.vmessDeserialize(byteArray)
             TYPE_TROJAN -> trojanBean = KryoConverters.trojanDeserialize(byteArray)
             TYPE_TROJAN_GO -> trojanGoBean = KryoConverters.trojanGoDeserialize(byteArray)
+            TYPE_SNELL -> snellBean = KryoConverters.snellDeserialize(byteArray)
             TYPE_MIERU -> mieruBean = KryoConverters.mieruDeserialize(byteArray)
             TYPE_NAIVE -> naiveBean = KryoConverters.naiveDeserialize(byteArray)
             TYPE_HYSTERIA -> hysteriaBean = KryoConverters.hysteriaDeserialize(byteArray)
@@ -187,6 +191,7 @@ data class ProxyEntity(
         TYPE_VMESS -> if (vmessBean!!.isVLESS) "VLESS" else "VMess"
         TYPE_TROJAN -> "Trojan"
         TYPE_TROJAN_GO -> "Trojan-Go"
+        TYPE_SNELL -> "Snell v${snellBean!!.version}"
         TYPE_MIERU -> "Mieru"
         TYPE_NAIVE -> "Naïve"
         TYPE_HYSTERIA -> "Hysteria" + hysteriaBean!!.protocolVersion
@@ -212,6 +217,7 @@ data class ProxyEntity(
             TYPE_VMESS -> vmessBean
             TYPE_TROJAN -> trojanBean
             TYPE_TROJAN_GO -> trojanGoBean
+            TYPE_SNELL -> snellBean
             TYPE_MIERU -> mieruBean
             TYPE_NAIVE -> naiveBean
             TYPE_HYSTERIA -> hysteriaBean
@@ -253,6 +259,7 @@ data class ProxyEntity(
             is VMessBean -> toUriVMessVLESSTrojan(false)
             is TrojanBean -> toUriVMessVLESSTrojan(true)
             is TrojanGoBean -> toUri()
+            is SnellBean -> toUri()
             is NaiveBean -> toUri()
             is HysteriaBean -> toUri()
             is TuicBean -> toUri()
@@ -282,6 +289,11 @@ data class ProxyEntity(
                                 append(bean.buildTrojanGoConfig(port))
                             }
 
+                            is SnellBean -> {
+                                append("\n\n")
+                                append(bean.buildSnellConfig(port))
+                            }
+
                             is MieruBean -> {
                                 append("\n\n")
                                 append(bean.buildMieruConfig(port))
@@ -306,6 +318,7 @@ data class ProxyEntity(
     fun needExternal(): Boolean {
         return when (type) {
             TYPE_TROJAN_GO -> true
+            TYPE_SNELL -> true
             TYPE_MIERU -> true
             TYPE_NAIVE -> true
             TYPE_HYSTERIA -> !hysteriaBean!!.canUseSingBox()
@@ -350,6 +363,7 @@ data class ProxyEntity(
         trojanBean = null
         trojanGoBean = null
         mieruBean = null
+        snellBean = null
         naiveBean = null
         hysteriaBean = null
         sshBean = null
@@ -390,6 +404,11 @@ data class ProxyEntity(
             is TrojanGoBean -> {
                 type = TYPE_TROJAN_GO
                 trojanGoBean = bean
+            }
+
+            is SnellBean -> {
+                type = TYPE_SNELL
+                snellBean = bean
             }
 
             is MieruBean -> {
@@ -461,6 +480,7 @@ data class ProxyEntity(
                 TYPE_VMESS -> VMessSettingsActivity::class.java
                 TYPE_TROJAN -> TrojanSettingsActivity::class.java
                 TYPE_TROJAN_GO -> TrojanGoSettingsActivity::class.java
+                TYPE_SNELL -> SnellSettingsActivity::class.java
                 TYPE_MIERU -> MieruSettingsActivity::class.java
                 TYPE_NAIVE -> NaiveSettingsActivity::class.java
                 TYPE_HYSTERIA -> HysteriaSettingsActivity::class.java

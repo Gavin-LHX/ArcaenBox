@@ -10,6 +10,8 @@ import io.nekohasekai.sagernet.fmt.ConfigBuildResult
 import io.nekohasekai.sagernet.fmt.buildConfig
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
 import io.nekohasekai.sagernet.fmt.hysteria.buildHysteria1Config
+import io.nekohasekai.sagernet.fmt.snell.SnellBean
+import io.nekohasekai.sagernet.fmt.snell.buildSnellConfig
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
@@ -60,6 +62,11 @@ abstract class BoxInstance(
                     is TrojanGoBean -> {
                         initPlugin("trojan-go-plugin")
                         pluginConfigs[port] = profile.type to bean.buildTrojanGoConfig(port)
+                    }
+
+                    is SnellBean -> {
+                        initPlugin("snell-builtin")
+                        pluginConfigs[port] = profile.type to bean.buildSnellConfig(port)
                     }
 
                     is MieruBean -> {
@@ -120,6 +127,17 @@ abstract class BoxInstance(
                         processes.start(commands)
                     }
 
+                    bean is SnellBean -> {
+                        val configFile = File.createTempFile("snell_", ".json", cacheDir)
+                        configFile.writeText(config)
+                        cacheFiles.add(configFile)
+                        val workingDir = File(app.noBackupFilesDir, "snell").apply { mkdirs() }
+                        processes.start(mutableListOf(
+                            initPlugin("snell-builtin").path, "-d", workingDir.absolutePath,
+                            "-f", configFile.absolutePath
+                        ))
+                    }
+
                     bean is MieruBean -> {
                         val configFile = File(
                             cacheDir, "mieru_" + SystemClock.elapsedRealtime() + ".json"
@@ -131,7 +149,8 @@ abstract class BoxInstance(
 
                         val envMap = mutableMapOf<String, String>()
                         envMap["MIERU_CONFIG_JSON_FILE"] = configFile.absolutePath
-                        envMap["MIERU_PROTECT_PATH"] = "protect_path"
+                        // Server sockets go through the sing-box loopback mapping.
+                        // No external protect-socket plugin is required.
 
                         val commands = mutableListOf(
                             initPlugin("mieru-plugin").path, "run",

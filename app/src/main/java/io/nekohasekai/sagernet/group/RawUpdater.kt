@@ -3,6 +3,7 @@ package io.nekohasekai.sagernet.group
 import android.annotation.SuppressLint
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.*
+import io.nekohasekai.sagernet.fmt.snell.parseSnellClash
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.http.HttpBean
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
@@ -246,6 +247,7 @@ object RawUpdater : GroupUpdater() {
                     // Note: YAML numbers parsed as "Long"
 
                     when (proxy["type"] as String) {
+                        "snell" -> proxies.add(parseSnellClash(proxy))
                         "socks5" -> {
                             proxies.add(SOCKSBean().apply {
                                 serverAddress = proxy["server"] as String

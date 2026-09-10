@@ -5,7 +5,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.4.2-arcaenbox.6
+        default: v1.5.0-arcaenbox.1
       stable_core_run:
         description: Native Cores run containing the verified stable AAR
         required: true
@@ -61,6 +61,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Prepare assets
         run: ./run init action gradle
+      - name: Package built-in protocol components
+        run: |
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/25.0.8775105"
+          python3 .github/scripts/package_builtins.py
       - name: Build signed release APKs
         env:
           SIGNING_KEYSTORE: ${{ secrets.ARCAENBOX_KEYSTORE }}
@@ -97,6 +101,7 @@ jobs:
               exit 1
             fi
             python3 .github/scripts/verify_icon.py "$apk"
+            python3 .github/scripts/package_builtins.py --verify-apk "$apk"
             cp "$apk" dist/
           done
           cd dist
@@ -140,6 +145,7 @@ jobs:
           path: |
             app/build/outputs/apk/oss/release/*.apk
             app/build/test-results/
+            app/schemas/
           if-no-files-found: warn
       - name: Publish APKs
         if: inputs.publish

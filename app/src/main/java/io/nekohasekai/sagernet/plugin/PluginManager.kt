@@ -9,6 +9,7 @@ import io.nekohasekai.sagernet.ktx.Logs
 import moe.matsuri.nb4a.plugin.Plugins
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
 
 object PluginManager {
 
@@ -26,6 +27,13 @@ object PluginManager {
     @Throws(Throwable::class)
     fun init(pluginId: String): InitResult? {
         if (pluginId.isEmpty()) return null
+        // These protocols are part of the APK. An installed plugin must never override them.
+        if (pluginId in setOf("trojan-go-plugin", "naive-plugin", "mieru-plugin", "snell-builtin")) {
+            val path = initNativeInternal(pluginId) ?: throw IOException(
+                SagerNet.application.getString(R.string.builtin_component_missing, pluginId)
+            )
+            return InitResult(path, ProviderInfo().apply { authority = Plugins.AUTHORITIES_PREFIX_NEKO_EXE })
+        }
         var throwable: Throwable? = null
 
         try {
@@ -71,6 +79,10 @@ object PluginManager {
             return null
         }
         return when (pluginId) {
+            "trojan-go-plugin" -> soIfExist("libtrojan-go.so")
+            "naive-plugin" -> soIfExist("libnaive.so")
+            "mieru-plugin" -> soIfExist("libmieru.so")
+            "snell-builtin" -> soIfExist("libmihomo.so")
             "hysteria-plugin" -> soIfExist("libhysteria.so")
             "hysteria2-plugin" -> soIfExist("libhysteria2.so")
             else -> null

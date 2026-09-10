@@ -1,0 +1,89 @@
+{
+  "components": [
+    {
+      "name": "NaiveProxy",
+      "version": "v150.0.7871.63-1",
+      "library": "libnaive.so",
+      "source": "https://github.com/klzgrad/naiveproxy/releases/tag/v150.0.7871.63-1",
+      "license": "BSD-3-Clause and Chromium third-party licenses",
+      "assets": {
+        "arm64-v8a": {
+          "url": "https://github.com/klzgrad/naiveproxy/releases/download/v150.0.7871.63-1/naiveproxy-plugin-v150.0.7871.63-1-arm64-v8a.apk",
+          "sha256": "733fbbbebb383a91f42036992c21cfd19b99e089ac3d15d7c077df79fc471a89"
+        },
+        "armeabi-v7a": {
+          "url": "https://github.com/klzgrad/naiveproxy/releases/download/v150.0.7871.63-1/naiveproxy-plugin-v150.0.7871.63-1-armeabi-v7a.apk",
+          "sha256": "d52b01d0a55cd0807fe196e72abd5aa4859a783798b1bc1b3cf1bfa9ad8f7ae4"
+        },
+        "x86": {
+          "url": "https://github.com/klzgrad/naiveproxy/releases/download/v150.0.7871.63-1/naiveproxy-plugin-v150.0.7871.63-1-x86.apk",
+          "sha256": "101d8e52c7473005b8ad072b7d446db624c76ba77ccce116564fadcc2cd4e0d7"
+        },
+        "x86_64": {
+          "url": "https://github.com/klzgrad/naiveproxy/releases/download/v150.0.7871.63-1/naiveproxy-plugin-v150.0.7871.63-1-x86_64.apk",
+          "sha256": "a6800d30bb70798d7b9ad3d0218469c58776c250b462926a7cc2e7795d915f78"
+        }
+      }
+    },
+    {
+      "name": "Snell (mihomo)",
+      "version": "v1.19.30",
+      "library": "libmihomo.so",
+      "source": "https://github.com/MetaCubeX/mihomo/releases/tag/v1.19.30",
+      "license": "GPL-3.0",
+      "assets": {
+        "arm64-v8a": {
+          "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.30/mihomo-android-arm64-v8-v1.19.30.gz",
+          "sha256": "19afeb40fca190fc2e3906a4e3b87c74a0c2120626fd3cb3ae0cf4092cb780ad"
+        },
+        "armeabi-v7a": {
+          "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.30/mihomo-android-armv7-v1.19.30.gz",
+          "sha256": "cfdd1fee92408da09666aa3845fbf73727359b72b6eb4bf69785a21bddb28ec1"
+        },
+        "x86": {
+          "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.30/mihomo-android-386-v1.19.30.gz",
+          "sha256": "4fc9a2fa45f93d4bb1ae055157c67ba401890a80f23d60fa2d2b542b774fdfca"
+        },
+        "x86_64": {
+          "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.30/mihomo-android-amd64-v1.19.30.gz",
+          "sha256": "33aa898cb17b442531abbb9f7567e0e4a8e0542ee2f72f042b1a805f0b6ab1fe"
+        }
+      }
+    },
+    {
+      "name": "Trojan-Go",
+      "version": "0.10.6",
+      "library": "libtrojan-go.so",
+      "source": "https://github.com/SagerNet/trojan-go",
+      "license": "GPL-3.0",
+      "assets": {
+        "arm64-v8a": {
+          "url": "https://github.com/SagerNet/SagerNet/releases/download/trojan-go-plugin-0.10.6/trojan-go-plugin-0.10.6-arm64-v8a.apk",
+          "sha256": "6b9b639f9d47a2633fffde1cd646f564a77d98aa59e52bcaf4f7d6eb0afc06c4"
+        },
+        "armeabi-v7a": {
+          "url": "https://github.com/SagerNet/SagerNet/releases/download/trojan-go-plugin-0.10.6/trojan-go-plugin-0.10.6-armeabi-v7a.apk",
+          "sha256": "9c220e0f05d4a4f6f135fce2f81c90e2f754c0ee063ef1580d5552dabcafdd29"
+        },
+        "x86": {
+          "url": "https://github.com/SagerNet/SagerNet/releases/download/trojan-go-plugin-0.10.6/trojan-go-plugin-0.10.6-x86.apk",
+          "sha256": "8a2066fa37139b1cbc48fad15464b05e14100d3cbb29b28ce3c53bfc1232669b"
+        },
+        "x86_64": {
+          "url": "https://github.com/SagerNet/SagerNet/releases/download/trojan-go-plugin-0.10.6/trojan-go-plugin-0.10.6-x86_64.apk",
+          "sha256": "98c250d498e8ec3db12132eb6ae238b5daaae8e1242b86adbfeeee1e507dba1b"
+        }
+      }
+    }
+  ],
+  "mieru": {
+    "name": "Mieru",
+    "version": "3.36.1",
+    "library": "libmieru.so",
+    "source": "https://github.com/enfein/mieru/tree/316cc6606c287d45a321b99ac86a1f2e7f2b785a",
+    "license": "GPL-3.0",
+    "commit": "316cc6606c287d45a321b99ac86a1f2e7f2b785a",
+    "url": "https://github.com/enfein/mieru/archive/316cc6606c287d45a321b99ac86a1f2e7f2b785a.tar.gz",
+    "sha256": "5b64fbd839b45e1adf1116d8b1c24e56c89e33a4dea12138e2e0c01670750b2c"
+  }
+}

@@ -80,6 +80,7 @@ import io.nekohasekai.sagernet.plugin.PluginManager
 import io.nekohasekai.sagernet.ui.profile.ChainSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.HttpSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.HysteriaSettingsActivity
+import io.nekohasekai.sagernet.ui.profile.SnellSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.MieruSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.NaiveSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.SSHSettingsActivity
@@ -403,6 +404,10 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             R.id.action_new_trojan_go -> {
                 startActivity(Intent(requireActivity(), TrojanGoSettingsActivity::class.java))
+            }
+
+            R.id.action_new_snell -> {
+                startActivity(Intent(requireActivity(), SnellSettingsActivity::class.java))
             }
 
             R.id.action_new_mieru -> {

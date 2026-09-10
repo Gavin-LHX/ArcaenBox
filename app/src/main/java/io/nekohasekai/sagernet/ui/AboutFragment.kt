@@ -112,6 +112,20 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                             .text(R.string.core_manager)
                             .setOnClickAction { (requireActivity() as MainActivity).displayFragment(CoreUpdatesFragment()) }
                             .build())
+                        .addItem(MaterialAboutActionItem.Builder()
+                            .text(R.string.builtin_protocols)
+                            .subText(R.string.builtin_protocols_summary)
+                            .setOnClickAction {
+                                val manifest = org.json.JSONObject(requireContext().assets.open("builtins/manifest.json").bufferedReader().use { it.readText() })
+                                val components = manifest.getJSONArray("components")
+                                val versions = (0 until components.length()).joinToString("\n") { index ->
+                                    components.getJSONObject(index).let { "${it.getString("name")}: ${it.getString("version")}" }
+                                }
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setTitle(R.string.builtin_protocols)
+                                    .setMessage(versions + "\n\n" + getString(R.string.snell_version_help))
+                                    .setPositiveButton(android.R.string.ok, null).show()
+                            }.build())
 
                         .apply {
                             PackageCache.awaitLoadSync()
@@ -120,6 +134,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                     val pluginId =
                                         pkg.providers?.get(0)?.loadString(Plugins.METADATA_KEY_ID)
                                     if (pluginId.isNullOrBlank()) continue
+                                    if (pluginId in setOf("trojan-go-plugin", "naive-plugin", "mieru-plugin")) continue
                                     addItem(
                                         MaterialAboutActionItem.Builder()
                                             .icon(R.drawable.ic_baseline_nfc_24)

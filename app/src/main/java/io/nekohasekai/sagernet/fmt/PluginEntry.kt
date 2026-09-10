@@ -9,31 +9,6 @@ enum class PluginEntry(
     val packageName: String, // for play and f-droid page
     val downloadSource: DownloadSource = DownloadSource()
 ) {
-    TrojanGo(
-        "trojan-go-plugin",
-        SagerNet.application.getString(R.string.action_trojan_go),
-        "io.nekohasekai.sagernet.plugin.trojan_go"
-    ),
-    MieruProxy(
-        "mieru-plugin",
-        SagerNet.application.getString(R.string.action_mieru),
-        "moe.matsuri.exe.mieru",
-        DownloadSource(
-            playStore = false,
-            fdroid = false,
-            downloadLink = "https://github.com/MatsuriDayo/plugins/releases?q=mieru"
-        )
-    ),
-    NaiveProxy(
-        "naive-plugin",
-        SagerNet.application.getString(R.string.action_naive),
-        "moe.matsuri.exe.naive",
-        DownloadSource(
-            playStore = false,
-            fdroid = false,
-            downloadLink = "https://github.com/MatsuriDayo/plugins/releases?q=naive"
-        )
-    ),
     Hysteria(
         "hysteria-plugin",
         SagerNet.application.getString(R.string.action_hysteria),

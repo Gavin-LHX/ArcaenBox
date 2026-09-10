@@ -27,3 +27,4 @@ __pycache__/
 /libcore/*-sources.jar
 /core-build/
 /app/src/main/assets/cores/bundled.json
+/app/src/main/assets/builtins/manifest.json
