@@ -38,6 +38,7 @@ abstract class BoxInstance(
     val externalInstances = hashMapOf<Int, AbstractInstance>()
     open lateinit var processes: GuardedProcessPool
     private var cacheFiles = ArrayList<File>()
+    private val componentDirectories = ArrayList<File>()
     fun isInitialized(): Boolean {
         return ::config.isInitialized && ::box.isInitialized
     }
@@ -131,7 +132,12 @@ abstract class BoxInstance(
                         val configFile = File.createTempFile("snell_", ".json", cacheDir)
                         configFile.writeText(config)
                         cacheFiles.add(configFile)
-                        val workingDir = File(app.noBackupFilesDir, "snell").apply { mkdirs() }
+                        // Separate homes prevent cache/database locks when a selector or route
+                        // starts several Snell nodes at once.
+                        val workingDir = File.createTempFile("snell_home_", "", cacheDir).apply {
+                            check(delete() && mkdir())
+                            componentDirectories.add(this)
+                        }
                         processes.start(mutableListOf(
                             initPlugin("snell-builtin").path, "-d", workingDir.absolutePath,
                             "-f", configFile.absolutePath
@@ -229,9 +235,14 @@ abstract class BoxInstance(
             }
         }
 
-        cacheFiles.removeAll { it.delete(); true }
-
-        if (::processes.isInitialized) processes.close(GlobalScope + Dispatchers.IO)
+        val files = cacheFiles.toList().also { cacheFiles.clear() }
+        val directories = componentDirectories.toList().also { componentDirectories.clear() }
+        val cleanup = {
+            files.forEach { it.delete() }
+            directories.forEach { it.deleteRecursively() }
+        }
+        // Keep configs and certificates available until the guarded children have exited.
+        if (::processes.isInitialized) processes.close(GlobalScope + Dispatchers.IO, cleanup) else cleanup()
 
         if (::box.isInitialized) {
             box.close()

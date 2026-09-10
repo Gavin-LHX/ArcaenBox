@@ -10,6 +10,7 @@ import moe.matsuri.nb4a.plugin.Plugins
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import android.os.Build
 
 object PluginManager {
 
@@ -29,6 +30,9 @@ object PluginManager {
         if (pluginId.isEmpty()) return null
         // These protocols are part of the APK. An installed plugin must never override them.
         if (pluginId in setOf("trojan-go-plugin", "naive-plugin", "mieru-plugin", "snell-builtin")) {
+            if (pluginId == "naive-plugin" && Build.VERSION.SDK_INT < 24) {
+                throw IOException(SagerNet.application.getString(R.string.builtin_naive_android_version))
+            }
             val path = initNativeInternal(pluginId) ?: throw IOException(
                 SagerNet.application.getString(R.string.builtin_component_missing, pluginId)
             )

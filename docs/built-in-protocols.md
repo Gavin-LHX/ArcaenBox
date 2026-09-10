@@ -2,6 +2,8 @@
 
 从 `1.5.0-arcaenbox.1` 起，Trojan-Go、NaïveProxy、Mieru 和 Snell 随四种架构的 APK 一起安装。原有 Trojan-Go、NaïveProxy 和 Mieru 节点直接使用内置客户端；已安装的同名插件不会覆盖它们。
 
+当前 NaïveProxy 官方二进制最低要求 Android 7.0（API 24）。应用在较旧系统上仍可使用其他协议；选择 NaïveProxy 时会显示版本要求。
+
 添加节点 → 手动输入 → Snell，可选择服务端 v4 或 v5，设置 PSK、UDP 转发、连接复用及可选的 HTTP/TLS 混淆。版本选择保存在节点、备份和分享链接中。支持 `snell://PSK@host:port?version=4`、`version=5` 及 Clash YAML 节点导入。不支持的版本和混淆参数会报错。
 
 Snell 使用 mihomo 的实现。其 v5 选项通过服务端的 v4 兼容协议连接，支持 TCP 和经 TCP 转发的 UDP；不实现 v5 独有的 QUIC 传输。应用设置中也显示此限制。
