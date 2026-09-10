@@ -1,0 +1,425 @@
+diff --git a/box.go b/box.go
+index f06a117..6247cf5 100644
+--- a/box.go
++++ b/box.go
+@@ -154,10 +154,10 @@ func New(options Options) (*Box, error) {
+ 	var needCacheFile bool
+ 	var needClashAPI bool
+ 	var needV2RayAPI bool
+-	if experimentalOptions.CacheFile != nil && experimentalOptions.CacheFile.Enabled || options.PlatformLogWriter != nil {
++	if experimentalOptions.CacheFile != nil && experimentalOptions.CacheFile.Enabled {
+ 		needCacheFile = true
+ 	}
+-	if experimentalOptions.ClashAPI != nil || options.PlatformLogWriter != nil {
++	if experimentalOptions.ClashAPI != nil {
+ 		needClashAPI = true
+ 	}
+ 	if experimentalOptions.V2RayAPI != nil && experimentalOptions.V2RayAPI.Listen != "" {
+diff --git a/boxapi/go_http.go b/boxapi/go_http.go
+new file mode 100644
+index 0000000..3cba5eb
+--- /dev/null
++++ b/boxapi/go_http.go
+@@ -0,0 +1,30 @@
++package boxapi
++
++import (
++	"context"
++	"net"
++	"net/http"
++	"time"
++
++	box "github.com/sagernet/sing-box"
++	"github.com/sagernet/sing-box/adapter"
++)
++
++func CreateProxyHttpClient(box *box.Box, tracker adapter.ConnectionTracker) *http.Client {
++	transport := &http.Transport{
++		TLSHandshakeTimeout:   time.Second * 3,
++		ResponseHeaderTimeout: time.Second * 3,
++	}
++
++	if box != nil {
++		transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
++			return DialContext(ctx, box, tracker, network, addr)
++		}
++	}
++
++	client := &http.Client{
++		Transport: transport,
++	}
++
++	return client
++}
+diff --git a/boxapi/go_net.go b/boxapi/go_net.go
+new file mode 100644
+index 0000000..5a7637d
+--- /dev/null
++++ b/boxapi/go_net.go
+@@ -0,0 +1,23 @@
++package boxapi
++
++import (
++	"context"
++	"net"
++
++	box "github.com/sagernet/sing-box"
++	"github.com/sagernet/sing-box/adapter"
++	"github.com/sagernet/sing-box/common/dialer"
++	"github.com/sagernet/sing/common/metadata"
++)
++
++func DialContext(ctx context.Context, box *box.Box, tracker adapter.ConnectionTracker, network, addr string) (net.Conn, error) {
++	defOutboundTag := box.Outbound().Default().Tag()
++	conn, err := dialer.NewDetour(box.Outbound(), defOutboundTag, true).DialContext(ctx, network, metadata.ParseSocksaddr(addr))
++	if err != nil {
++		return nil, err
++	}
++	if ss, ok := tracker.(*SbStatsService); ok {
++		conn = ss.RoutedConnectionInternal("", defOutboundTag, "", conn, false)
++	}
++	return conn, nil
++}
+diff --git a/boxapi/v2ray_server.go b/boxapi/v2ray_server.go
+new file mode 100644
+index 0000000..a97e0af
+--- /dev/null
++++ b/boxapi/v2ray_server.go
+@@ -0,0 +1,32 @@
++package boxapi
++
++import (
++	"context"
++
++	"github.com/sagernet/sing-box/adapter"
++	"github.com/sagernet/sing-box/option"
++)
++
++type SbV2rayServer struct {
++	ss *SbStatsService
++}
++
++func NewSbV2rayServer(options option.V2RayStatsServiceOptions) *SbV2rayServer {
++	return &SbV2rayServer{
++		ss: NewSbStatsService(options),
++	}
++}
++
++func (s *SbV2rayServer) Start() error                            { return nil }
++func (s *SbV2rayServer) Close() error                            { return nil }
++func (s *SbV2rayServer) StatsService() adapter.ConnectionTracker { return s.ss }
++
++// NekoRay style API
++
++func (s *SbV2rayServer) QueryStats(name string) int64 {
++	value, err := s.ss.GetStats(context.TODO(), name, true)
++	if err == nil {
++		return value
++	}
++	return 0
++}
+diff --git a/boxapi/v2ray_stats_service.go b/boxapi/v2ray_stats_service.go
+new file mode 100644
+index 0000000..3e96f42
+--- /dev/null
++++ b/boxapi/v2ray_stats_service.go
+@@ -0,0 +1,147 @@
++package boxapi
++
++import (
++	"context"
++	"net"
++	"sync"
++	"sync/atomic"
++	"time"
++
++	"github.com/sagernet/sing-box/adapter"
++	"github.com/sagernet/sing-box/option"
++	"github.com/sagernet/sing/common/bufio"
++	E "github.com/sagernet/sing/common/exceptions"
++	N "github.com/sagernet/sing/common/network"
++)
++
++type SbStatsService struct {
++	createdAt time.Time
++	inbounds  map[string]bool
++	outbounds map[string]bool
++	users     map[string]bool
++	access    sync.Mutex
++	counters  map[string]*atomic.Int64
++}
++
++func NewSbStatsService(options option.V2RayStatsServiceOptions) *SbStatsService {
++	if !options.Enabled {
++		return nil
++	}
++	inbounds := make(map[string]bool)
++	outbounds := make(map[string]bool)
++	users := make(map[string]bool)
++	for _, inbound := range options.Inbounds {
++		inbounds[inbound] = true
++	}
++	for _, outbound := range options.Outbounds {
++		outbounds[outbound] = true
++	}
++	for _, user := range options.Users {
++		users[user] = true
++	}
++	return &SbStatsService{
++		createdAt: time.Now(),
++		inbounds:  inbounds,
++		outbounds: outbounds,
++		users:     users,
++		counters:  make(map[string]*atomic.Int64),
++	}
++}
++
++func (s *SbStatsService) RoutedConnection(ctx context.Context, conn net.Conn, metadata adapter.InboundContext, matchedRule adapter.Rule, matchOutbound adapter.Outbound) net.Conn {
++	inbound := metadata.Inbound
++	user := metadata.User
++	outbound := matchOutbound.Tag()
++	return s.RoutedConnectionInternal(inbound, outbound, user, conn, true)
++}
++
++func (s *SbStatsService) RoutedConnectionInternal(inbound string, outbound string, user string, conn net.Conn, directIn bool) net.Conn {
++	var readCounter []*atomic.Int64
++	var writeCounter []*atomic.Int64
++	countInbound := inbound != "" && s.inbounds[inbound]
++	countOutbound := outbound != "" && s.outbounds[outbound]
++	countUser := user != "" && s.users[user]
++	if !countInbound && !countOutbound && !countUser {
++		return conn
++	}
++	s.access.Lock()
++	if countInbound {
++		readCounter = append(readCounter, s.loadOrCreateCounter("inbound>>>"+inbound+">>>traffic>>>uplink"))
++		writeCounter = append(writeCounter, s.loadOrCreateCounter("inbound>>>"+inbound+">>>traffic>>>downlink"))
++	}
++	if countOutbound {
++		readCounter = append(readCounter, s.loadOrCreateCounter("outbound>>>"+outbound+">>>traffic>>>uplink"))
++		writeCounter = append(writeCounter, s.loadOrCreateCounter("outbound>>>"+outbound+">>>traffic>>>downlink"))
++	}
++	if countUser {
++		readCounter = append(readCounter, s.loadOrCreateCounter("user>>>"+user+">>>traffic>>>uplink"))
++		writeCounter = append(writeCounter, s.loadOrCreateCounter("user>>>"+user+">>>traffic>>>downlink"))
++	}
++	s.access.Unlock()
++	if directIn {
++		conn = bufio.NewInt64CounterConn(conn, readCounter, writeCounter)
++	} else {
++		conn = bufio.NewInt64CounterConn(conn, writeCounter, readCounter)
++	}
++	return conn
++}
++
++func (s *SbStatsService) RoutedPacketConnection(ctx context.Context, conn N.PacketConn, metadata adapter.InboundContext, matchedRule adapter.Rule, matchOutbound adapter.Outbound) N.PacketConn {
++	inbound := metadata.Inbound
++	user := metadata.User
++	outbound := matchOutbound.Tag()
++	var readCounter []*atomic.Int64
++	var writeCounter []*atomic.Int64
++	countInbound := inbound != "" && s.inbounds[inbound]
++	countOutbound := outbound != "" && s.outbounds[outbound]
++	countUser := user != "" && s.users[user]
++	if !countInbound && !countOutbound && !countUser {
++		return conn
++	}
++	s.access.Lock()
++	if countInbound {
++		readCounter = append(readCounter, s.loadOrCreateCounter("inbound>>>"+inbound+">>>traffic>>>uplink"))
++		writeCounter = append(writeCounter, s.loadOrCreateCounter("inbound>>>"+inbound+">>>traffic>>>downlink"))
++	}
++	if countOutbound {
++		readCounter = append(readCounter, s.loadOrCreateCounter("outbound>>>"+outbound+">>>traffic>>>uplink"))
++		writeCounter = append(writeCounter, s.loadOrCreateCounter("outbound>>>"+outbound+">>>traffic>>>downlink"))
++	}
++	if countUser {
++		readCounter = append(readCounter, s.loadOrCreateCounter("user>>>"+user+">>>traffic>>>uplink"))
++		writeCounter = append(writeCounter, s.loadOrCreateCounter("user>>>"+user+">>>traffic>>>downlink"))
++	}
++	s.access.Unlock()
++	return bufio.NewInt64CounterPacketConn(conn, readCounter, nil, writeCounter, nil)
++}
++
++func (s *SbStatsService) GetStats(ctx context.Context, name string, reset bool) (int64, error) {
++	s.access.Lock()
++	counter, loaded := s.counters[name]
++	s.access.Unlock()
++	if !loaded {
++		return 0, E.New(name, " not found.")
++	}
++	var value int64
++	if reset {
++		value = counter.Swap(0)
++	} else {
++		value = counter.Load()
++	}
++	return value, nil
++}
++
++// QueryStats
++
++// GetSysStats
++
++//nolint:staticcheck
++func (s *SbStatsService) loadOrCreateCounter(name string) *atomic.Int64 {
++	counter, loaded := s.counters[name]
++	if loaded {
++		return counter
++	}
++	counter = &atomic.Int64{}
++	s.counters[name] = counter
++	return counter
++}
+diff --git a/common/dialer/default.go b/common/dialer/default.go
+index 0bffbf1..f241d04 100644
+--- a/common/dialer/default.go
++++ b/common/dialer/default.go
+@@ -25,6 +25,8 @@ import (
+ 	"github.com/database64128/tfo-go/v2"
+ )
+ 
++var DoNotSelectInterface = false
++
+ var (
+ 	_ ParallelInterfaceDialer = (*DefaultDialer)(nil)
+ 	_ UDPListener             = (*DefaultDialer)(nil)
+@@ -270,7 +272,7 @@ func (d *DefaultDialer) DialContext(ctx context.Context, network string, address
+ 	} else if address.IsDomain() {
+ 		return nil, E.New("domain not resolved")
+ 	}
+-	if d.networkStrategy == nil {
++	if DoNotSelectInterface || d.networkStrategy == nil {
+ 		conn, err := listener.ListenNetworkNamespace[net.Conn](ctx, d.netns, func() (net.Conn, error) {
+ 			switch N.NetworkName(network) {
+ 			case N.NetworkUDP:
+@@ -341,7 +343,8 @@ func (d *DefaultDialer) DialParallelInterface(ctx context.Context, network strin
+ }
+ 
+ func (d *DefaultDialer) ListenPacket(ctx context.Context, destination M.Socksaddr) (net.PacketConn, error) {
+-	if d.networkStrategy == nil {
++
++	if DoNotSelectInterface || d.networkStrategy == nil {
+ 		packetConn, err := listener.ListenNetworkNamespace[net.PacketConn](ctx, d.netns, func() (net.PacketConn, error) {
+ 			listenConfig := d.udpListener
+ 			if d.autoDetectBindFunc != nil {
+diff --git a/nekoutils/callback.go b/nekoutils/callback.go
+new file mode 100644
+index 0000000..97f5612
+--- /dev/null
++++ b/nekoutils/callback.go
+@@ -0,0 +1,3 @@
++package nekoutils
++
++var Selector_OnProxySelected func(selectorTag string, tag string)
+diff --git a/nekoutils/srs.go b/nekoutils/srs.go
+new file mode 100644
+index 0000000..a86df58
+--- /dev/null
++++ b/nekoutils/srs.go
+@@ -0,0 +1,7 @@
++package nekoutils
++
++import "github.com/sagernet/sing-box/option"
++
++var GetGeoIPHeadlessRules func(name string) ([]option.HeadlessRule, error)
++
++var GetGeoSiteHeadlessRules func(name string) ([]option.HeadlessRule, error)
+diff --git a/protocol/group/selector.go b/protocol/group/selector.go
+index 0542d07..b501525 100644
+--- a/protocol/group/selector.go
++++ b/protocol/group/selector.go
+@@ -10,6 +10,7 @@ import (
+ 	"github.com/sagernet/sing-box/common/urltest"
+ 	C "github.com/sagernet/sing-box/constant"
+ 	"github.com/sagernet/sing-box/log"
++	"github.com/sagernet/sing-box/nekoutils"
+ 	"github.com/sagernet/sing-box/option"
+ 	"github.com/sagernet/sing/common"
+ 	E "github.com/sagernet/sing/common/exceptions"
+@@ -54,7 +55,6 @@ func NewSelector(ctx context.Context, router adapter.Router, logger log.ContextL
+ 		tags:                         options.Outbounds,
+ 		defaultTag:                   options.Default,
+ 		outbounds:                    make(map[string]adapter.Outbound),
+-		history:                      service.PtrFromContext[urltest.HistoryStorage](ctx),
+ 		interruptGroup:               interrupt.NewGroup(),
+ 		interruptExternalConnections: options.InterruptExistConnections,
+ 	}
+@@ -141,6 +141,9 @@ func (s *Selector) SelectOutbound(tag string) bool {
+ 	if s.history != nil {
+ 		s.history.NotifyUpdated()
+ 	}
++	if nekoutils.Selector_OnProxySelected != nil {
++		nekoutils.Selector_OnProxySelected(s.Tag(), tag)
++	}
+ 	return true
+ }
+ 
+@@ -194,4 +197,5 @@ func RealTag(outboundManager adapter.OutboundManager, detour adapter.Outbound) s
+ 			return tag
+ 		}
+ 	}
++	return detour.Tag()
+ }
+diff --git a/protocol/vless/outbound.go b/protocol/vless/outbound.go
+index 1356a58..1709812 100644
+--- a/protocol/vless/outbound.go
++++ b/protocol/vless/outbound.go
+@@ -88,11 +88,15 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
+ 			return nil, E.New("unknown packet encoding: ", *options.PacketEncoding)
+ 		}
+ 	}
++	muxOpts := common.PtrValueOrDefault(options.Multiplex)
++	if muxOpts.Enabled {
++		options.Flow = ""
++	}
+ 	outbound.client, err = vless.NewClient(options.UUID, options.Flow, logger)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+-	outbound.multiplexDialer, err = mux.NewClientWithOptions((*vlessDialer)(outbound), logger, common.PtrValueOrDefault(options.Multiplex))
++	outbound.multiplexDialer, err = mux.NewClientWithOptions((*vlessDialer)(outbound), logger, muxOpts)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+diff --git a/route/rule/rule_set_local.go b/route/rule/rule_set_local.go
+index 9d5d21e..4656d25 100644
+--- a/route/rule/rule_set_local.go
++++ b/route/rule/rule_set_local.go
+@@ -11,6 +11,7 @@ import (
+ 	"github.com/sagernet/sing-box/adapter"
+ 	"github.com/sagernet/sing-box/common/srs"
+ 	C "github.com/sagernet/sing-box/constant"
++	"github.com/sagernet/sing-box/nekoutils"
+ 	"github.com/sagernet/sing-box/option"
+ 	"github.com/sagernet/sing/common"
+ 	E "github.com/sagernet/sing/common/exceptions"
+@@ -54,6 +55,28 @@ func NewLocalRuleSet(ctx context.Context, logger logger.Logger, tag string, opti
+ 			return nil, err
+ 		}
+ 	} else {
++		if strings.HasPrefix(options.LocalOptions.Path, "geoip:") {
++			rules, err := nekoutils.GetGeoIPHeadlessRules(strings.TrimPrefix(options.LocalOptions.Path, "geoip:"))
++			if err != nil {
++				return nil, err
++			}
++			err = ruleSet.reloadRules(rules)
++			if err != nil {
++				return nil, err
++			}
++			return ruleSet, nil
++		}
++		if strings.HasPrefix(options.LocalOptions.Path, "geosite:") {
++			rules, err := nekoutils.GetGeoSiteHeadlessRules(strings.TrimPrefix(options.LocalOptions.Path, "geosite:"))
++			if err != nil {
++				return nil, err
++			}
++			err = ruleSet.reloadRules(rules)
++			if err != nil {
++				return nil, err
++			}
++			return ruleSet, nil
++		}
+ 		filePath := filemanager.BasePath(ctx, strings.ReplaceAll(options.LocalOptions.Path, C.RuleSetTagPlaceholder, tag))
+ 		filePath, _ = filepath.Abs(filePath)
+ 		err := ruleSet.reloadFile(filePath)

@@ -54,6 +54,12 @@ func (p *platformLocalDNSTransport) Close() error {
 	return nil
 }
 
+func (p *platformLocalDNSTransport) Reset() {}
+
+func (p *platformLocalDNSTransport) ExchangeAsync(ctx context.Context, message *mDNS.Msg, callback func(response *mDNS.Msg, err error)) {
+	go func() { callback(p.Exchange(ctx, message)) }()
+}
+
 func (p *platformLocalDNSTransport) Exchange(ctx context.Context, message *mDNS.Msg) (*mDNS.Msg, error) {
 	if p.raw && rawQueryFunc != nil {
 		// Raw - Android 10 及以上才有
@@ -140,6 +146,7 @@ func (c *ExchangeContext) OnCancel(callback Func) {
 }
 
 func (c *ExchangeContext) Success(result string) {
+	defer c.done()
 	c.addresses = common.Map(common.Filter(strings.Split(result, "\n"), func(it string) bool {
 		return !common.IsEmpty(it)
 	}), func(it string) netip.Addr {

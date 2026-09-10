@@ -1,28 +1,13 @@
-#!/bin/bash
-
-chmod -R 777 .build 2>/dev/null
-rm -rf .build 2>/dev/null
-
-if [ -z "$GOPATH" ]; then
-    GOPATH=$(go env GOPATH)
+#!/usr/bin/env bash
+set -euo pipefail
+source ../buildScript/lib/core/get_source_env.sh
+export GOPATH="${GOPATH:-$(go env GOPATH)}"
+if [ ! -d gomobile ]; then
+  git clone --no-checkout https://github.com/MatsuriDayo/gomobile.git gomobile
 fi
-
-# Install gomobile
-if [ ! -f "$GOPATH/bin/gomobile-matsuri" ]; then
-    git clone https://github.com/MatsuriDayo/gomobile.git
-    pushd gomobile
-	git checkout origin/master2
-    pushd cmd
-    pushd gomobile
-    go install -v
-    popd
-    pushd gobind
-    go install -v
-    popd
-    popd
-    rm -rf gomobile
-    mv "$GOPATH/bin/gomobile" "$GOPATH/bin/gomobile-matsuri"
-    mv "$GOPATH/bin/gobind" "$GOPATH/bin/gobind-matsuri"
-fi
-
-GOBIND=gobind-matsuri gomobile-matsuri init
+git -C gomobile checkout "$COMMIT_GOMOBILE"
+python3 ../buildScript/lib/core/patch_loader.py gomobile/bind/java/Seq.java
+(cd gomobile && go build -o "$GOPATH/bin/gomobile-matsuri" ./cmd/gomobile && go build -o "$GOPATH/bin/gobind-matsuri" ./cmd/gobind)
+GOBIND=gobind-matsuri "$GOPATH/bin/gomobile-matsuri" init
+go mod edit -droprequire github.com/sagernet/gvisor
+go mod tidy

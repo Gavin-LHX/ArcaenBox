@@ -1,0 +1,98 @@
+diff --git a/boxapi/v2ray_stats_service.go b/boxapi/v2ray_stats_service.go
+index 3e96f42..a616f75 100644
+--- a/boxapi/v2ray_stats_service.go
++++ b/boxapi/v2ray_stats_service.go
+@@ -9,6 +9,7 @@ import (
+ 
+ 	"github.com/sagernet/sing-box/adapter"
+ 	"github.com/sagernet/sing-box/option"
++ "github.com/sagernet/sing-tun"
+ 	"github.com/sagernet/sing/common/bufio"
+ 	E "github.com/sagernet/sing/common/exceptions"
+ 	N "github.com/sagernet/sing/common/network"
+@@ -145,3 +146,61 @@ func (s *SbStatsService) loadOrCreateCounter(name string) *atomic.Int64 {
+ 	s.counters[name] = counter
+ 	return counter
+ }
++
++func (s *SbStatsService) RoutedFlow(ctx context.Context, metadata adapter.InboundContext, matchedRule adapter.Rule, matchOutbound adapter.Outbound) tun.FlowTracker {
++	inbound := metadata.Inbound
++	user := metadata.User
++	outbound := matchOutbound.Tag()
++	var uplinkCounter []*atomic.Int64
++	var downlinkCounter []*atomic.Int64
++	countInbound := inbound != "" && s.inbounds[inbound]
++	countOutbound := outbound != "" && s.outbounds[outbound]
++	countUser := user != "" && s.users[user]
++	if !countInbound && !countOutbound && !countUser {
++		return nil
++	}
++	s.access.Lock()
++	if countInbound {
++		uplinkCounter = append(uplinkCounter, s.loadOrCreateCounter("inbound>>>"+inbound+">>>traffic>>>uplink"))
++		downlinkCounter = append(downlinkCounter, s.loadOrCreateCounter("inbound>>>"+inbound+">>>traffic>>>downlink"))
++	}
++	if countOutbound {
++		uplinkCounter = append(uplinkCounter, s.loadOrCreateCounter("outbound>>>"+outbound+">>>traffic>>>uplink"))
++		downlinkCounter = append(downlinkCounter, s.loadOrCreateCounter("outbound>>>"+outbound+">>>traffic>>>downlink"))
++	}
++	if countUser {
++		uplinkCounter = append(uplinkCounter, s.loadOrCreateCounter("user>>>"+user+">>>traffic>>>uplink"))
++		downlinkCounter = append(downlinkCounter, s.loadOrCreateCounter("user>>>"+user+">>>traffic>>>downlink"))
++	}
++	s.access.Unlock()
++	return &statsFlowTracker{uplinkCounter: uplinkCounter, downlinkCounter: downlinkCounter}
++}
++
++var _ tun.FlowTracker = (*statsFlowTracker)(nil)
++
++type statsFlowTracker struct {
++	uplinkCounter   []*atomic.Int64
++	downlinkCounter []*atomic.Int64
++}
++
++func (t *statsFlowTracker) AttachFlow(handle tun.FlowHandle) {
++}
++
++func (t *statsFlowTracker) CountForward(n int) {
++	for _, counter := range t.uplinkCounter {
++		counter.Add(int64(n))
++	}
++}
++
++func (t *statsFlowTracker) CountReverse(n int) {
++	for _, counter := range t.downlinkCounter {
++		counter.Add(int64(n))
++	}
++}
++
++func (t *statsFlowTracker) FlowEstablished() {
++}
++
++func (t *statsFlowTracker) CloseFlow(reason tun.FlowCloseReason) {
++}
++
+diff --git a/option/rule_action.go b/option/rule_action.go
+index ae05200..575d381 100644
+--- a/option/rule_action.go
++++ b/option/rule_action.go
+@@ -323,6 +323,7 @@ func (r *RejectActionOptions) UnmarshalJSON(bytes []byte) error {
+ }
+ 
+ type RouteActionSniff struct {
++ OverrideDestination bool `json:"override_destination,omitempty"`
+ 	Sniffer badoption.Listable[string] `json:"sniffer,omitempty" enum:"tls,http,quic,dns,stun,bittorrent,dtls,ssh,rdp,ntp"`
+ 	Timeout badoption.Duration         `json:"timeout,omitempty"`
+ }
+diff --git a/route/rule/rule_action.go b/route/rule/rule_action.go
+index cb65611..94a7d96 100644
+--- a/route/rule/rule_action.go
++++ b/route/rule/rule_action.go
+@@ -106,6 +106,7 @@ func NewRuleAction(ctx context.Context, logger logger.ContextLogger, action opti
+ 	case C.RuleActionTypeSniff:
+ 		sniffAction := &RuleActionSniff{
+ 			SnifferNames: action.SniffOptions.Sniffer,
++ OverrideDestination: action.SniffOptions.OverrideDestination,
+ 			Timeout:      time.Duration(action.SniffOptions.Timeout),
+ 		}
+ 		return sniffAction, sniffAction.build()

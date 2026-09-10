@@ -21,3 +21,9 @@ jniLibs/
 /.signing/
 /ui-smoke/
 __pycache__/
+/libcore/gomobile/
+/libcore/.build/
+/libcore/*.aar
+/libcore/*-sources.jar
+/core-build/
+/app/src/main/assets/cores/bundled.json
