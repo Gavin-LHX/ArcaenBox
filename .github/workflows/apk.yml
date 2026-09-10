@@ -12,6 +12,9 @@ on:
       preview_core_run:
         description: Native Cores run containing the verified preview AAR
         required: true
+      ui_checks:
+        description: Optional focused checks after an existing full UI regression (blank runs all)
+        required: false
       publish:
         description: Publish the verified APKs as a release
         type: boolean
@@ -112,6 +115,8 @@ jobs:
         run: sudo chmod a+rw /dev/kvm
       - name: Verify Material 3 screens on Android 15
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          UI_SMOKE_CHECKS: ${{ inputs.ui_checks }}
         with:
           api-level: 35
           arch: x86_64
