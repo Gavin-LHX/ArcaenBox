@@ -64,8 +64,11 @@ def setup_servers():
                                  'users':[{'name':'test','password':SECRET}],'loggingLevel':'INFO'}))
     server('mieru',[str(BIN/'mita'),'run'],{'MITA_CONFIG_JSON_FILE':str(config.resolve()),'MITA_UDS_PATH':str(Path(SOCKET_DIR.name)/'mita.sock'),'MITA_INSECURE_UDS':'1'})
     config=OUT/'Caddyfile'
+    site=OUT/'site'; site.mkdir(exist_ok=True)
+    (site/'index.html').write_text('<html><body>ArcaenBox integration test</body></html>')
     config.write_text('''{
     admin off
+    persist_config off
     auto_https off
     order forward_proxy before file_server
 }
@@ -81,10 +84,13 @@ def setup_servers():
             deny all
         }
     }
-    respond "ArcaenBox test server"
+    file_server {
+        root SITE
+    }
 }
-'''.replace('CERT',cert).replace('KEY',key).replace('SECRET',SECRET))
-    server('naive',[str(BIN/'caddy'),'run','--config',str(config),'--adapter','caddyfile'])
+'''.replace('CERT',cert).replace('KEY',key).replace('SECRET',SECRET).replace('SITE',str(site.resolve())))
+    server('naive',[str(BIN/'caddy'),'run','--config',str(config),'--adapter','caddyfile'],
+           {'XDG_CONFIG_HOME':SOCKET_DIR.name+'/config','XDG_DATA_HOME':SOCKET_DIR.name+'/data'})
     def echo():
         sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); sock.bind(('127.0.0.1',18889))
         while True:
