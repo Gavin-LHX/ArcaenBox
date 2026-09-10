@@ -24,6 +24,9 @@ if a.keystore:
 
 with zipfile.ZipFile(a.stable) as stable, zipfile.ZipFile(a.preview) as preview:
     c1,c2=classes(stable),classes(preview)
+    for binding in [c1,c2]:
+        loader=binding['go/Seq.class']
+        assert b'io.nekohasekai.sagernet.update.CoreRuntime' in loader and b'loadLibrary' not in loader, 'Unpatched native core loader'
     if c1!=c2:
         raise SystemExit('Stable and preview JNI bridge classes differ: '+str([n for n in c1.keys()|c2.keys() if c1.get(n)!=c2.get(n)]))
     bridge=hashlib.sha256(b''.join(n.encode()+b'\0'+data for n,data in c1.items())).hexdigest()
