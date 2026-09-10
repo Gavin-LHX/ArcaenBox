@@ -1,0 +1,44 @@
+name: ArcaenBox Publish Verified Cores
+on:
+  workflow_dispatch:
+    inputs:
+      apk_run:
+        description: Successful signed APK and Android UI verification run
+        required: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify APK source run
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_RUN: ${{ inputs.apk_run }}
+        run: |
+          set -euo pipefail
+          [[ "$APK_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$APK_RUN" > /tmp/source.json
+          python3 - <<'PY'
+          import json, os
+          r=json.load(open('/tmp/source.json'))
+          assert r['path']=='.github/workflows/apk.yml' and r['conclusion']=='success'
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('sha='+r['head_sha']+'\n')
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: ArcaenBox-Core-Updates
+          path: core-build/dist
+          run-id: ${{ inputs.apk_run }}
+          github-token: ${{ github.token }}
+      - run: python3 -m pip install cryptography==45.0.7
+      - name: Verify signatures and publish immutable core packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: python3 .github/scripts/publish_cores.py --target "$SOURCE_SHA"
