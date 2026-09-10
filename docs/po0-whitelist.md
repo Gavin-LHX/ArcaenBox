@@ -44,9 +44,10 @@ not saved into activity-instance state or autofill.
 ## Artwork and promotion removal
 
 The original supplied illustration was cut out locally, retaining its original
-RGB pixels. The PNG has a real alpha channel. Launcher layers have a transparent
-background; the drawer and About page display the PNG directly. Launcher masking
-or themed-icon rendering may still vary with Android/OEM launcher settings.
+RGB pixels. The PNG has a real alpha channel. The launcher uses a standard bitmap,
+because Android's AdaptiveIconDrawable paints black behind transparent layers.
+The drawer and About page display the PNG directly. Some launchers still add their
+own icon plate or theme; those launcher settings are outside the application's control.
 The promotion menu, donation action, translated donation text and README donation
 list were removed. Open-source credits and license notices remain.
 
