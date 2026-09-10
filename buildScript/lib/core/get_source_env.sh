@@ -1,4 +1,5 @@
 export CORE_CHANNEL="${CORE_CHANNEL:-stable}"
+export CORE_REVISION=2
 export CORE_TAGS="with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api"
 if [ "$CORE_CHANNEL" = "stable" ]; then
   export COMMIT_SING_BOX="0bd0381c146042237abacc831249a90ab753ef8e"

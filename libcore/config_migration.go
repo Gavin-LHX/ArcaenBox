@@ -99,6 +99,9 @@ func migrateConfig(input string) ([]byte, error) {
 			default:
 				a := address
 				if !strings.Contains(a, "://") {
+					if net.ParseIP(a) != nil && strings.Contains(a, ":") {
+						a = "[" + a + "]"
+					}
 					a = "udp://" + a
 				}
 				u, err := url.Parse(a)
@@ -146,8 +149,12 @@ func migrateConfig(input string) ([]byte, error) {
 						s["detour"] = object(array(root["outbounds"])[0])["tag"]
 					}
 				}
-				if s["detour"] == "direct" {
-					delete(s, "detour")
+				for _, rawOutbound := range array(root["outbounds"]) {
+					out := object(rawOutbound)
+					if out["tag"] == s["detour"] && out["type"] == "direct" && len(out) == 2 {
+						delete(s, "detour")
+						break
+					}
 				}
 			}
 			servers = append(servers, s)
@@ -247,6 +254,9 @@ func migrateConfig(input string) ([]byte, error) {
 				action = "hijack-dns"
 			}
 			special[str(out["tag"])] = action
+			if out["type"] == "block" {
+				outbounds = append(outbounds, out)
+			} // Still supported as a selector target.
 			continue
 		}
 		if out["type"] == "wireguard" {
@@ -332,11 +342,15 @@ func migrateWireguard(out configObject) configObject {
 		for _, p := range peers {
 			m := object(p)
 			if endpoint := str(take(m, "server")); endpoint != "" {
+				m["address"] = endpoint
 				host, port, err := net.SplitHostPort(endpoint)
 				if err == nil {
 					m["address"] = host
 					m["port"], _ = strconv.Atoi(port)
 				}
+			}
+			if port := take(m, "server_port"); port != nil {
+				m["port"] = port
 			}
 			if m["allowed_ips"] == nil {
 				m["allowed_ips"] = []any{"0.0.0.0/0", "::/0"}

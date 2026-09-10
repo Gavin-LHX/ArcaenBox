@@ -6,7 +6,7 @@ p=argparse.ArgumentParser()
 p.add_argument('--stable',required=True)
 p.add_argument('--preview',required=True)
 p.add_argument('--keystore')
-p.add_argument('--revision',type=int,default=1)
+p.add_argument('--revision',type=int,default=2)
 a=p.parse_args()
 abis=['arm64-v8a','armeabi-v7a','x86','x86_64']
 def classes(aar):
@@ -38,7 +38,7 @@ with zipfile.ZipFile(a.stable) as stable, zipfile.ZipFile(a.preview) as preview:
         for abi in abis:
             binary=aar.read(f'jni/{abi}/libgojni.so')
             assert binary[:4]==b'\x7fELF'
-            assert f'{version}-arcaenbox-1'.encode() in binary, f'Wrong version in {channel}/{abi}'
+            assert f'{version}-arcaenbox-{a.revision}'.encode() in binary, f'Wrong version in {channel}/{abi}'
             name=f'ArcaenBox-core-{channel}-{version}-{abi}.so'
             (destination/name).write_bytes(binary)
             metadata['assets'][abi]={'name':name,'size':len(binary),'sha256':hashlib.sha256(binary).hexdigest()}

@@ -16,7 +16,7 @@ if [ -z "$GOPATH" ]; then
 fi
 
 export GOBIND=gobind-matsuri
-"$GOPATH"/bin/gomobile-matsuri bind -v -androidapi 21 -cache "$(realpath $BUILD)" -trimpath -ldflags="-s -w -X github.com/sagernet/sing-box/constant.Version=$CORE_VERSION-arcaenbox-1" -tags="$CORE_TAGS" . || exit 1
+"$GOPATH"/bin/gomobile-matsuri bind -v -androidapi 21 -cache "$(realpath $BUILD)" -trimpath -ldflags="-s -w -X github.com/sagernet/sing-box/constant.Version=$CORE_VERSION-arcaenbox-$CORE_REVISION" -tags="$CORE_TAGS" . || exit 1
 
 proj=../app/libs
 mkdir -p $proj

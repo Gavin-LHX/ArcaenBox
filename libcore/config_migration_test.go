@@ -172,3 +172,25 @@ func TestPreserveModernConfiguration(t *testing.T) {
 		t.Fatal("modern resolver was changed")
 	}
 }
+
+func TestLegacyIPv6DNSAndDirectDefault(t *testing.T) {
+	_, _, m := parseMigrated(t, `{"outbounds":[{"type":"direct","tag":"proxy"}],"dns":{"servers":[{"address":"2606:4700:4700::1111","tag":"dns"}],"final":"dns"}}`)
+	s := object(array(object(m["dns"])["servers"])[0])
+	if s["server"] != "2606:4700:4700::1111" || s["server_port"] != nil {
+		t.Fatal("IPv6 DNS address was split as a host and port")
+	}
+	if s["detour"] != nil {
+		t.Fatal("empty direct outbound cannot be a DNS detour")
+	}
+}
+
+func TestLegacyWireguardPeersAndBlockSelector(t *testing.T) {
+	_, _, m := parseMigrated(t, `{"outbounds":[{"type":"selector","tag":"proxy","outbounds":["block","wg"]},{"type":"block","tag":"block"},{"type":"wireguard","tag":"wg","local_address":["10.0.0.2/32"],"private_key":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","peers":[{"server":"vpn.example","server_port":51820,"public_key":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","allowed_ips":["0.0.0.0/0"]}]}]}`)
+	peer := object(array(object(array(m["endpoints"])[0])["peers"])[0])
+	if peer["address"] != "vpn.example" || peer["port"] != float64(51820) || peer["server_port"] != nil {
+		t.Fatalf("peer endpoint lost: %v", peer)
+	}
+	if len(array(m["outbounds"])) != 2 || object(array(m["outbounds"])[1])["type"] != "block" {
+		t.Fatal("block selector target removed")
+	}
+}
