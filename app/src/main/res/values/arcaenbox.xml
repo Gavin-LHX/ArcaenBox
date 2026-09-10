@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="arcaenbox_primary">#DCEEF1</color>
+    <color name="arcaenbox_primary_dark">#BCDCE2</color>
+    <color name="arcaenbox_on_primary">#20383D</color>
+    <color name="arcaenbox_accent">#36656F</color>
+    <color name="arcaenbox_surface_tint">#EFF7F9</color>
+
+    <style name="Theme.SagerNet.ArcaenBox" parent="Theme.SagerNet">
+        <item name="colorPrimary">@color/arcaenbox_primary</item>
+        <item name="colorPrimaryDark">@color/arcaenbox_primary_dark</item>
+        <item name="colorOnPrimary">@color/arcaenbox_on_primary</item>
+        <item name="colorOnPrimarySurface">@color/arcaenbox_on_primary</item>
+        <item name="colorAccent">@color/arcaenbox_accent</item>
+        <item name="colorSecondary">@color/arcaenbox_accent</item>
+        <item name="colorOnSecondary">@color/arcaenbox_surface_tint</item>
+        <item name="colorMaterial100">@color/arcaenbox_surface_tint</item>
+        <item name="colorMaterial300">@color/arcaenbox_primary</item>
+        <item name="primaryOrTextPrimary">@color/arcaenbox_accent</item>
+        <item name="primaryOrTextSecondary">@color/arcaenbox_accent</item>
+        <item name="whiteOrTextPrimary">@color/arcaenbox_on_primary</item>
+        <item name="selectedColorPrimary">@color/arcaenbox_accent</item>
+        <item name="fabColorBackground">@color/arcaenbox_primary</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.ArcaenBox.Toolbar</item>
+        <item name="tabTextColor">@color/arcaenbox_on_primary</item>
+        <item name="tabSelectedTextColor">@color/arcaenbox_on_primary</item>
+        <item name="tabIndicatorColor">@color/arcaenbox_on_primary</item>
+        <item name="tabRippleColor">@color/arcaenbox_primary_dark</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="Theme.SagerNet.Dialog.ArcaenBox" parent="Theme.SagerNet.Dialog">
+        <item name="colorPrimary">@color/arcaenbox_primary</item>
+        <item name="colorPrimaryDark">@color/arcaenbox_primary_dark</item>
+        <item name="colorOnPrimary">@color/arcaenbox_on_primary</item>
+        <item name="colorOnPrimarySurface">@color/arcaenbox_on_primary</item>
+        <item name="colorAccent">@color/arcaenbox_accent</item>
+        <item name="colorSecondary">@color/arcaenbox_accent</item>
+        <item name="colorOnSecondary">@color/arcaenbox_surface_tint</item>
+        <item name="colorMaterial100">@color/arcaenbox_surface_tint</item>
+        <item name="colorMaterial300">@color/arcaenbox_primary</item>
+        <item name="primaryOrTextPrimary">@color/arcaenbox_accent</item>
+        <item name="primaryOrTextSecondary">@color/arcaenbox_accent</item>
+        <item name="whiteOrTextPrimary">@color/arcaenbox_on_primary</item>
+        <item name="selectedColorPrimary">@color/arcaenbox_accent</item>
+        <item name="fabColorBackground">@color/arcaenbox_primary</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.ArcaenBox.Toolbar</item>
+        <item name="tabTextColor">@color/arcaenbox_on_primary</item>
+        <item name="tabSelectedTextColor">@color/arcaenbox_on_primary</item>
+        <item name="tabIndicatorColor">@color/arcaenbox_on_primary</item>
+        <item name="tabRippleColor">@color/arcaenbox_primary_dark</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="ThemeOverlay.ArcaenBox.Toolbar" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:textColorPrimary">@color/arcaenbox_on_primary</item>
+        <item name="android:textColorSecondary">@color/arcaenbox_on_primary</item>
+        <item name="colorControlNormal">@color/arcaenbox_on_primary</item>
+    </style>
+</resources>

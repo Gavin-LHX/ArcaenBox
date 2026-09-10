@@ -1,0 +1,74 @@
+name: ArcaenBox Signed APK
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        required: true
+        default: v1.4.2-arcaenbox.1
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: libcore/go.sum
+      - name: Install Android build tools
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.1' 'ndk;25.0.8775105'
+      - name: Cache native core
+        id: core
+        uses: actions/cache@v4
+        with:
+          path: app/libs/libcore.aar
+          key: arcaenbox-core-${{ runner.os }}-${{ hashFiles('libcore/**', 'buildScript/**') }}
+      - name: Build native core
+        if: steps.core.outputs.cache-hit != 'true'
+        run: ./run lib core
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare assets
+        run: ./run init action gradle
+      - name: Build signed release APKs
+        env:
+          SIGNING_KEYSTORE: ${{ secrets.ARCAENBOX_KEYSTORE }}
+          KEYSTORE_PASS: ${{ secrets.ARCAENBOX_KEYSTORE_PASSWORD }}
+          ALIAS_PASS: ${{ secrets.ARCAENBOX_KEYSTORE_PASSWORD }}
+          ALIAS_NAME: arcaenbox
+        run: |
+          set -euo pipefail
+          test -n "$SIGNING_KEYSTORE"
+          printf '%s' "$SIGNING_KEYSTORE" | base64 --decode > release.keystore
+          ./gradlew --no-daemon app:assembleOssRelease
+      - name: Verify APK signatures and application name
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for apk in app/build/outputs/apk/oss/release/*.apk; do
+            "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose "$apk"
+            "$ANDROID_HOME/build-tools/35.0.1/aapt" dump badging "$apk" | tee /tmp/apk-badging.txt
+            grep -q "application-label:'ArcaenBox'" /tmp/apk-badging.txt
+            cp "$apk" dist/
+          done
+          cd dist
+          sha256sum *.apk > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArcaenBox-APKs
+          path: dist/*
+          if-no-files-found: error
+      - name: Publish APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' 'ArcaenBox for Android. Default primary color: #DCEEF1.' 'Signed release APKs for arm64-v8a, armeabi-v7a, x86, and x86_64.' 'This build uses a dedicated ArcaenBox signing key.' > /tmp/release-notes.md
+          gh release create "$RELEASE_TAG" dist/* --target "$GITHUB_SHA" --title "ArcaenBox $RELEASE_TAG" --notes-file /tmp/release-notes.md
