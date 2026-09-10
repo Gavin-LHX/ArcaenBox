@@ -201,9 +201,13 @@ def traffic(name, library, udp=False):
             except Exception as error: last=error; time.sleep(2)
         if last: raise last
         processes=ui.adb('shell','ps','-A','-o','PID,ARGS')
-        assert library in processes, 'Built-in process missing: '+library
-        assert '/data/app/' in '\n'.join(line for line in processes.splitlines() if library in line), 'Client did not execute from the installed APK'
-        (OUT/(name+'-processes.txt')).write_text('\n'.join(line for line in processes.splitlines() if library in line))
+        rows=[line for line in processes.splitlines() if library in line]
+        assert rows, 'Built-in process missing: '+library
+        # Android ps can display just the process name for ARGS. Inspect the
+        # executable symlink instead of assuming argv[0] contains a full path.
+        executables=[ui.adb('shell','readlink','/proc/'+line.split()[0]+'/exe').strip() for line in rows]
+        (OUT/(name+'-processes.txt')).write_text('\n'.join(rows+executables))
+        assert all(exe.startswith('/data/app/') and exe.endswith('/'+library) for exe in executables), executables
         if udp:
             control,port=socks(3,0)
             with control:
