@@ -16,6 +16,8 @@
     <string name="core_ready">Core verified and saved. Apply and restart to use it.</string>
     <string name="core_latest">No newer compatible core is available for this channel.</string>
     <string name="core_available">Available: %1$s</string>
+    <string name="core_current">This channel is up to date. You can download the current core again.</string>
+    <string name="core_reinstall">Download this core again</string>
     <string name="core_recovered">The previous core failed to initialize. A built-in core has been restored.</string>
     <string name="core_status">%1$s · %2$s / r%3$d · %4$s</string>
     <string name="update_checking">Checking for updates…</string>

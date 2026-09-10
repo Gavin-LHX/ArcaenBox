@@ -16,6 +16,8 @@
     <string name="core_ready">内核已校验并保存，点击“应用并重启”后生效。</string>
     <string name="core_latest">此渠道暂无更新的兼容内核。</string>
     <string name="core_available">发现内核：%1$s</string>
+    <string name="core_current">此渠道已是最新版，也可以重新下载当前内核。</string>
+    <string name="core_reinstall">重新下载当前内核</string>
     <string name="core_recovered">上次内核初始化失败，已恢复使用内置内核。</string>
     <string name="core_status">%1$s · %2$s / r%3$d · %4$s</string>
     <string name="update_checking">正在检查更新…</string>

@@ -1,0 +1,37 @@
+name: ArcaenBox Android Checks
+on:
+  workflow_dispatch:
+    inputs:
+      core_run:
+        description: Native stable core artifact for Java interface compilation
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  checks:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.1' 'ndk;25.0.8775105'
+      - uses: actions/download-artifact@v4
+        with:
+          name: core-stable
+          path: core-build/checks
+          run-id: ${{ inputs.core_run }}
+          github-token: ${{ github.token }}
+      - run: mkdir -p app/libs && cp core-build/checks/libcore.aar app/libs/
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./run init action gradle
+      - run: ./gradlew --no-daemon app:testOssReleaseUnitTest
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-unit-test-results
+          path: app/build/test-results/

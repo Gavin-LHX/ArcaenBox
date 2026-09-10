@@ -121,7 +121,10 @@ object CoreRuntime {
         }
         if (best == null && incompatible) throw UpdateException("incompatible")
         val current = choice(channel)
-        return best?.takeIf { newer(it.manifest.version,it.manifest.revision,current.version,current.revision) }
+        return best?.takeIf {
+            newer(it.manifest.version,it.manifest.revision,current.version,current.revision) ||
+                it.manifest.version == current.version && it.manifest.revision == current.revision
+        }
     }
     private fun newer(a: String, ar: Long, b: String, br: Long): Boolean {
         val av = ReleaseVersion.parse(a) ?: return false; val bv = ReleaseVersion.parse(b) ?: return true

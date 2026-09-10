@@ -63,7 +63,10 @@ class CoreUpdatesFragment : ToolbarFragment(R.layout.layout_core_updates) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 update = withContext(Dispatchers.IO) { CoreRuntime.check(channel) }
-                binding?.coreStatus?.text = update?.let { getString(R.string.core_available,it.manifest.displayVersion) } ?: getString(R.string.core_latest)
+                val current = withContext(Dispatchers.IO) { CoreRuntime.choice(channel) }
+                val same = update?.let { it.manifest.version == current.version && it.manifest.revision == current.revision } == true
+                binding?.coreStatus?.text = if (same) getString(R.string.core_current) else update?.let { getString(R.string.core_available,it.manifest.displayVersion) } ?: getString(R.string.core_latest)
+                binding?.coreDownload?.setText(if (same) R.string.core_reinstall else R.string.core_download)
             } catch (e: CancellationException) { throw e } catch (e: Exception) { binding?.coreStatus?.setText(UpdateMessages.resource(e)) }
             finally { busy = false; if (binding != null) refresh() }
         }
