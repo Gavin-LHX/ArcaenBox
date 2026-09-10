@@ -227,7 +227,9 @@ def main():
         ui.adb('install','-r','-g',str(BIN/'previous.apk'))
         ui.adb('shell','logcat','-c')
         ui.adb('shell','cmd','uimode','night','no')
-        assert 'plugin.' not in ui.adb('shell','pm','list','packages'), 'Emulator unexpectedly has external plugins'
+        packages=ui.adb('shell','pm','list','packages')
+        (OUT/'installed-packages.txt').write_text(packages)
+        assert not any(prefix in packages for prefix in ('io.nekohasekai.sagernet.plugin.', 'moe.matsuri.exe.')), 'Emulator unexpectedly has proxy plugins'
         # Save an existing Mieru node in the released database schema before upgrading.
         create_mieru('Mieru-TCP','TCP',18088)
         ui.adb('shell','am','force-stop',P)
