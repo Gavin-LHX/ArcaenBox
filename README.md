@@ -49,14 +49,14 @@ https://matsuridayo.github.io
 * TUIC
 * Hysteria 1/2
 * WireGuard
-* Trojan-Go (trojan-go-plugin)
-* NaïveProxy (naive-plugin)
-* Mieru (mieru-plugin)
+* Trojan-Go（内置 / built-in）
+* NaïveProxy（内置 / built-in）
+* Mieru（内置 / built-in）
+* Snell v4/v5（内置，可选择服务端版本 / built-in, selectable server version）
 
-请到[这里](https://matsuridayo.github.io/nb4a-plugin/)下载插件以获得完整的代理支持.
+Trojan-Go、NaïveProxy、Mieru 和 Snell 无需安装插件。[内置组件版本、Snell v5 兼容范围与构建说明](docs/built-in-protocols.md)。Hysteria 1 的特殊模式仍使用可选插件。
 
-Please visit [here](https://matsuridayo.github.io/nb4a-plugin/) to download plugins for full proxy
-supports.
+Trojan-Go, NaïveProxy, Mieru and Snell ship in the APK. Snell v5 servers use the v4-compatible transport; v5-specific QUIC is not implemented. Special Hysteria 1 modes still use an optional plugin.
 
 ## 支持的订阅格式 / Supported Subscription Format
 

@@ -20,6 +20,7 @@ jniLibs/
 /external
 /.signing/
 /ui-smoke/
+/protocol-smoke/
 __pycache__/
 /libcore/gomobile/
 /libcore/.build/

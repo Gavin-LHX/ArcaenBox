@@ -8,6 +8,7 @@ import socket
 import struct
 import subprocess
 import threading
+import tempfile
 import time
 import traceback
 import urllib.parse
@@ -21,6 +22,7 @@ ui.OUT = OUT
 ui.STRINGS.update({e.get('name'): ''.join(e.itertext()) for e in ET.parse('app/src/main/res/values/builtin_protocols.xml').getroot() if e.tag == 'string'})
 P = ui.PACKAGE
 PROCESSES = []
+SOCKET_DIR = tempfile.TemporaryDirectory(prefix='arcaenbox-protocol-')
 RESULTS = []
 SECRET = 'arcaenbox-ci-only'
 PAYLOAD = b'arcaenbox-built-in-protocol-proof'
@@ -35,6 +37,12 @@ def server(name, args, env=None):
 
 
 def setup_servers():
+    class Origin(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200); self.send_header('Content-Length',str(len(PAYLOAD))); self.end_headers(); self.wfile.write(PAYLOAD)
+        def log_message(self,*args): pass
+    origin=http.server.ThreadingHTTPServer(('127.0.0.1',18888),Origin)
+    threading.Thread(target=origin.serve_forever,daemon=True).start()
     subprocess.run(['openssl','req','-x509','-newkey','rsa:2048','-nodes','-keyout',str(OUT/'key.pem'),
                     '-out',str(OUT/'cert.pem'),'-days','2','-subj','/CN=localhost',
                     '-addext','subjectAltName=DNS:localhost'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
@@ -54,7 +62,7 @@ def setup_servers():
     config=OUT/'mita.json'
     config.write_text(json.dumps({'portBindings':[{'port':18088,'protocol':'TCP'},{'port':18089,'protocol':'UDP'}],
                                  'users':[{'name':'test','password':SECRET}],'loggingLevel':'INFO'}))
-    server('mieru',[str(BIN/'mita'),'run'],{'MITA_CONFIG_JSON_FILE':str(config.resolve()),'MITA_UDS_PATH':str((OUT/'mita.sock').resolve()),'MITA_INSECURE_UDS':'1'})
+    server('mieru',[str(BIN/'mita'),'run'],{'MITA_CONFIG_JSON_FILE':str(config.resolve()),'MITA_UDS_PATH':str(Path(SOCKET_DIR.name)/'mita.sock'),'MITA_INSECURE_UDS':'1'})
     config=OUT/'Caddyfile'
     config.write_text('''{
     admin off
@@ -77,12 +85,6 @@ def setup_servers():
 }
 '''.replace('CERT',cert).replace('KEY',key).replace('SECRET',SECRET))
     server('naive',[str(BIN/'caddy'),'run','--config',str(config),'--adapter','caddyfile'])
-    class Origin(http.server.BaseHTTPRequestHandler):
-        def do_GET(self):
-            self.send_response(200); self.send_header('Content-Length',str(len(PAYLOAD))); self.end_headers(); self.wfile.write(PAYLOAD)
-        def log_message(self,*args): pass
-    origin=http.server.ThreadingHTTPServer(('127.0.0.1',18888),Origin)
-    threading.Thread(target=origin.serve_forever,daemon=True).start()
     def echo():
         sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); sock.bind(('127.0.0.1',18889))
         while True:
