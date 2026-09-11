@@ -139,6 +139,9 @@ class BaseService {
             callbacks.unregister(cb)
         }
 
+        override fun getExitProbePort(): Int =
+            if (data?.state == State.Connected) data?.proxy?.config?.exitProbePort ?: 0 else 0
+
         override fun urlTest(): Int {
             if (data?.proxy?.box == null) {
                 error("core not started")

@@ -1,13 +1,13 @@
 <resources>
-    <string name="snell_psk">预共享密钥（PSK）</string>
-    <string name="snell_version">Snell 服务端版本</string>
-    <string name="snell_version_help">请选择服务端版本。v5 服务端通过兼容 v4 的 TCP 传输连接，支持 UDP 转发；暂不支持 v5 独有的 QUIC 传输。</string>
-    <string name="snell_udp">UDP 转发</string>
-    <string name="snell_reuse">复用连接</string>
-    <string name="snell_obfs">混淆方式</string>
-    <string name="snell_obfs_host">混淆主机名</string>
-    <string name="builtin_protocols">内置协议</string>
-    <string name="builtin_protocols_summary">已内置 Trojan-Go、NaïveProxy、Mieru 和 Snell，无需安装插件。</string>
-    <string name="builtin_component_missing">内置组件 %1$s 缺失，请重新安装完整的 ArcaenBox APK。</string>
-    <string name="builtin_naive_android_version">当前内置的 NaïveProxy 需要 Android 7.0 或以上版本。</string>
+  <string name="snell_psk">预共享密钥（PSK）</string>
+  <string name="snell_version">Snell 服务端版本</string>
+  <string name="snell_version_help">v4/v5 可使用正式版内核。v6 Beta/RC 请先在“内核管理 → Snell”中应用测试版；传输模式须与服务端一致。暂不支持 v5 独有的 QUIC 传输。</string>
+  <string name="snell_udp">UDP 转发</string>
+  <string name="snell_reuse">复用连接</string>
+  <string name="snell_obfs">混淆方式</string>
+  <string name="snell_obfs_host">混淆主机名</string>
+  <string name="builtin_protocols">内置协议</string>
+  <string name="builtin_protocols_summary">已内置 Trojan-Go、NaïveProxy、Mieru 和 Snell，无需安装插件。</string>
+  <string name="builtin_component_missing">内置组件 %1$s 缺失，请重新安装完整的 ArcaenBox APK。</string>
+  <string name="builtin_naive_android_version">当前内置的 NaïveProxy 需要 Android 7.0 或以上版本。</string>
 </resources>

@@ -38,6 +38,8 @@ import moe.matsuri.nb4a.utils.JavaUtil.gson
 import moe.matsuri.nb4a.utils.Util
 import moe.matsuri.nb4a.utils.listByLineOrComma
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import io.nekohasekai.sagernet.po0.Po0RouteConfig
+import io.nekohasekai.sagernet.po0.Po0Store
 
 const val TAG_MIXED = "mixed-in"
 
@@ -55,6 +57,7 @@ class ConfigBuildResult(
     var trafficMap: Map<String, List<ProxyEntity>>,
     var profileTagMap: Map<Long, String>,
     val selectorGroupId: Long,
+    val exitProbePort: Int = 0,
 ) {
     data class IndexEntity(var chain: LinkedHashMap<Int, ProxyEntity>)
 }
@@ -63,16 +66,23 @@ fun buildConfig(
     proxy: ProxyEntity, forTest: Boolean = false, forExport: Boolean = false
 ): ConfigBuildResult {
 
+    var exitProbePort = if (!forTest && !forExport && DataStore.showExitIp) mkPort() else 0
+    val po0Configured = !forTest && runCatching {
+        Po0Store.state(SagerNet.application).encryptedTokens.isNotBlank()
+    }.getOrDefault(false)
+
     if (proxy.type == TYPE_CONFIG) {
         val bean = proxy.requireBean() as ConfigBean
         if (bean.type == 0) {
+            val target = ExitProbeConfig.proxyTag(bean.config)
+            if (target == null) exitProbePort = 0
             return ConfigBuildResult(
-                bean.config,
+                ExitProbeConfig.apply(Po0RouteConfig.apply(bean.config, po0Configured), exitProbePort, target),
                 listOf(),
                 proxy.id, //
                 mapOf(TAG_PROXY to listOf(proxy)), //
                 mapOf(proxy.id to TAG_PROXY), //
-                -1L
+                -1L, exitProbePort
             )
         }
     }
@@ -148,6 +158,7 @@ fun buildConfig(
     fun genDomainStrategy(noAsIs: Boolean): String {
         return when {
             !noAsIs -> ""
+            DataStore.destinationStrategy.isNotBlank() -> DataStore.destinationStrategy
             ipv6Mode == IPv6Mode.DISABLE -> "ipv4_only"
             ipv6Mode == IPv6Mode.PREFER -> "prefer_ipv6"
             ipv6Mode == IPv6Mode.ONLY -> "ipv6_only"
@@ -742,13 +753,17 @@ fun buildConfig(
     }.let {
         val configMap = it.asMap()
         Util.mergeJSON(configMap, proxy.requireBean().customConfigJson)
+        val tunedConfig = ConnectionOptions.apply(gson.toJson(configMap), DataStore.udpTimeout,
+            DataStore.tlsFragment, DataStore.tlsFragmentDelay, DataStore.globalMux,
+            DataStore.globalMuxProtocol, DataStore.globalMuxStreams, DataStore.globalMuxPadding)
         ConfigBuildResult(
-            gson.toJson(configMap),
+            ExitProbeConfig.apply(Po0RouteConfig.apply(tunedConfig, po0Configured), exitProbePort, TAG_PROXY),
             externalIndexMap,
             proxy.id,
             trafficMap,
             tagMap,
-            if (buildSelector) group.id else -1L
+            if (buildSelector) group.id else -1L,
+            exitProbePort
         )
     }
 

@@ -53,7 +53,7 @@ def verify_apk(apk):
             data = z.read(f'lib/{abi}/{name}')
             check_elf(data, abi)
             assert sha(data) == component['sha256'][abi], f'{name}: packaged bytes differ'
-        print(f'{apk}: all four built-in executables verified ({abi})')
+        print(f'{apk}: all {len(manifest["components"])} built-in executables verified ({abi})')
 
 
 def main():
@@ -105,6 +105,29 @@ def main():
         check_elf(data, abi)
         entry['sha256'][abi] = sha(data)
     manifest['components'].append(entry)
+    # The stable Snell channel retains the proven Mihomo v4/v5 adapter. The test
+    # channel is an independent, pinned sing-snell client with v6 Beta/RC support.
+    snell = lock['snell_preview']
+    entry = {k: snell[k] for k in ('name', 'version', 'library', 'source', 'license')}
+    entry['sha256'] = {}
+    for abi, (arch, _, triple) in ABIS.items():
+        output = target / abi / snell['library']
+        env = {**os.environ, 'GOOS': 'android', 'GOARCH': arch, 'GOARM': '7', 'CGO_ENABLED': '1',
+               'CC': str(ndk / (triple + '21-clang'))}
+        subprocess.run(['go', 'build', '-trimpath', '-buildmode=pie',
+                        '-ldflags=-s -w -extldflags=-Wl,-z,max-page-size=16384',
+                        '-o', str(output), '.'], cwd=ROOT / 'buildScript/snell-client', env=env, check=True)
+        data = output.read_bytes(); check_elf(data, abi); entry['sha256'][abi] = sha(data)
+    manifest['components'].append(entry)
+    identities = {'libnaive.so': ('naive', 'stable', 24, []),
+                  'libtrojan-go.so': ('trojan-go', 'stable', 21, []),
+                  'libmieru.so': ('mieru', 'stable', 21, []),
+                  'libmihomo.so': ('snell', 'stable', 21, [4, 5]),
+                  'libsnell.so': ('snell', 'preview', 21, [4, 5, 6])}
+    for entry in manifest['components']:
+        component, channel, sdk, protocols = identities[entry['library']]
+        entry.update(id=component, channel=channel, min_sdk=sdk, protocols=protocols,
+                     revision=lock['revisions'][f'{component}:{channel}'])
     output = ROOT / 'app/src/main/assets/builtins/manifest.json'
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')

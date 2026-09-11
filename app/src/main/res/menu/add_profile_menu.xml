@@ -87,6 +87,11 @@
         android:title=""
         app:showAsAction="always">
         <menu>
+            <item android:id="@+id/action_restart_service" android:title="@string/node_restart" />
+            <item android:id="@+id/action_delete_group_profiles" android:title="@string/node_delete_group" />
+            <item android:id="@+id/action_export_group_profiles" android:title="@string/node_export_group" />
+            <item android:id="@+id/action_locate_profile" android:title="@string/node_locate" />
+            <item android:id="@+id/action_sort_test_results" android:title="@string/node_sort_delay" />
             <item
                 android:id="@+id/action_update_subscription"
                 android:title="@string/update_current_subscription" />

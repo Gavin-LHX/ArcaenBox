@@ -64,7 +64,36 @@ class SnellTest {
 
     @Test fun rejectsUnsupportedVersionInsteadOfSilentlyDowngrading() {
         assertThrows(IllegalArgumentException::class.java) { parseSnell("snell://key@example.com:443?version=3") }
-        assertThrows(IllegalArgumentException::class.java) { profile(6).buildSnellConfig(12345) }
+        assertThrows(IllegalArgumentException::class.java) { profile(7).buildSnellConfig(12345) }
         assertThrows(IllegalArgumentException::class.java) { profile().apply { psk = "" }.toUri() }
+    }
+
+    @Test fun snellSixPreservesModeAcrossUriDatabaseAndConfig() {
+        for (mode in listOf("default", "unshaped", "unsafe-raw")) {
+            val source = profile(6).apply { this.mode = mode; finalAddress = "127.0.0.1"; finalPort = 12345 }
+            assertEquals(mode, parseSnell(source.toUri()).mode)
+            assertEquals(mode, KryoConverters.snellDeserialize(KryoConverters.serialize(source)).mode)
+            val proxy = JsonParser.parseString(source.buildSnellConfig(23456)).asJsonObject["proxies"].asJsonArray[0].asJsonObject
+            assertEquals(6, proxy["version"].asInt)
+            assertEquals(mode, proxy["snell-mode"].asString)
+        }
+        assertThrows(IllegalArgumentException::class.java) { profile(6).apply { psk = "short" }.validate() }
+        assertThrows(IllegalArgumentException::class.java) { profile(6).apply { obfs = "http" }.validate() }
+        assertThrows(IllegalArgumentException::class.java) { profile(5).apply { mode = "unshaped" }.validate() }
+    }
+
+    @Test fun readsVersionZeroProfilesWithoutLosingExistingFields() {
+        val source = profile(5).apply { obfs = "http"; obfsHost = "front.example"; reuse = true }
+        val buffer = com.esotericsoftware.kryo.io.ByteBufferOutput(4096)
+        source.serialize(buffer)
+        val modeBytes = com.esotericsoftware.kryo.io.ByteBufferOutput(100).apply { writeString("default") }.toBytes()
+        val old = buffer.toBytes().dropLast(modeBytes.size).toByteArray()
+        for (i in 0..3) old[i] = 0
+        val restored = SnellBean().apply { deserialize(com.esotericsoftware.kryo.io.ByteBufferInput(old)); initializeDefaultValues() }
+        assertEquals("default", restored.mode)
+        assertEquals(5, restored.version)
+        assertEquals(source.psk, restored.psk)
+        assertEquals(source.obfsHost, restored.obfsHost)
+        assertTrue(restored.reuse)
     }
 }

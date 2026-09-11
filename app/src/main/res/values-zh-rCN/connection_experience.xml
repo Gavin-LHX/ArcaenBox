@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vpn_permission_help">Android 未授予 VPN 授权。如果 NekoBox 等其他应用启用了“始终开启 VPN”，请先到系统 VPN 设置中关闭该选项，再返回点击连接。若手机另有“创建 VPN 连接”权限，也请在应用权限中允许 ArcaenBox。受管理设备的限制需由管理员调整。</string>
+    <string name="system_vpn_settings">系统 VPN 设置</string>
+    <string name="app_permission_settings">应用权限设置</string>
+    <string name="vpn_establish_failed">Android 未能创建 VPN 接口，请在系统 VPN 设置中检查授权、其他应用的“始终开启 VPN”及设备限制。</string>
+    <string name="exit_ip_value">出口 IP：%1$s</string>
+    <string name="exit_ip_querying">出口 IP：查询中…</string>
+    <string name="exit_ip_failed">出口 IP 查询失败 · 点击重试</string>
+    <string name="show_exit_ip">显示代理出口 IP</string>
+    <string name="exit_ip_url">出口 IP 查询地址</string>
+    <string name="exit_ip_help">填写返回纯文本公网 IP 或 JSON {\"ip\":\"…\"} 的 HTTPS 地址。查询始终经过当前代理，失败不会切换为直连。</string>
+    <string name="connection_concurrency">真连接测试并发数</string>
+    <string name="invalid_setting">值无效，请检查允许的范围或网址格式。</string>
+    <string name="vpn_settings_group">VPN 设置</string>
+    <string name="core_settings_group">sing-box 连接设置</string>
+    <string name="udp_timeout_title">UDP 会话超时（秒）</string>
+    <string name="udp_timeout_help">0 使用内核默认值（300 秒）；范围 0–86400。</string>
+    <string name="fragment_title">TLS 握手分片</string>
+    <string name="fragment_help">用于内置 TCP TLS 代理连接。优先使用 TLS 记录分片；TCP 分片可能降低性能。QUIC 和独立内核使用各自设置。</string>
+    <string name="fragment_delay">分片回退等待时间（毫秒）</string>
+    <string name="mux_title">启用 sing-box 多路复用</string>
+    <string name="mux_help">作为未单独配置多路复用的 Shadowsocks、VMess、VLESS、Trojan 节点的默认设置，需服务端兼容。此处使用 sing-box 多路复用，与 Xray Mux/XUDP 参数不通用。</string>
+    <string name="mux_protocol_title">多路复用协议</string>
+    <string name="mux_streams_title">每条连接最大并发流数</string>
+    <string name="mux_padding_title">多路复用填充</string>
+    <string name="route_domain_strategy">目标域名策略</string>
+    <string name="route_strategy_value">目标域名策略：%1$s</string>
+    <string name="route_instructions">规则从上往下匹配。点击规则或铅笔编辑，右侧开关启用；长按拖动排序，左滑删除。</string>
+    <string name="route_resources_button">资源文件</string>
+    <string name="resource_format_help">Geo 数据库使用 sing-box 的 .db 格式；规则集支持 .srs 与源格式 .json，可在路由规则中填写 rule-set:文件名。Xray 的 .dat 文件不兼容。</string>
+    <string name="resource_source">Geo 文件来源</string>
+    <string name="resource_update_all">更新全部 Geo 文件</string>
+    <string name="resource_not_installed">尚未安装</string>
+    <string name="resource_invalid">不支持、为空或格式无效的资源文件</string>
+    <string name="resource_busy">资源操作正在进行中</string>
+    <string name="resource_updated_count">已更新 %1$d 个资源文件</string>
+    <string name="resource_changed">资源已变更，重新连接后路由规则生效。</string>
+    <string name="resource_delete_confirm">删除 %1$s？引用该文件的路由规则需要重新导入或下载后才能使用。</string>
+    <string name="node_restart">服务重启</string>
+    <string name="node_delete_group">删除当前分组配置</string>
+    <string name="node_export_group">将当前分组导出至剪贴板</string>
+    <string name="node_locate">定位所选配置</string>
+    <string name="node_sort_delay">按测试结果排序</string>
+    <string name="node_empty">没有符合条件的配置</string>
+    <string name="node_count_confirm">删除当前分组的 %1$d 个配置？</string>
+</resources>

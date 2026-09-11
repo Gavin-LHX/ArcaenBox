@@ -7,4 +7,5 @@
         android:icon="@drawable/ic_action_note_add"
         android:title="@string/action_import_file"
         app:showAsAction="always" />
+    <item android:id="@+id/action_update_resources" android:icon="@drawable/ic_file_cloud_queue" android:title="@string/resource_update_all" app:showAsAction="always" />
 </menu>

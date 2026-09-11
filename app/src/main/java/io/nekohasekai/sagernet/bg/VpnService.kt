@@ -83,7 +83,7 @@ class VpnService : BaseVpnService(),
 
     inner class NullConnectionException : NullPointerException(),
         BaseService.ExpectedException {
-        override fun getLocalizedMessage() = getString(R.string.reboot_required)
+        override fun getLocalizedMessage() = getString(R.string.vpn_establish_failed)
     }
 
     fun startVpn(tunOptionsJson: String, tunPlatformOptionsJson: String): Int {

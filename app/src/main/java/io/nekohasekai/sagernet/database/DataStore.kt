@@ -156,7 +156,17 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var appendHttpProxy by configurationStore.boolean(Key.APPEND_HTTP_PROXY)
     var connectionTestURL by configurationStore.string(Key.CONNECTION_TEST_URL) { CONNECTION_TEST_URL }
-    var connectionTestConcurrent by configurationStore.int("connectionTestConcurrent") { 5 }
+    var destinationStrategy by configurationStore.string("destinationStrategy") { "" }
+    var udpTimeout by configurationStore.stringToInt("udpTimeout") { 0 }
+    var tlsFragment by configurationStore.string("tlsFragment") { "off" }
+    var tlsFragmentDelay by configurationStore.stringToInt("tlsFragmentDelay") { 500 }
+    var globalMux by configurationStore.boolean("globalMux")
+    var globalMuxProtocol by configurationStore.string("globalMuxProtocol") { "h2mux" }
+    var globalMuxStreams by configurationStore.stringToInt("globalMuxStreams") { 8 }
+    var globalMuxPadding by configurationStore.boolean("globalMuxPadding")
+    var showExitIp by configurationStore.boolean("showExitIp") { true }
+    var exitIpURL by configurationStore.string("exitIpURL") { "https://api.ipify.org" }
+    var connectionTestConcurrent by configurationStore.stringToInt("connectionTestConcurrency") { configurationStore.getInt("connectionTestConcurrent", 5) }
     var alwaysShowAddress by configurationStore.boolean(Key.ALWAYS_SHOW_ADDRESS)
 
     var tunImplementation by configurationStore.stringToInt(Key.TUN_IMPLEMENTATION) { TunImplementation.GVISOR }
@@ -195,6 +205,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverALPN by profileCacheStore.string(Key.SERVER_ALPN)
     var serverCertificates by profileCacheStore.string(Key.SERVER_CERTIFICATES)
     var snellUDP by profileCacheStore.boolean("snellUDP") { true }
+    var snellMode by profileCacheStore.string("snellMode") { "default" }
     var snellReuse by profileCacheStore.boolean("snellReuse")
     var snellObfsHost by profileCacheStore.string("snellObfsHost")
     var serverMTU by profileCacheStore.stringToInt(Key.SERVER_MTU)

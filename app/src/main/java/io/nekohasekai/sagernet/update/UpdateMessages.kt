@@ -4,6 +4,7 @@ import io.nekohasekai.sagernet.R
 
 object UpdateMessages {
     fun resource(error: Exception): Int = when ((error as? UpdateException)?.reason) {
+        "component_unavailable" -> R.string.kernel_unavailable
         "missing" -> R.string.update_missing
         "rate_limit" -> R.string.update_rate_limit
         "invalid" -> R.string.update_invalid

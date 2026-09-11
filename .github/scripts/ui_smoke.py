@@ -40,7 +40,7 @@ def tree():
 
 def find(doc, **attrs):
     for node in doc.iter('node'):
-        if all(node.get(k.replace('_', '-')) == v for k, v in attrs.items()):
+        if all((v in node.get('text', '') if k == 'text_contains' else node.get(k.replace('_', '-')) == v) for k, v in attrs.items()):
             if len(bounds(node)) == 4 and bounds(node)[2] > bounds(node)[0]:
                 return node
     return None
@@ -305,8 +305,8 @@ def backup():
 
 
 def open_core():
-    navigate('nav_about')
-    tap(scroll_for(text=STRINGS['core_manager']))
+    navigate('nav_kernels')
+    tap(scroll_for(text_contains='sing-box'))
     wait_for(resource_id=PACKAGE+':id/core_running')
 
 

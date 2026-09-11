@@ -85,5 +85,19 @@
     "commit": "316cc6606c287d45a321b99ac86a1f2e7f2b785a",
     "url": "https://github.com/enfein/mieru/archive/316cc6606c287d45a321b99ac86a1f2e7f2b785a.tar.gz",
     "sha256": "5b64fbd839b45e1adf1116d8b1c24e56c89e33a4dea12138e2e0c01670750b2c"
+  },
+  "snell_preview": {
+    "name": "Snell (sing-snell)",
+    "version": "sing-snell bc5a12ac736f / adapter 1",
+    "library": "libsnell.so",
+    "source": "https://github.com/SagerNet/sing-snell/tree/bc5a12ac736f235b2de2926ecd2791cc925e6b8c",
+    "license": "GPL-3.0-or-later"
+  },
+  "revisions": {
+    "trojan-go:stable": 1,
+    "naive:stable": 1,
+    "mieru:stable": 1,
+    "snell:stable": 1,
+    "snell:preview": 1
   }
 }

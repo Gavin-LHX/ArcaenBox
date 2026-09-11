@@ -1,0 +1,3 @@
+<resources>
+    <string name="po0_direct_route_help">Po0 加白请求使用直连。配置后自动添加 IP 直连规则；首次配置或移除配置时，正在运行的代理会重新连接一次。</string>
+</resources>

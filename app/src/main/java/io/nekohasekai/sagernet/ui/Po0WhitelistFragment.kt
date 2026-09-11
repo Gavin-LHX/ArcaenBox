@@ -7,6 +7,8 @@ import android.content.Context
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.SagerNet
+import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutPo0WhitelistBinding
 import io.nekohasekai.sagernet.ktx.launchCustomTab
 import io.nekohasekai.sagernet.po0.*
@@ -73,7 +75,13 @@ class Po0WhitelistFragment : ToolbarFragment(R.layout.layout_po0_whitelist) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val state = withContext(Dispatchers.IO) {
+                    val hadTokens = Po0Store.state(context).encryptedTokens.isNotBlank()
                     Po0Store.save(context, text, automatic).also {
+                        // Activate/remove the managed IP route in an already running tunnel.
+                        // The whitelist worker independently uses protected physical sockets.
+                        if (hadTokens != it.encryptedTokens.isNotBlank() && DataStore.serviceState.connected) {
+                            SagerNet.reloadService()
+                        }
                         Po0Whitelist.configure(context)
                         if (addNow || automatic) Po0Whitelist.enqueue(context, manual = addNow)
                     }

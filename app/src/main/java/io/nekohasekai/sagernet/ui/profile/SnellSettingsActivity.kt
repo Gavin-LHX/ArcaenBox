@@ -37,6 +37,7 @@ class SnellSettingsActivity : ProfileSettingsActivity<SnellBean>() {
         DataStore.snellReuse = reuse
         DataStore.serverObfs = obfs
         DataStore.snellObfsHost = obfsHost
+        DataStore.snellMode = mode
     }
 
     override fun SnellBean.serialize() {
@@ -47,8 +48,9 @@ class SnellSettingsActivity : ProfileSettingsActivity<SnellBean>() {
         version = DataStore.protocolVersion
         udp = DataStore.snellUDP
         reuse = DataStore.snellReuse
-        obfs = DataStore.serverObfs
+        obfs = if (version == 6) "none" else DataStore.serverObfs
         obfsHost = DataStore.snellObfsHost
+        mode = if (version == 6) DataStore.snellMode else "default"
         validate()
     }
 
@@ -59,7 +61,15 @@ class SnellSettingsActivity : ProfileSettingsActivity<SnellBean>() {
         findPreference<EditTextPreference>(Key.SERVER_PASSWORD)!!.summaryProvider = PasswordSummaryProvider
         val obfs = findPreference<SimpleMenuPreference>(Key.SERVER_OBFS)!!
         val host = findPreference<EditTextPreference>("snellObfsHost")!!
-        host.isVisible = obfs.value != "none"
-        obfs.setOnPreferenceChangeListener { _, value -> host.isVisible = value != "none"; true }
+        val version = findPreference<SimpleMenuPreference>(Key.PROTOCOL_VERSION)!!
+        val mode = findPreference<SimpleMenuPreference>("snellMode")!!
+        fun refresh(v: String) {
+            mode.isVisible = v == "6"
+            obfs.isVisible = v != "6"
+            host.isVisible = v != "6" && obfs.value != "none"
+        }
+        refresh(version.value)
+        version.setOnPreferenceChangeListener { _, value -> refresh(value.toString()); true }
+        obfs.setOnPreferenceChangeListener { _, value -> host.isVisible = version.value != "6" && value != "none"; true }
     }
 }

@@ -1,17 +1,29 @@
 <resources>
-    <string name="action_snell" translatable="false">Snell</string>
-    <string name="snell_psk">Pre-shared key (PSK)</string>
-    <string name="snell_version">Snell server version</string>
-    <string name="snell_version_help">Choose your server version. v5 servers use the v4-compatible TCP transport, including UDP relay. The v5-specific QUIC transport is not supported.</string>
-    <string name="snell_udp">UDP relay</string>
-    <string name="snell_reuse">Reuse connections</string>
-    <string name="snell_obfs">Obfuscation</string>
-    <string name="snell_obfs_host">Obfuscation host</string>
-    <string name="builtin_protocols">Built-in protocols</string>
-    <string name="builtin_protocols_summary">Trojan-Go, NaïveProxy, Mieru and Snell are included. No plugin installation is required.</string>
-    <string name="builtin_component_missing">Built-in component %1$s is missing. Reinstall the complete ArcaenBox APK.</string>
-    <string name="builtin_naive_android_version">This NaïveProxy version requires Android 7.0 or later.</string>
-    <string-array name="snell_versions"><item>v4</item><item>v5</item></string-array>
-    <string-array name="snell_version_values"><item>4</item><item>5</item></string-array>
-    <string-array name="snell_obfs"><item>none</item><item>http</item><item>tls</item></string-array>
+  <string name="action_snell" translatable="false">Snell</string>
+  <string name="snell_psk">Pre-shared key (PSK)</string>
+  <string name="snell_version">Snell server version</string>
+  <string name="snell_version_help">v4/v5 use the stable core. For v6 Beta/RC, apply the test core in Kernel manager → Snell. Its mode must match the server. v5 QUIC transport is not supported.</string>
+  <string name="snell_udp">UDP relay</string>
+  <string name="snell_reuse">Reuse connections</string>
+  <string name="snell_obfs">Obfuscation</string>
+  <string name="snell_obfs_host">Obfuscation host</string>
+  <string name="builtin_protocols">Built-in protocols</string>
+  <string name="builtin_protocols_summary">Trojan-Go, NaïveProxy, Mieru and Snell are included. No plugin installation is required.</string>
+  <string name="builtin_component_missing">Built-in component %1$s is missing. Reinstall the complete ArcaenBox APK.</string>
+  <string name="builtin_naive_android_version">This NaïveProxy version requires Android 7.0 or later.</string>
+  <string-array name="snell_versions">
+    <item>v4</item>
+    <item>v5</item>
+    <item>v6 (Beta / RC)</item>
+  </string-array>
+  <string-array name="snell_version_values">
+    <item>4</item>
+    <item>5</item>
+    <item>6</item>
+  </string-array>
+  <string-array name="snell_obfs">
+    <item>none</item>
+    <item>http</item>
+    <item>tls</item>
+  </string-array>
 </resources>

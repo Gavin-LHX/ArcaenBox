@@ -22,7 +22,7 @@ data class Po0Result(
 }
 
 object Po0Protocol {
-    const val API = "https://124.221.69.228/api/firewall/"
+    const val API = "https://" + Po0RouteConfig.API_IP + "/api/firewall/"
     const val GUIDE = "https://wiki.uuuz.de/guide/tutorials/po0fw-whitelist.html"
     private val tokenPattern = Regex("^(pgnfw_[A-Za-z0-9_-]{1,512})(?:@([0-4]))?$")
 

@@ -1,0 +1,1 @@
+<resources><string-array name="destination_strategy_entries"><item>AsIs（不预先解析）</item><item>优先 IPv4</item><item>优先 IPv6</item><item>仅 IPv4</item><item>仅 IPv6</item></string-array><string-array name="fragment_entries"><item>关闭</item><item>TLS 记录分片</item><item>TCP 数据包分片</item></string-array></resources>

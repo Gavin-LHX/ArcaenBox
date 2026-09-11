@@ -1,0 +1,7 @@
+<resources>
+ <string-array name="destination_strategy_entries"><item>AsIs</item><item>IPv4 first</item><item>IPv6 first</item><item>IPv4 only</item><item>IPv6 only</item></string-array>
+ <string-array name="destination_strategy_values"><item></item><item>prefer_ipv4</item><item>prefer_ipv6</item><item>ipv4_only</item><item>ipv6_only</item></string-array>
+ <string-array name="fragment_entries"><item>@string/off</item><item>TLS record</item><item>TCP packet</item></string-array>
+ <string-array name="fragment_values"><item>off</item><item>record</item><item>packet</item></string-array>
+ <string-array name="mux_protocols"><item>h2mux</item><item>smux</item><item>yamux</item></string-array>
+</resources>

@@ -17,6 +17,7 @@
             android:icon="@drawable/ic_maps_directions"
             android:title="@string/menu_route" />
 
+        <item android:id="@+id/nav_resources" android:icon="@drawable/ic_baseline_rule_folder_24" android:title="@string/route_resources_button" />
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_action_settings"
@@ -38,6 +39,7 @@
             android:id="@+id/nav_tools"
             android:icon="@drawable/baseline_construction_24"
             android:title="@string/menu_tools" />
+        <item android:id="@+id/nav_kernels" android:icon="@drawable/ic_action_settings" android:title="@string/kernel_manager" />
         <item android:id="@+id/nav_po0" android:icon="@drawable/ic_po0_shield" android:title="@string/po0_title" />
     </group>
 

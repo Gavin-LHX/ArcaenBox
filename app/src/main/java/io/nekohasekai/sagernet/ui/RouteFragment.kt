@@ -100,6 +100,11 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
         super.onDestroy()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (::ruleAdapter.isInitialized) ruleAdapter.notifyItemChanged(0)
+    }
+
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_new_route -> {
@@ -261,11 +266,26 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
             }
         }
 
-        inner class DocumentHolder(binding: LayoutEmptyRouteBinding) : RecyclerView.ViewHolder(binding.root) {
+        inner class DocumentHolder(private val binding: LayoutEmptyRouteBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind() {
-                itemView.setOnClickListener {
-                    it.context.launchCustomTab("https://matsuridayo.github.io/nb4a-route/")
+                val values = resources.getStringArray(R.array.destination_strategy_values)
+                val entries = resources.getStringArray(R.array.destination_strategy_entries)
+                val effective = if (!DataStore.resolveDestination) "" else DataStore.destinationStrategy.ifEmpty {
+                    when (DataStore.ipv6Mode) { 0 -> "ipv4_only"; 2 -> "prefer_ipv6"; 3 -> "ipv6_only"; else -> "prefer_ipv4" }
                 }
+                val selected = values.indexOf(effective).coerceAtLeast(0)
+                binding.routeDomainStrategy.text = getString(R.string.route_strategy_value, entries[selected])
+                binding.routeDomainStrategy.setOnClickListener {
+                    MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.route_domain_strategy)
+                        .setSingleChoiceItems(entries, selected) { dialog, index ->
+                            DataStore.destinationStrategy = values[index]
+                            DataStore.resolveDestination = index != 0
+                            needReload()
+                            bind()
+                            dialog.dismiss()
+                        }.setNegativeButton(android.R.string.cancel, null).show()
+                }
+                binding.routeResources.setOnClickListener { startActivity(Intent(requireContext(), AssetsActivity::class.java)) }
             }
         }
 
@@ -284,10 +304,17 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
                 profileName.text = rule.displayName()
                 profileType.text = rule.mkSummary()
                 routeOutbound.text = rule.displayOutbound()
-                itemView.setOnClickListener {
-                    enableSwitch.performClick()
-                }
+                val label = when (rule.outbound) { 0L -> "proxy"; -1L -> "direct"; -2L -> "block"; else -> "proxy" }
+                routeOutbound.text = "$label · ${rule.displayOutbound()}"
+                routeOutbound.setTextColor(requireContext().getColorAttr(when (rule.outbound) {
+                    -2L -> com.google.android.material.R.attr.colorError
+                    -1L -> com.google.android.material.R.attr.colorTertiary
+                    else -> com.google.android.material.R.attr.colorPrimary
+                }))
+                itemView.setOnClickListener { editButton.performClick() }
+                enableSwitch.setOnCheckedChangeListener(null)
                 enableSwitch.isChecked = rule.enabled
+                enableSwitch.contentDescription = rule.displayName()
                 enableSwitch.setOnCheckedChangeListener { _, isChecked ->
                     runOnDefaultDispatcher {
                         rule.enabled = isChecked

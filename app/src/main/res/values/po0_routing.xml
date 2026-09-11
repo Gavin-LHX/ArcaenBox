@@ -1,0 +1,3 @@
+<resources>
+    <string name="po0_direct_route_help">Po0 requests use a direct connection. A direct IP rule is added automatically when configured. Adding or removing this setup reconnects an active proxy once.</string>
+</resources>

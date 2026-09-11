@@ -346,6 +346,61 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_restart_service -> {
+                if (DataStore.serviceState.connected) SagerNet.reloadService()
+                else snackbar(R.string.not_connected).show()
+            }
+            R.id.action_sort_test_results -> {
+                val group = getCurrentGroupFragment()?.proxyGroup ?: return true
+                runOnDefaultDispatcher { group.order = GroupOrder.BY_DELAY; GroupManager.updateGroup(group) }
+            }
+            R.id.action_export_group_profiles -> {
+                val groupId = DataStore.selectedGroup
+                runOnDefaultDispatcher {
+                    val profiles = SagerDatabase.proxyDao.getByGroup(groupId)
+                    val links = profiles.joinToString("\n") { it.requireBean().toUniversalLink() }
+                    onMainDispatcher {
+                        if (links.isEmpty()) snackbar(R.string.node_empty).show()
+                        else snackbar(if (SagerNet.trySetPrimaryClip(links)) R.string.action_export_msg else R.string.action_export_err).show()
+                    }
+                }
+            }
+            R.id.action_delete_group_profiles -> {
+                val groupId = DataStore.selectedGroup
+                runOnDefaultDispatcher {
+                    val profiles = SagerDatabase.proxyDao.getByGroup(groupId)
+                    onMainDispatcher {
+                        if (profiles.isEmpty()) snackbar(R.string.node_empty).show()
+                        else MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.node_delete_group)
+                            .setMessage(getString(R.string.node_count_confirm, profiles.size))
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .setPositiveButton(android.R.string.ok) { _, _ -> runOnDefaultDispatcher {
+                                if (profiles.any { it.id == DataStore.selectedProxy } && DataStore.serviceState.canStop) SagerNet.stopService()
+                                profiles.forEach { ProfileManager.deleteProfile(it.groupId, it.id) }
+                            } }.show()
+                    }
+                }
+            }
+            R.id.action_locate_profile -> {
+                runOnLifecycleDispatcher {
+                    val selected = ProfileManager.getProfile(DataStore.selectedProxy)
+                    onMainDispatcher {
+                        val index = adapter.groupList.indexOfFirst { it.id == selected?.groupId }
+                        if (selected == null || index < 0) snackbar(R.string.node_empty).show()
+                        else {
+                            toolbar.findViewById<SearchView>(R.id.action_search)?.setQuery("", false)
+                            DataStore.selectedGroup = selected.groupId
+                            groupPager.setCurrentItem(index, false)
+                            groupPager.postDelayed({
+                                getCurrentGroupFragment()?.let { fragment ->
+                                    val position = fragment.adapter?.configurationIdList?.indexOf(selected.id) ?: -1
+                                    if (position >= 0) fragment.configurationListView.scrollTo(position, true)
+                                }
+                            }, 250)
+                        }
+                    }
+                }
+            }
             R.id.action_scan_qr_code -> {
                 startActivity(Intent(context, ScannerActivity::class.java))
             }

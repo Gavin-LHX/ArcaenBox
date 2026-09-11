@@ -308,6 +308,7 @@ class MainActivity : ThemedActivity(),
     fun displayFragment(fragment: ToolbarFragment) {
         if (fragment is ConfigurationFragment) {
             binding.stats.allowShow = true
+            if (DataStore.serviceState.connected) binding.stats.performShow()
             binding.fab.show()
         } else if (!DataStore.showBottomBar) {
             binding.stats.allowShow = false
@@ -328,9 +329,15 @@ class MainActivity : ThemedActivity(),
 
             R.id.nav_group -> displayFragment(GroupFragment())
             R.id.nav_route -> displayFragment(RouteFragment())
+            R.id.nav_resources -> {
+                binding.drawerLayout.closeDrawers()
+                startActivity(Intent(this, AssetsActivity::class.java))
+                return false
+            }
             R.id.nav_settings -> displayFragment(SettingsFragment())
             R.id.nav_traffic -> displayFragment(WebviewFragment())
             R.id.nav_tools -> displayFragment(ToolsFragment())
+            R.id.nav_kernels -> displayFragment(KernelManagerFragment())
             R.id.nav_po0 -> displayFragment(Po0WhitelistFragment())
             R.id.nav_logcat -> displayFragment(LogcatFragment())
             R.id.nav_faq -> {
@@ -387,7 +394,7 @@ class MainActivity : ThemedActivity(),
     }
 
     private val connect = registerForActivityResult(VpnRequestActivity.StartService()) {
-        if (it) snackbar(R.string.vpn_permission_denied).show()
+        if (it) VpnRequestActivity.showPermissionHelp(this)
     }
 
     // may NOT called when app is in background
@@ -406,6 +413,7 @@ class MainActivity : ThemedActivity(),
         val old = DataStore.selectedProxy
         DataStore.selectedProxy = id
         DataStore.currentProfile = id
+        binding.stats.refreshExitIp()
         runOnDefaultDispatcher {
             ProfileManager.postUpdate(old, true)
             ProfileManager.postUpdate(id, true)

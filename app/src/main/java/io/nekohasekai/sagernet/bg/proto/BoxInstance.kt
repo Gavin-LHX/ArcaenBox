@@ -66,7 +66,8 @@ abstract class BoxInstance(
                     }
 
                     is SnellBean -> {
-                        initPlugin("snell-builtin")
+                        val component = initPlugin("snell-builtin").component!!
+                        if (bean.version !in component.protocols) throw java.io.IOException(app.getString(io.nekohasekai.sagernet.R.string.snell_preview_required))
                         pluginConfigs[port] = profile.type to bean.buildSnellConfig(port)
                     }
 
@@ -121,9 +122,7 @@ abstract class BoxInstance(
                         configFile.writeText(config)
                         cacheFiles.add(configFile)
 
-                        val commands = mutableListOf(
-                            initPlugin("trojan-go-plugin").path, "-config", configFile.absolutePath
-                        )
+                        val commands = initPlugin("trojan-go-plugin").command("-config", configFile.absolutePath)
 
                         processes.start(commands)
                     }
@@ -138,8 +137,8 @@ abstract class BoxInstance(
                             check(delete() && mkdir())
                             componentDirectories.add(this)
                         }
-                        processes.start(mutableListOf(
-                            initPlugin("snell-builtin").path, "-d", workingDir.absolutePath,
+                        processes.start(initPlugin("snell-builtin").command(
+                            "-d", workingDir.absolutePath,
                             "-f", configFile.absolutePath
                         ))
                     }
@@ -158,9 +157,7 @@ abstract class BoxInstance(
                         // Server sockets go through the sing-box loopback mapping.
                         // No external protect-socket plugin is required.
 
-                        val commands = mutableListOf(
-                            initPlugin("mieru-plugin").path, "run",
-                        )
+                        val commands = initPlugin("mieru-plugin").command("run")
 
                         processes.start(commands, envMap)
                     }
@@ -188,9 +185,7 @@ abstract class BoxInstance(
                             envMap["SSL_CERT_FILE"] = certFile.absolutePath
                         }
 
-                        val commands = mutableListOf(
-                            initPlugin("naive-plugin").path, configFile.absolutePath
-                        )
+                        val commands = initPlugin("naive-plugin").command(configFile.absolutePath)
 
                         processes.start(commands, envMap)
                     }

@@ -1,0 +1,22 @@
+<resources>
+  <string name="kernel_manager">内核管理</string>
+  <string name="kernel_preview">测试版</string>
+  <string name="kernel_manager_help">统一管理 sing-box 和内置协议内核。每个内核可独立选择正式版或测试版。</string>
+  <string name="kernel_enabled">当前启用的内核</string>
+  <string name="kernel_channel_help">选择渠道后可检查、下载并应用内核。测试版不一定比正式版新，请核对显示的版本。</string>
+  <string name="kernel_no_local">此渠道暂无本地内核，请先检查更新。</string>
+  <string name="kernel_unavailable">此渠道暂未发布兼容的 ArcaenBox 内核，当前启用的内核保持不变。</string>
+  <string name="kernel_download_help">下载会匹配设备架构并校验 ArcaenBox 签名。可随时恢复应用内置的正式版内核。</string>
+  <string name="kernel_restore">恢复内置正式版内核</string>
+  <string name="kernel_apply">应用所选内核</string>
+  <string name="kernel_apply_help">切换内核前会断开代理。应用完成后重新连接，即使用所选版本。</string>
+  <string name="kernel_ready">下载及校验完成。点击“应用所选内核”后生效。</string>
+  <string name="kernel_applied">内核已应用，重新连接即可使用。</string>
+  <string name="snell_preview_required">Snell 6 需要测试版内核。请在“内核管理 → Snell → 测试版”中应用所选内核。</string>
+  <string name="snell_mode">Snell 6 传输模式</string>
+  <string-array name="snell_modes">
+    <item>默认（加密）</item>
+    <item>无流量整形（加密）</item>
+    <item>原始传输（不加密）</item>
+  </string-array>
+</resources>

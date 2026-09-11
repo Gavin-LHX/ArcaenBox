@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vpn_permission_help">Android did not grant VPN authorization. If another app is set to Always-on VPN, turn that option off in System VPN settings, then return and tap Connect. On phones with a separate Create VPN connections permission, allow ArcaenBox in App permissions too. A managed-device restriction must be changed by its administrator.</string>
+    <string name="system_vpn_settings">System VPN settings</string>
+    <string name="app_permission_settings">App permissions</string>
+    <string name="vpn_establish_failed">Android could not create the VPN interface. Check VPN authorization, another app’s Always-on VPN, and device restrictions in System VPN settings.</string>
+    <string name="exit_ip_value">Exit IP: %1$s</string>
+    <string name="exit_ip_querying">Exit IP: checking…</string>
+    <string name="exit_ip_failed">Exit IP unavailable · tap to retry</string>
+    <string name="show_exit_ip">Show proxy exit IP</string>
+    <string name="exit_ip_url">Exit IP lookup URL</string>
+    <string name="exit_ip_help">HTTPS endpoint returning a public IP as plain text or JSON {\"ip\":\"…\"}. Requests always use the current proxy; failure never falls back to direct access.</string>
+    <string name="connection_concurrency">Connection test concurrency</string>
+    <string name="invalid_setting">Invalid value. Check the permitted range or URL format.</string>
+    <string name="vpn_settings_group">VPN settings</string>
+    <string name="core_settings_group">sing-box connection settings</string>
+    <string name="udp_timeout_title">UDP session timeout (seconds)</string>
+    <string name="udp_timeout_help">0 uses the core default (300 seconds); range 0–86400.</string>
+    <string name="fragment_title">TLS handshake fragmentation</string>
+    <string name="fragment_help">Applies to built-in TCP TLS proxy connections. Record fragmentation is preferable; packet fragmentation may reduce performance. QUIC and external cores use their own settings.</string>
+    <string name="fragment_delay">Fragment fallback delay (ms)</string>
+    <string name="mux_title">Enable sing-box multiplexing</string>
+    <string name="mux_help">Default for Shadowsocks, VMess, VLESS and Trojan profiles without their own multiplex settings. Requires a compatible server. This is sing-box multiplexing; Xray Mux/XUDP parameters are not interchangeable.</string>
+    <string name="mux_protocol_title">Multiplex protocol</string>
+    <string name="mux_streams_title">Maximum streams per connection</string>
+    <string name="mux_padding_title">Multiplex padding</string>
+    <string name="route_domain_strategy">Destination domain strategy</string>
+    <string name="route_strategy_value">Destination domain strategy: %1$s</string>
+    <string name="route_instructions">Rules match from top to bottom. Tap a rule or its pencil to edit; use its switch to enable. Long-press to reorder, swipe to delete.</string>
+    <string name="route_resources_button">Resource files</string>
+    <string name="resource_format_help">Geo databases use sing-box .db format. Rule sets support .srs and source .json; use rule-set:filename in a routing rule. Xray .dat files are not compatible.</string>
+    <string name="resource_source">Geo file source</string>
+    <string name="resource_update_all">Update all Geo files</string>
+    <string name="resource_not_installed">Not installed</string>
+    <string name="resource_invalid">Unsupported, empty or invalid resource file</string>
+    <string name="resource_busy">A resource operation is in progress</string>
+    <string name="resource_updated_count">Updated %1$d resource files</string>
+    <string name="resource_changed">Resources changed. Reconnect to apply routing changes.</string>
+    <string name="resource_delete_confirm">Delete %1$s? Rules using this file require it to be imported or downloaded again.</string>
+    <string name="node_restart">Restart service</string>
+    <string name="node_delete_group">Delete profiles in current group</string>
+    <string name="node_export_group">Export current group to clipboard</string>
+    <string name="node_locate">Locate selected profile</string>
+    <string name="node_sort_delay">Sort by test results</string>
+    <string name="node_empty">No matching profiles</string>
+    <string name="node_count_confirm">Delete %1$d profiles from the current group?</string>
+</resources>

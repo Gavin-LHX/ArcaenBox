@@ -13,6 +13,7 @@ public class SnellBean extends AbstractBean {
     public Boolean reuse;
     public String obfs;
     public String obfsHost;
+    public String mode;
 
     @Override public void initializeDefaultValues() {
         super.initializeDefaultValues();
@@ -22,12 +23,13 @@ public class SnellBean extends AbstractBean {
         if (reuse == null) reuse = false;
         if (obfs == null) obfs = "none";
         if (obfsHost == null) obfsHost = "";
+        if (mode == null) mode = "default";
     }
 
     @Override public String network() { return Boolean.TRUE.equals(udp) ? "tcp,udp" : "tcp"; }
 
     @Override public void serialize(ByteBufferOutput output) {
-        output.writeInt(0);
+        output.writeInt(1);
         super.serialize(output);
         output.writeString(psk);
         output.writeInt(version);
@@ -35,11 +37,12 @@ public class SnellBean extends AbstractBean {
         output.writeBoolean(reuse);
         output.writeString(obfs);
         output.writeString(obfsHost);
+        output.writeString(mode);
     }
 
     @Override public void deserialize(ByteBufferInput input) {
         int format = input.readInt();
-        if (format != 0) throw new IllegalArgumentException("Unsupported Snell profile format");
+        if (format < 0 || format > 1) throw new IllegalArgumentException("Unsupported Snell profile format");
         super.deserialize(input);
         psk = input.readString();
         version = input.readInt();
@@ -47,6 +50,7 @@ public class SnellBean extends AbstractBean {
         reuse = input.readBoolean();
         obfs = input.readString();
         obfsHost = input.readString();
+        mode = format >= 1 ? input.readString() : "default";
     }
 
     @NonNull @Override public SnellBean clone() {

@@ -11,6 +11,8 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import android.os.Build
+import io.nekohasekai.sagernet.update.NativeChoice
+import io.nekohasekai.sagernet.update.NativeComponents
 
 object PluginManager {
 
@@ -23,7 +25,11 @@ object PluginManager {
     data class InitResult(
         val path: String,
         val info: ProviderInfo,
-    )
+        val component: NativeChoice? = null,
+    ) {
+        fun command(vararg args: String): MutableList<String> = component?.let { NativeComponents.command(it, *args) }
+            ?: mutableListOf(path, *args)
+    }
 
     @Throws(Throwable::class)
     fun init(pluginId: String): InitResult? {
@@ -33,10 +39,8 @@ object PluginManager {
             if (pluginId == "naive-plugin" && Build.VERSION.SDK_INT < 24) {
                 throw IOException(SagerNet.application.getString(R.string.builtin_naive_android_version))
             }
-            val path = initNativeInternal(pluginId) ?: throw IOException(
-                SagerNet.application.getString(R.string.builtin_component_missing, pluginId)
-            )
-            return InitResult(path, ProviderInfo().apply { authority = Plugins.AUTHORITIES_PREFIX_NEKO_EXE })
+            val selected = NativeComponents.selected(NativeComponents.plugins.getValue(pluginId))
+            return InitResult(selected.path.absolutePath, ProviderInfo().apply { authority = Plugins.AUTHORITIES_PREFIX_NEKO_EXE }, selected)
         }
         var throwable: Throwable? = null
 

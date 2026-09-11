@@ -77,6 +77,14 @@
 
             </LinearLayout>
 
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/delete_resource"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/delete"
+                app:tint="?attr/colorOnSurfaceVariant"
+                app:srcCompat="@drawable/ic_action_delete" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/rules_update"
                 style="?attr/borderlessButtonStyle"

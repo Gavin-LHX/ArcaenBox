@@ -25,7 +25,17 @@ and its [upstream implementation](https://github.com/w0ven/po0fw):
 The IPv4 endpoint presents a publicly trusted IP certificate. Normal certificate
 and hostname verification remain enabled. Requests cannot redirect, use a system
 HTTP proxy, or fall back to the VPN: sockets and DNS bind to an explicitly checked
-non-VPN Android `Network`. No routing rule or proxy configuration is changed.
+non-VPN Android `Network`.
+
+When Po0 tokens are configured, ArcaenBox also adds the equivalent of
+`IP-CIDR,124.221.69.228/32,DIRECT,no-resolve` to the beginning of the generated
+sing-box route list. It uses a plain direct outbound and an IP-only matcher,
+without introducing DNS resolution or changing DNS rules. This applies after
+custom configuration merging and also covers full custom sing-box profiles.
+Equivalent duplicate rules are coalesced; other rules retain their order.
+The generated rule is managed automatically and is not added to the editable
+user-rule database. Adding the first token or clearing all tokens reloads an
+already connected proxy once to apply/remove it. Later updates do not reload it.
 The worker validates the physical network itself because WorkManager's default
 network validation can report an unusable VPN while the physical connection works.
 

@@ -109,8 +109,8 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .setOnClickAction { (requireActivity() as MainActivity).displayFragment(CoreUpdatesFragment()) }
                                 .build())
                         .addItem(MaterialAboutActionItem.Builder()
-                            .text(R.string.core_manager)
-                            .setOnClickAction { (requireActivity() as MainActivity).displayFragment(CoreUpdatesFragment()) }
+                            .text(R.string.kernel_manager)
+                            .setOnClickAction { (requireActivity() as MainActivity).displayFragment(KernelManagerFragment()) }
                             .build())
                         .addItem(MaterialAboutActionItem.Builder()
                             .text(R.string.builtin_protocols)

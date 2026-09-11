@@ -1,6 +1,9 @@
 package moe.matsuri.nb4a
 
 import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.ktx.app
+import io.nekohasekai.sagernet.utils.ResourceFiles
+import java.io.File
 import moe.matsuri.nb4a.SingBoxOptions.RuleSet
 
 object SingBoxOptionsUtil {
@@ -34,7 +37,7 @@ fun SingBoxOptions.DNSRule_DefaultOptions.makeSingBoxRule(list: List<String>) {
     domain_regex = mutableListOf<String>()
     domain_keyword = mutableListOf<String>()
     list.forEach {
-        if (it.startsWith("geosite:")) {
+        if (it.startsWith("geosite:") || it.startsWith("rule-set:")) {
             rule_set.plusAssign(it)
         } else if (it.startsWith("full:")) {
             domain.plusAssign(it.removePrefix("full:").lowercase())
@@ -73,6 +76,18 @@ fun SingBoxOptions.DNSRule_DefaultOptions.checkEmpty(): Boolean {
 fun generateRuleSet(ruleSetString: List<String>, ruleSet: MutableList<RuleSet>) {
     ruleSetString.forEach {
         when {
+            it.startsWith("rule-set:") -> {
+                val name = it.removePrefix("rule-set:")
+                require(ResourceFiles.validName(name) && (name.endsWith(".srs") || name.endsWith(".json"))) { "Invalid rule set filename" }
+                val file = File(app.externalAssets, name)
+                require(file.isFile) { "Missing resource: $name" }
+                ruleSet.add(RuleSet().apply {
+                    type = "local"
+                    tag = it
+                    format = if (name.endsWith(".srs")) "binary" else "source"
+                    path = file.absolutePath
+                })
+            }
             it.startsWith("geoip:") -> {
                 ruleSet.add(RuleSet().apply {
                     type = "local"
@@ -107,7 +122,9 @@ fun SingBoxOptions.Rule_DefaultOptions.makeSingBoxRule(list: List<String>, isIP:
     }
     list.forEach {
         if (isIP) {
-            if (it.startsWith("geoip:")) {
+            if (it.startsWith("rule-set:")) {
+                rule_set.plusAssign(it)
+            } else if (it.startsWith("geoip:")) {
                 if (it == "geoip:private") {
                     ip_is_private = true
                 } else {
@@ -118,7 +135,7 @@ fun SingBoxOptions.Rule_DefaultOptions.makeSingBoxRule(list: List<String>, isIP:
             }
             return@forEach
         }
-        if (it.startsWith("geosite:")) {
+        if (it.startsWith("geosite:") || it.startsWith("rule-set:")) {
             rule_set.plusAssign(it)
         } else if (it.startsWith("full:")) {
             domain.plusAssign(it.removePrefix("full:").lowercase())

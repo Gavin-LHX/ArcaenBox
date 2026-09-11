@@ -17,6 +17,7 @@ import io.nekohasekai.sagernet.database.preference.EditTextPreferenceModifiers
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.Theme
 import moe.matsuri.nb4a.ui.*
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
@@ -40,6 +41,46 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         preferenceManager.preferenceDataStore = DataStore.configurationStore
         DataStore.initGlobal()
         addPreferencesFromResource(R.xml.global_preferences)
+
+        findPreference<Preference>("systemVpnSettings")!!.setOnPreferenceClickListener {
+            VpnRequestActivity.openSettings(requireContext())
+            true
+        }
+        findPreference<Preference>("resourceFiles")!!.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), AssetsActivity::class.java))
+            true
+        }
+        fun number(key: String, range: IntRange) {
+            findPreference<EditTextPreference>(key)!!.apply {
+                setOnBindEditTextListener { it.inputType = EditorInfo.TYPE_CLASS_NUMBER }
+                if (key == "connectionTestConcurrency" && text == null) text = DataStore.connectionTestConcurrent.toString()
+                summaryProvider = EditTextPreference.SimpleSummaryProvider.getInstance()
+                setOnPreferenceChangeListener { _, value ->
+                    val valid = value.toString().toIntOrNull()?.let { it in range } == true
+                    if (valid) needReload() else snackbar(R.string.invalid_setting).show()
+                    valid
+                }
+            }
+        }
+        number("udpTimeout", 0..86400)
+        number("tlsFragmentDelay", 1..1000)
+        number("globalMuxStreams", 1..1024)
+        number("connectionTestConcurrency", 1..32)
+        listOf("tlsFragment", "globalMux", "globalMuxProtocol", "globalMuxPadding", "showExitIp",
+            "domain_strategy_for_remote", "domain_strategy_for_direct", "domain_strategy_for_server")
+            .forEach { findPreference<Preference>(it)!!.onPreferenceChangeListener = reloadListener }
+        findPreference<Preference>("destinationStrategy")!!.setOnPreferenceChangeListener { _, value ->
+            DataStore.resolveDestination = value.toString().isNotEmpty()
+            findPreference<SwitchPreference>(Key.RESOLVE_DESTINATION)!!.isChecked = DataStore.resolveDestination
+            needReload()
+            true
+        }
+        findPreference<EditTextPreference>("exitIpURL")!!.setOnPreferenceChangeListener { _, value ->
+            val url = value.toString().toHttpUrlOrNull()
+            val valid = url?.isHttps == true && url.username.isEmpty() && url.password.isEmpty()
+            if (!valid) snackbar(R.string.invalid_setting).show()
+            valid
+        }
 
         val appTheme = findPreference<ColorPickerPreference>(Key.APP_THEME)!!
         appTheme.setOnPreferenceChangeListener { _, newTheme ->

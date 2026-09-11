@@ -1,0 +1,27 @@
+<resources>
+  <string name="kernel_manager">Kernel manager</string>
+  <string name="kernel_preview">Test release</string>
+  <string name="kernel_manager_help">Manage sing-box and built-in protocol cores. Each core has its own stable and test channels.</string>
+  <string name="kernel_enabled">Enabled core</string>
+  <string name="kernel_channel_help">Choose a channel to check, download and apply. A test release may be older than stable; compare the displayed versions before switching.</string>
+  <string name="kernel_no_local">No local core for this channel. Check for updates first.</string>
+  <string name="kernel_unavailable">No compatible ArcaenBox core is published for this channel yet. Your enabled core is unchanged.</string>
+  <string name="kernel_download_help">Downloads are matched to this device and verified with the ArcaenBox signing key. You can restore the bundled stable core at any time.</string>
+  <string name="kernel_restore">Restore bundled stable core</string>
+  <string name="kernel_apply">Apply selected core</string>
+  <string name="kernel_apply_help">The VPN will stop before changing this core. Reconnect after applying to use the selected version.</string>
+  <string name="kernel_ready">Download verified. Apply this core to enable it.</string>
+  <string name="kernel_applied">Core applied. Reconnect to use it.</string>
+  <string name="snell_preview_required">Snell 6 requires the test core. Open Kernel manager → Snell → Test release → Apply selected core.</string>
+  <string name="snell_mode">Snell 6 transport mode</string>
+  <string-array name="snell_modes">
+    <item>Default (encrypted)</item>
+    <item>Unshaped (encrypted)</item>
+    <item>Unsafe raw (unencrypted)</item>
+  </string-array>
+  <string-array name="snell_mode_values" translatable="false">
+    <item>default</item>
+    <item>unshaped</item>
+    <item>unsafe-raw</item>
+  </string-array>
+</resources>

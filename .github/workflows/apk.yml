@@ -5,7 +5,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.5.0-arcaenbox.1
+        default: v1.6.0-arcaenbox.1
       stable_core_run:
         description: Native Cores run containing the verified stable AAR
         required: true
@@ -77,6 +77,7 @@ jobs:
           printf '%s' "$SIGNING_KEYSTORE" | base64 --decode > release.keystore
           python3 -m pip install cryptography
           python3 .github/scripts/package_cores.py --stable core-build/stable/libcore.aar --preview core-build/preview/libcore.aar --keystore release.keystore
+          python3 .github/scripts/package_components.py --keystore release.keystore
           ./gradlew --no-daemon app:testOssReleaseUnitTest app:assembleOssRelease
       - name: Verify APK signatures, application name and package
         run: |
@@ -139,6 +140,13 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: python3 .github/scripts/ui_smoke.py
+      - name: Upload native component updates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NativeComponentUpdates
+          path: core-build/component-updates/
+          if-no-files-found: error
       - name: Upload UI verification evidence
         if: always()
         uses: actions/upload-artifact@v4
