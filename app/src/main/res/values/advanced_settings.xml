@@ -32,4 +32,5 @@
     <string-array name="advanced_sniffers"><item>http</item><item>tls</item><item>quic</item><item>dns</item></string-array>
     <string-array name="advanced_fingerprint_entries"><item>Core default</item><item>chrome</item><item>firefox</item><item>safari</item><item>randomized</item></string-array>
     <string-array name="advanced_fingerprint_values"><item></item><item>chrome</item><item>firefox</item><item>safari</item><item>randomized</item></string-array>
+    <string-array name="advanced_sniffers_default" />
 </resources>
