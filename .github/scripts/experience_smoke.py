@@ -4,6 +4,7 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import time
 import traceback
 import urllib.parse
@@ -85,6 +86,9 @@ def permissions():
 
 def exit_ip():
     ensure_snell('Snell-public-exit')
+    ui.navigate('nav_settings')
+    ui.tap(ui.scroll_for(text=ui.STRINGS['log_level']))
+    ui.tap(ui.wait_for(text='debug'))
     button = protocol.start_profile('Snell-public-exit')
     try:
         end = time.monotonic() + 40
@@ -96,6 +100,13 @@ def exit_ip():
             if match:
                 ip = match.group(1); break
             time.sleep(1)
+        if not ip:
+            (OUT/'exit-core.log').write_text(ui.adb('shell','cat','/data/user/0/'+P+'/cache/neko.log',check=False))
+            sockets=ui.adb('shell','ss','-ltnp',check=False)
+            (OUT/'exit-listeners.txt').write_text(sockets)
+            (OUT/'exit-processes.txt').write_text(ui.adb('shell','ps','-A','-o','PID,ARGS'))
+            baseline=subprocess.run(['curl','-i','--max-time','20','https://api.ipify.org'],capture_output=True,text=True)
+            (OUT/'exit-host-baseline.txt').write_text(baseline.stdout+'\n'+baseline.stderr)
         assert ip, 'No public proxy exit IP: '+text
         assert ip not in ('10.0.2.2', '127.0.0.1')
         (OUT/'public-exit.json').write_text(json.dumps({'ip': ip, 'proxy': 'Snell 5', 'endpoint': 'https://api.ipify.org'}))
@@ -117,7 +128,7 @@ def resources():
     ui.wait_for(text='geoip.db'); ui.wait_for(text='geosite.db')
     ui.capture('resource-files-overview')
     ui.tap(ui.wait_for(resource_id=P+':id/resource_source'))
-    ui.wait_for(resource_id='android:id/select_dialog_listview')
+    ui.wait_for(resource_id=P+':id/select_dialog_listview')
     ui.capture('resource-source-picker')
     ui.adb('shell','input','keyevent','BACK')
     ui.tap(ui.wait_for(resource_id=P+':id/action_update_resources'))
@@ -273,6 +284,7 @@ def run(name, function):
         FAILURES.append(name)
         (OUT/(name+'-failure.txt')).write_text(traceback.format_exc())
         (OUT/(name+'-failure-logcat.txt')).write_text(ui.adb('shell','logcat','-d',check=False))
+        (OUT/(name+'-core.log')).write_text(ui.adb('shell','cat','/data/user/0/'+P+'/cache/neko.log',check=False))
         print('FAIL:',name,traceback.format_exc(),flush=True)
         try: ui.capture(name+'-failure')
         except Exception: pass
