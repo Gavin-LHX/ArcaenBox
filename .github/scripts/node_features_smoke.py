@@ -14,6 +14,15 @@ import protocol_smoke as protocol
 P = ui.PACKAGE
 
 
+def vpn_config(log):
+    # The same logger also records auxiliary Mihomo configurations. Select the
+    # sing-box configuration that actually owns the VPN interface.
+    configs = [json.loads(line.split('[ProxyInstance] ', 1)[1])
+               for line in log.splitlines() if '[ProxyInstance] {' in line]
+    return next(config for config in reversed(configs)
+                if any(inbound.get('type') == 'tun' for inbound in config.get('inbounds', [])))
+
+
 def results():
     path = ui.OUT / 'node-tests-snapshot.db'
     path.write_bytes(ui.adb('exec-out', 'cat', '/data/user/0/'+P+'/databases/sager_net.db', binary=True))
@@ -146,8 +155,7 @@ def advanced_settings():
     button = protocol.start_profile('Advanced-Snell')
     try:
         log = ui.adb('shell','cat','/data/user/0/'+P+'/cache/neko.log')
-        lines = [line.split('[ProxyInstance] ',1)[1] for line in log.splitlines() if '[ProxyInstance] {' in line]
-        config = json.loads(lines[-1])
+        config = vpn_config(log)
         assert config['dns']['timeout']=='8s' and config['dns']['optimistic'] is True
         assert config['dns']['cache_capacity']==2048
         assert any(s.get('predefined',{}).get('example.test')==['192.0.2.123'] for s in config['dns']['servers'])
@@ -277,7 +285,7 @@ def custom_dns():
     button=protocol.start_profile('Custom-DNS-Snell')
     try:
         log=ui.adb('shell','cat','/data/user/0/'+P+'/cache/neko.log')
-        config=json.loads([line.split('[ProxyInstance] ',1)[1] for line in log.splitlines() if '[ProxyInstance] {' in line][-1])
+        config=vpn_config(log)
         dns=config['dns']
         assert len(dns['servers'])==2 and dns['final']=='dns-remote',dns
         assert {s['tag'] for s in dns['servers']}=={'dns-direct','dns-remote'}
