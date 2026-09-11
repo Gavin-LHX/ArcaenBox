@@ -13,7 +13,8 @@ PACKAGE = 'com.arcaenbox.android'
 OUT = Path('ui-smoke')
 OUT.mkdir(exist_ok=True)
 STRINGS = {e.get('name'): ''.join(e.itertext()) for e in ET.parse('app/src/main/res/values/strings.xml').getroot() if e.tag == 'string'}
-STRINGS.update({e.get('name'): ''.join(e.itertext()) for e in ET.parse('app/src/main/res/values/core_updates.xml').getroot() if e.tag == 'string'})
+for resource in Path('app/src/main/res/values').glob('*.xml'):
+    STRINGS.update({e.get('name'): ''.join(e.itertext()) for e in ET.parse(resource).getroot() if e.tag == 'string'})
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 MENU = {e.get(ANDROID + 'id').split('/')[-1]: STRINGS[e.get(ANDROID + 'title').split('/')[-1]] for e in ET.parse('app/src/main/res/menu/main_drawer_menu.xml').iter('item')}
 RESULTS = []
@@ -118,6 +119,7 @@ def navigate(item):
 
 
 def auto_connect_switch():
+    scroll_for(text=STRINGS['auto_connect'])
     doc=tree()
     title=find(doc,text=STRINGS['auto_connect'])
     assert title is not None

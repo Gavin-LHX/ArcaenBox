@@ -8,6 +8,8 @@ from package_builtins import fetch
 OUT = Path('core-build/protocol-tests')
 OUT.mkdir(parents=True, exist_ok=True)
 SERVERS = [
+    ('snell6', 'https://dl.nssurge.com/snell/snell-server-v6.0.0rc2-linux-amd64.zip',
+     '8a9c4463ca87cfa5eaa37c6af0d37ab93ea275aa12391985bb2a375ca3abd7f2', 'snell-server'),
     ('snell4', 'https://dl.nssurge.com/snell/snell-server-v4.1.1-linux-amd64.zip',
      'cc2271b79c7506888b34e651e8741b3aa7fc7d5f60aa65ef8bb096f3313a193b', 'snell-server'),
     ('snell5', 'https://dl.nssurge.com/snell/snell-server-v5.0.1-linux-amd64.zip',

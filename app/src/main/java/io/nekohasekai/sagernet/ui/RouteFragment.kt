@@ -307,9 +307,9 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
                 val label = when (rule.outbound) { 0L -> "proxy"; -1L -> "direct"; -2L -> "block"; else -> "proxy" }
                 routeOutbound.text = "$label · ${rule.displayOutbound()}"
                 routeOutbound.setTextColor(requireContext().getColorAttr(when (rule.outbound) {
-                    -2L -> com.google.android.material.R.attr.colorError
+                    -2L -> androidx.appcompat.R.attr.colorError
                     -1L -> com.google.android.material.R.attr.colorTertiary
-                    else -> com.google.android.material.R.attr.colorPrimary
+                    else -> androidx.appcompat.R.attr.colorPrimary
                 }))
                 itemView.setOnClickListener { editButton.performClick() }
                 enableSwitch.setOnCheckedChangeListener(null)

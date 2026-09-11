@@ -52,6 +52,10 @@ def setup_servers():
         config=OUT/f'snell{version}.conf'
         config.write_text(f'[snell-server]\nlisten = 127.0.0.1:{port}\npsk = {SECRET}\nipv6 = false\n')
         server(f'snell{version}',[str(BIN/f'snell{version}'),'-c',str(config)])
+    for mode,port in [('default',18091),('unshaped',18092),('unsafe-raw',18093)]:
+        config=OUT/f'snell6-{mode}.conf'
+        config.write_text(f'[snell-server]\nlisten = 127.0.0.1:{port}\npsk = {SECRET}\nmode = {mode}\n')
+        server(f'snell6-{mode}',[str(BIN/'snell6'),'-c',str(config)])
     for name, port, extra in [('trojan',18086,{}),('trojan-ws-ss',18087,{
         'websocket':{'enabled':True,'path':'/test','host':'localhost'},
         'shadowsocks':{'enabled':True,'method':'AES-128-GCM','password':SECRET}})]:
@@ -291,6 +295,21 @@ def main():
                              ('Mieru-TCP','libmieru.so',True),('Mieru-UDP','libmieru.so',True),
                              ('NaiveProxy','libnaive.so',False)]:
             check_traffic(name,lib,udp)
+        ui.launch(); ui.navigate('nav_kernels')
+        ui.tap(ui.scroll_for(text_contains='Snell'))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_preview'))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_apply'))
+        ui.tap(ui.wait_for(resource_id='android:id/button1'))
+        ui.wait_for(text=ui.STRINGS['kernel_applied'])
+        for mode,port in [('default',18091),('unshaped',18092),('unsafe-raw',18093)]:
+            name='Snell-v6-'+mode
+            import_uri(f'snell://{SECRET}@10.0.2.2:{port}?version=6&udp=true&reuse=true&mode={mode}',name)
+            check_traffic(name,'libsnell.so',True)
+        ui.launch(); ui.navigate('nav_kernels')
+        ui.tap(ui.scroll_for(text_contains='Snell'))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_restore'))
+        ui.tap(ui.wait_for(resource_id='android:id/button1'))
+        ui.wait_for(text=ui.STRINGS['kernel_applied'])
         ui.launch(); ui.open_core()
         ui.tap(ui.scroll_for(resource_id=P+':id/core_preview'))
         ui.tap(ui.scroll_for(resource_id=P+':id/core_apply'))

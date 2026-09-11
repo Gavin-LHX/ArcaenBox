@@ -13,30 +13,12 @@ object Protocols {
 
     // Deduplication
 
-    class Deduplication(
-        val bean: AbstractBean, val type: String
-    ) {
-
-        fun hash(): String {
-            if (bean is ConfigBean) {
-                return bean.config
-            }
-            return bean.serverAddress + bean.serverPort + type
-        }
-
-        override fun hashCode(): Int {
-            return hash().toByteArray().contentHashCode()
-        }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Deduplication
-
-            return hash() == other.hash()
-        }
-
+    class Deduplication(bean: AbstractBean, private val type: String) {
+        // Compare complete connection settings while ignoring only the display name.
+        // Address and port alone collapse different credentials, transports and Snell versions.
+        private val bytes = io.nekohasekai.sagernet.fmt.KryoConverters.serialize(bean.clone().apply { name = "" })
+        override fun hashCode() = 31 * type.hashCode() + bytes.contentHashCode()
+        override fun equals(other: Any?) = other is Deduplication && type == other.type && bytes.contentEquals(other.bytes)
     }
 
     // Display
