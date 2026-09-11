@@ -22,8 +22,8 @@ def results():
     return {(row[0], row[1]): dict(zip(['profileId','kind','value','testedAt','error','transferred'],row)) for row in rows}
 
 
-def start_test(key, targets, speed=False):
-    ui.launch()
+def start_test(key, targets, speed=False, restart=True):
+    if restart: ui.launch()
     ui.tap(ui.wait_for(resource_id=P+':id/action_misc'))
     ui.tap(ui.scroll_for(text=ui.STRINGS[key]))
     ui.wait_for(text=ui.STRINGS['node_test_toggle_all'])
@@ -99,6 +99,20 @@ def node_tests():
         processes = ui.adb('shell','ps','-A','-o','PID,ARGS')
         assert not any('/libmihomo.so' in line or '/libsnell_preview.so' in line for line in processes.splitlines()), processes
         assert results() == before, 'Cancellation overwrote completed results'
+        # Measuring a bad node while a good VPN is connected must not silently
+        # use that VPN's proxy, nor interrupt its service.
+        button=protocol.start_profile('Measure-OK')
+        try:
+            service=ui.adb('shell','pidof',P+':bg').strip()
+            before=int(time.time()*1000)
+            start_test('node_test_url',['Measure-OK','Measure-Failed'],restart=False)
+            active_results=wait_results('URL',2,before)
+            assert sorted(r['value']>=0 for r in active_results)==[False,True],active_results
+            assert ui.adb('shell','pidof',P+':bg').strip()==service and service
+            assert re.search(r'\btun\d+:',ui.adb('shell','ip','-o','link','show'))
+            ui.wait_for(resource_id=P+':id/action_misc');ui.capture('node-tests-preserve-active-vpn')
+        finally:
+            ui.tap(button)
         ui.launch(); ui.tap(ui.wait_for(resource_id=P+':id/action_misc'))
         ui.tap(ui.scroll_for(text=ui.STRINGS['node_sort_results']))
         ui.tap(ui.wait_for(text=ui.STRINGS['node_test_speed']))
