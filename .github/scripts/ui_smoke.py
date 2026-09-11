@@ -369,7 +369,7 @@ def core_switch():
     capture('20-core-stable')
     for channel,version in [('preview','1.15.0-alpha.2'),('stable','1.14.0')]:
         tap(scroll_for(resource_id=PACKAGE+':id/core_'+channel))
-        tap(scroll_for(resource_id=PACKAGE+':id/core_apply'))
+        tap(scroll_for(resource_id=PACKAGE+':id/core_apply',enabled='true'))
         tap(wait_for(resource_id='android:id/button1'))
         time.sleep(4)
         wait_for(resource_id=PACKAGE+':id/toolbar')
@@ -380,7 +380,7 @@ def core_switch():
         service()
         open_core()
         assert version in find(tree(),resource_id=PACKAGE+':id/core_details').get('text','')
-    tap(scroll_for(resource_id=PACKAGE+':id/core_restore'))
+    tap(scroll_for(resource_id=PACKAGE+':id/core_restore',enabled='true'))
     tap(wait_for(resource_id='android:id/button1'))
     time.sleep(4)
     launch()
@@ -407,15 +407,15 @@ def core_download():
             time.sleep(1)
         raise AssertionError('Core update did not finish: '+text)
     def apply():
-        tap(scroll_for(resource_id=PACKAGE+':id/core_apply'))
+        tap(scroll_for(resource_id=PACKAGE+':id/core_apply',enabled='true'))
         tap(wait_for(resource_id='android:id/button1'))
         time.sleep(4)
         wait_for(resource_id=PACKAGE+':id/toolbar')
         open_core()
     def fetch_core(channel):
         tap(scroll_for(resource_id=PACKAGE+':id/core_'+channel))
-        tap(scroll_for(resource_id=PACKAGE+':id/core_check'))
-        tap(wait_for(resource_id=PACKAGE+':id/core_download'))
+        tap(scroll_for(resource_id=PACKAGE+':id/core_check',enabled='true'))
+        tap(wait_for(resource_id=PACKAGE+':id/core_download',enabled='true'))
         wait_status(STRINGS['core_ready'])
     for channel,version in [('stable','1.14.0'),('preview','1.15.0-alpha.2')]:
         launch(); open_core()
