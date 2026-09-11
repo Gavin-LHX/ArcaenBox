@@ -87,6 +87,7 @@ class MainActivity : ThemedActivity(),
         binding.stats.setOnClickListener { if (DataStore.serviceState.connected) binding.stats.testConnection() }
 
         setContentView(binding.root)
+        binding.stats.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateContentSpace() }
         changeState(BaseService.State.Idle)
         connection.connect(this, this)
         DataStore.configurationStore.registerChangeListener(this)
@@ -315,10 +316,20 @@ class MainActivity : ThemedActivity(),
             binding.stats.performHide()
             binding.fab.hide()
         }
+        updateContentSpace()
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_holder, fragment)
             .commitAllowingStateLoss()
         binding.drawerLayout.closeDrawers()
+    }
+
+    private fun updateContentSpace() {
+        val params = binding.fragmentHolder.layoutParams as android.view.ViewGroup.MarginLayoutParams
+        val bottom = if (binding.stats.allowShow) binding.stats.height else 0
+        if (params.bottomMargin != bottom) {
+            params.bottomMargin = bottom
+            binding.fragmentHolder.layoutParams = params
+        }
     }
 
     fun displayFragmentWithId(@IdRes id: Int): Boolean {

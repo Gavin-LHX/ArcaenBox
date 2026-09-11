@@ -34,48 +34,9 @@ class NodeTestUi(private val fragment: Fragment) {
         }
     }
 
-    fun select(kind: NodeTestKind, groupId: Long) {
-        if (DataStore.runningTest) return
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
-            val profiles = withContext(Dispatchers.IO) { SagerDatabase.proxyDao.getByGroup(groupId) }
-            if (profiles.isEmpty()) {
-                MaterialAlertDialogBuilder(fragment.requireContext()).setMessage(R.string.node_empty)
-                    .setPositiveButton(android.R.string.ok, null).show()
-                return@launch
-            }
-            val selected = BooleanArray(profiles.size) { true }
-            val dialog = MaterialAlertDialogBuilder(fragment.requireContext()).setTitle(title(kind))
-                .setMultiChoiceItems(profiles.map { "${it.displayName()} · ${it.displayType()}" }.toTypedArray(), selected) { alert, index, checked ->
-                    selected[index] = checked
-                    (alert as androidx.appcompat.app.AlertDialog).getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).isEnabled = selected.any { it }
-                }
-                .setNeutralButton(R.string.node_test_toggle_all, null)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.node_test_start, null).create()
-            dialog.setOnShowListener {
-                val start = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
-                start.setOnClickListener {
-                    val targets = profiles.filterIndexed { index, _ -> selected[index] }
-                    if (targets.isNotEmpty()) {
-                        dialog.dismiss()
-                        if (kind == NodeTestKind.SPEED) {
-                            MaterialAlertDialogBuilder(fragment.requireContext()).setTitle(title(kind))
-                                .setMessage(fragment.getString(R.string.node_test_speed_help, targets.size,
-                                    DataStore.speedTestLimitMiB, targets.size.toLong() * DataStore.speedTestLimitMiB,
-                                    DataStore.nodeTestTimeout))
-                                .setNegativeButton(android.R.string.cancel, null)
-                                .setPositiveButton(R.string.node_test_start) { _, _ -> run(kind, groupId, targets) }.show()
-                        } else run(kind, groupId, targets)
-                    }
-                }
-                dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                    val check = selected.any { !it }
-                    start.isEnabled = check
-                    selected.indices.forEach { index -> selected[index] = check; dialog.listView.setItemChecked(index, check) }
-                }
-            }
-            dialog.show()
-        }
+    fun start(kind: NodeTestKind, profiles: List<ProxyEntity>) {
+        if (profiles.isEmpty() || DataStore.runningTest) return
+        run(kind, profiles.first().groupId, profiles)
     }
 
     private fun run(kind: NodeTestKind, groupId: Long, profiles: List<ProxyEntity>) {
@@ -118,7 +79,7 @@ class NodeTestUi(private val fragment: Fragment) {
                                     SagerDatabase.instance.runInTransaction {
                                         if (SagerDatabase.proxyDao.getById(profile.id) != null) {
                                             SagerDatabase.nodeTests.put(result)
-                                            if (kind == NodeTestKind.URL || (kind == NodeTestKind.TCP && profile.requireBean().canTCPing()))
+                                            if (kind == NodeTestKind.URL)
                                                 SagerDatabase.proxyDao.updateTestStatus(profile.id, if (result.value >= 0) 1 else 3,
                                                     result.value.coerceAtLeast(0).toInt(), result.error)
                                         }
@@ -136,7 +97,7 @@ class NodeTestUi(private val fragment: Fragment) {
                 withContext(NonCancellable) {
                     DataStore.runningTest = false
                     progress.dismiss()
-                    withContext(Dispatchers.IO) { GroupManager.postReload(groupId) }
+                    withContext(Dispatchers.IO) { profiles.map { it.groupId }.distinct().forEach { GroupManager.postReload(it) } }
                 }
             }
         }

@@ -3,6 +3,7 @@ package io.nekohasekai.sagernet.ui
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import io.nekohasekai.sagernet.R
@@ -19,10 +20,8 @@ class KernelManagerFragment : ToolbarFragment(R.layout.layout_kernel_manager) {
         val list = view.findViewById<LinearLayout>(R.id.kernel_list)
         val entries = linkedMapOf("sing-box" to "sing-box").apply { putAll(NativeComponents.names) }
         entries.forEach { (id, name) ->
-            val button = MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
-                text = name; isAllCaps = false; textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                setPadding(32, 24, 32, 24)
-                layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 16 }
+            val button = layoutInflater.inflate(R.layout.item_kernel, list, false).apply {
+                findViewById<TextView>(R.id.kernel_name).text = name
                 setOnClickListener {
                     (requireActivity() as MainActivity).displayFragment(if (id == "sing-box") CoreUpdatesFragment() else NativeUpdatesFragment.create(id))
                 }
@@ -33,7 +32,8 @@ class KernelManagerFragment : ToolbarFragment(R.layout.layout_kernel_manager) {
                     if (id == "sing-box") CoreRuntime.active.let { it.version to it.channel }
                     else NativeComponents.selected(id).let { it.version to it.channel }
                 }
-                button.text = "$name\n${status.first} · ${getString(if (status.second == "preview") R.string.kernel_preview else R.string.core_stable)}"
+                button.findViewById<TextView>(R.id.kernel_version).text = status.first
+                button.findViewById<TextView>(R.id.kernel_channel).setText(if (status.second == "preview") R.string.kernel_preview else R.string.core_stable)
             }
         }
     }

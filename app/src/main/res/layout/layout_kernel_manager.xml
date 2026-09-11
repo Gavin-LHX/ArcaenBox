@@ -3,8 +3,8 @@
     android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
     <include layout="@layout/layout_appbar" android:layout_width="match_parent" android:layout_height="wrap_content" />
     <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
-        <LinearLayout android:id="@+id/kernel_list" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp" android:paddingBottom="88dp">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/kernel_manager_help" android:textAppearance="?textAppearanceBodyLarge" android:layout_marginBottom="16dp" />
+        <LinearLayout android:id="@+id/kernel_list" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:paddingBottom="88dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/kernel_manager_help" android:textAppearance="?textAppearanceBodyMedium" android:layout_marginBottom="16dp" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

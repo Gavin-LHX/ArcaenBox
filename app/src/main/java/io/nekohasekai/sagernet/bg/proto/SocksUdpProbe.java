@@ -5,13 +5,16 @@ import java.net.*;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-/** RFC 1928 UDP ASSOCIATE with an RFC 5905 request sent through the selected proxy. */
+/** RFC 1928 UDP ASSOCIATE with a validated protocol request through the selected proxy. */
 public final class SocksUdpProbe implements Closeable {
     private volatile boolean cancelled;
     private volatile Socket control;
     private volatile DatagramSocket datagram;
 
     public int measure(int proxyPort, String host, int port, int timeoutMs) throws IOException {
+        UdpTestTarget target=UdpTestTarget.parse(host,port);
+        host=target.host;port=target.port;
+        UdpProbePacket probe=new UdpProbePacket(target.mode);
         long deadline = System.nanoTime() + timeoutMs * 1_000_000L;
         try {
             control = new Socket(Proxy.NO_PROXY);
@@ -33,21 +36,18 @@ public final class SocksUdpProbe implements Closeable {
             relay = new InetSocketAddress("127.0.0.1", relay.getPort());
             if (relay.getPort() == 0) throw new IOException("Invalid UDP relay port");
 
-            byte[] request = new byte[48];
-            request[0] = 0x23; // NTP v4, client. A nonce correlates the originate timestamp.
-            byte[] nonce = new byte[8];
-            new SecureRandom().nextBytes(nonce);
-            System.arraycopy(nonce, 0, request, 40, 8);
             ByteArrayOutputStream packet = new ByteArrayOutputStream();
             DataOutputStream data = new DataOutputStream(packet);
-            data.write(new byte[]{0, 0, 0, 3});
-            byte[] name = IDN.toASCII(host).getBytes(java.nio.charset.StandardCharsets.US_ASCII);
-            if (name.length == 0 || name.length > 253 || port < 1 || port > 65535)
-                throw new IOException("Invalid NTP destination");
-            data.writeByte(name.length);
-            data.write(name);
+            data.write(new byte[]{0, 0, 0});
+            if(host.contains(":")) {
+                data.writeByte(4);data.write(InetAddress.getByName(host).getAddress());
+            } else {
+                data.writeByte(3);
+                byte[] name = host.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+                data.writeByte(name.length);data.write(name);
+            }
             data.writeShort(port);
-            data.write(request);
+            data.write(probe.request);
             datagram = new DatagramSocket(new InetSocketAddress("127.0.0.1", 0));
             checkCancelled();
             datagram.connect(relay);
@@ -61,9 +61,9 @@ public final class SocksUdpProbe implements Closeable {
                 throw new IOException("Invalid or fragmented SOCKS UDP response");
             InetSocketAddress origin = readAddress(received);
             if (origin.getPort() != port) throw new IOException("Unexpected UDP response port");
-            byte[] ntp = new byte[received.available()];
-            received.readFully(ntp);
-            validateNtp(ntp, nonce);
+            byte[] payload = new byte[received.available()];
+            received.readFully(payload);
+            probe.validate(payload);
             return Math.max(1, (int) ((System.nanoTime() - start) / 1_000_000L));
         } finally {
             close();

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="node_test_tcp">TCP latency (multi-select)</string>
-    <string name="node_test_url">Real connection latency (multi-select)</string>
-    <string name="node_test_udp">UDP latency (multi-select)</string>
-    <string name="node_test_speed">Download speed (multi-select)</string>
+    <string name="node_test_tcp">TCP latency</string>
+    <string name="node_test_url">Real connection latency</string>
+    <string name="node_test_udp">UDP latency</string>
+    <string name="node_test_speed">Download speed</string>
     <string name="node_test_real_short">Connection</string>
     <string name="node_test_speed_short">Download</string>
     <string name="node_sort_results">Sort by test results</string>
@@ -14,8 +14,17 @@
     <string name="node_test_timeout">Test timeout per node (seconds)</string>
     <string name="node_test_download_url">Speed test file URL (HTTPS)</string>
     <string name="node_test_limit">Download limit per node (MiB)</string>
-    <string name="node_test_udp_host">UDP test NTP server</string>
-    <string name="node_test_udp_port">UDP test NTP port</string>
-    <string name="node_test_udp_help">Send an NTP request through each selected proxy and validate its reply. This measures UDP round-trip latency. A failed UDP test does not mark TCP unavailable.</string>
+    <string name="node_test_udp_host">UDP probe protocol and server</string>
+    <string name="node_test_udp_port">Custom NTP port (plain host only)</string>
+    <string name="node_test_udp_help">Choose NTP, DNS, STUN or Minecraft Bedrock. Custom format: protocol:host:port. Replies are validated through the selected proxy.</string>
     <string name="node_test_unsupported">Unsupported test</string>
+    <string name="test_preset_custom">Custom…</string>
+    <string name="node_actions">Node actions</string>
+    <string name="node_select_multiple">Select nodes</string>
+    <string name="node_selected_count">%1$d nodes selected</string>
+    <string name="node_test_selected">Test selected nodes</string>
+    <string name="status_latency">Connected · Latency %1$d ms</string>
+    <string name="status_latency_pending">Connected · Testing latency</string>
+    <string name="status_latency_failed">Connected · Latency test failed</string>
+    <string name="status_retest">Tap to refresh latency and exit IP</string>
 </resources>

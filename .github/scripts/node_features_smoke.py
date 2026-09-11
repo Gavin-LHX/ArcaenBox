@@ -31,19 +31,30 @@ def results():
     return {(row[0], row[1]): dict(zip(['profileId','kind','value','testedAt','error','transferred'],row)) for row in rows}
 
 
+def node_action(name):
+    ui.scroll_for(text=name)
+    doc=ui.tree();parents={child:parent for parent in doc.iter() for child in parent}
+    row=ui.find(doc,text=name)
+    while row in parents:
+        button=ui.find(row,resource_id=P+':id/node_actions')
+        if button is not None: return button
+        row=parents[row]
+    raise AssertionError('Node action menu missing')
+
+
 def start_test(key, targets, speed=False, restart=True):
     if restart: ui.launch()
+    if len(targets)==1:
+        ui.tap(node_action(targets[0]))
+        ui.capture('node-menu-'+key)
+        ui.tap(ui.wait_for(text=ui.STRINGS[key]))
+        return
     ui.tap(ui.wait_for(resource_id=P+':id/action_misc'))
-    ui.tap(ui.scroll_for(text=ui.STRINGS[key]))
-    ui.wait_for(text=ui.STRINGS['node_test_toggle_all'])
-    ui.tap(ui.wait_for(resource_id='android:id/button3'))
-    for name in targets: ui.tap(ui.scroll_for(text_contains=name, checked='false'))
-    ui.capture('node-selection-'+key)
-    ui.tap(ui.wait_for(resource_id='android:id/button1'))
-    if speed:
-        ui.wait_for(text_contains='The total download limit')
-        ui.capture('speed-test-limit-confirmation')
-        ui.tap(ui.wait_for(resource_id='android:id/button1'))
+    ui.tap(ui.scroll_for(text=ui.STRINGS['node_select_multiple']))
+    for name in targets: ui.tap(ui.scroll_for(text=name))
+    ui.capture('node-list-selection-'+key)
+    ui.tap(ui.wait_for(content_desc='More options'))
+    ui.tap(ui.wait_for(text=ui.STRINGS[key]))
 
 
 def wait_results(kind, count, since, timeout=65):

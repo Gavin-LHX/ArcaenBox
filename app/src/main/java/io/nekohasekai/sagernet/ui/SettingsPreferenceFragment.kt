@@ -73,6 +73,37 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         number("secondMixedPort", 1..65535)
         number("dnsQueryTimeout", 1..60)
         number("dnsCacheCapacity", 1024..65536)
+        fun presets(key: String, values: List<String>) {
+            findPreference<TestPresetPreference>(key)!!.apply {
+                presets = values.map { it to it }
+                summaryProvider = EditTextPreference.SimpleSummaryProvider.getInstance()
+            }
+        }
+        presets("connectionTestConcurrency", (1..8).map(Int::toString) + listOf("16", "32"))
+        presets("nodeTestTimeout", listOf("5", "10", "15", "20", "25", "30", "60"))
+        presets("speedTestLimitMiB", listOf("1", "5", "10", "20", "50", "100"))
+        presets("speedTestURL", listOf(
+            "https://speed.cloudflare.com/__down?bytes=10000000",
+            "https://speed.cloudflare.com/__down?bytes=50000000",
+            "https://speed.cloudflare.com/__down?bytes=99999999",
+            "https://cachefly.cachefly.net/1mb.test", "https://cachefly.cachefly.net/10mb.test",
+            "https://cachefly.cachefly.net/50mb.test", "https://cachefly.cachefly.net/100mb.test"))
+        presets("connectionTestURL", listOf("https://www.gstatic.com/generate_204",
+            "https://www.google.com/generate_204", "https://www.youtube.com/generate_204",
+            "https://www.googlevideo.com/generate_204", "https://cp.cloudflare.com/generate_204",
+            "https://www.apple.com/library/test/success.html", "http://www.msftconnecttest.com/connecttest.txt"))
+        presets("udpTestHost", listOf("ntp:pool.ntp.org", "ntp:time.google.com", "ntp:time.cloudflare.com",
+            "dns:1.1.1.1", "dns:8.8.8.8", "dns:dns.google", "stun:stun.voztovoice.org",
+            "stun:stun.cloudflare.com", "stun:stun.l.google.com:19302",
+            "mcbe:pms.mc-complex.com", "mcbe:bedrock.opblocks.com", "mcbe:play.craftersmc.net"))
+        presets("exitIpURL", listOf("https://api.ipify.org", "https://api64.ipify.org",
+            "https://api.ip.sb/geoip", "https://api-ipv4.ip.sb/geoip", "https://api-ipv6.ip.sb/geoip", "https://api.ipapi.is"))
+        findPreference<EditTextPreference>("connectionTestURL")!!.setOnPreferenceChangeListener { _, value ->
+            val url = value.toString().toHttpUrlOrNull()
+            val valid = url != null && url.username.isEmpty() && url.password.isEmpty()
+            if (!valid) snackbar(R.string.invalid_setting).show()
+            valid
+        }
         listOf("dnsCache", "dnsOptimistic", "dnsBlockAAAA", "dnsBlockHttps", "dnsSystemHosts", "customDnsEnabled",
             "coreCacheFile", "protocolSniffers", "defaultFingerprint", "inboundUsername", "inboundPassword", "secondMixedEnabled")
             .forEach { findPreference<Preference>(it)!!.onPreferenceChangeListener = reloadListener }
@@ -110,8 +141,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             valid
         }
         findPreference<EditTextPreference>("udpTestHost")!!.setOnPreferenceChangeListener { _, value ->
-            val host = value.toString().trim()
-            val valid = host.length in 1..253 && host.matches(Regex("[A-Za-z0-9.-]+"))
+            val valid = runCatching { io.nekohasekai.sagernet.bg.proto.UdpTestTarget.parse(value.toString(), DataStore.udpTestPort) }.isSuccess
             if (!valid) snackbar(R.string.invalid_setting).show()
             valid
         }

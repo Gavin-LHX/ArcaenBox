@@ -57,9 +57,10 @@ class NativeUpdatesFragment : ToolbarFragment(R.layout.layout_core_updates) {
             try {
                 val (enabled, available) = withContext(Dispatchers.IO) { NativeComponents.selected(id) to NativeComponents.choice(id, target) }
                 if (target != channel || binding !== ui) return@launch
-                ui.coreRunning.text = label(enabled)
+                ui.coreRunning.text = enabled.version
                 ui.coreSelected.text = available?.let(::label) ?: getString(R.string.kernel_no_local)
-                ui.coreDetails.text = if (id == "snell") getString(R.string.snell_version_help) else getString(R.string.kernel_download_help)
+                ui.coreDetails.text = label(enabled)
+                ui.coreDetails.setOnClickListener { MaterialAlertDialogBuilder(requireContext()).setTitle(NativeComponents.names.getValue(id)).setMessage(if (id == "snell") R.string.snell_version_help else R.string.kernel_download_help).setPositiveButton(android.R.string.ok, null).show() }
                 ui.coreApply.isEnabled = !busy && available != null
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) { ui.coreStatus.setText(UpdateMessages.resource(e)) }

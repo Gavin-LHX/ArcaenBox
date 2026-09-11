@@ -12,6 +12,12 @@ import android.text.format.Formatter
 import android.text.style.ForegroundColorSpan
 import android.view.KeyEvent
 import android.view.LayoutInflater
+import android.view.Menu
+import androidx.appcompat.view.ActionMode
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import io.nekohasekai.sagernet.bg.proto.NodeTestKind
+import kotlinx.coroutines.withContext
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -126,6 +132,76 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     interface SelectCallback {
         fun returnProfile(profileId: Long)
+    }
+
+    private val testSelection = linkedSetOf<Long>()
+    private var selectionMode: ActionMode? = null
+    private val testKinds = linkedMapOf(R.id.action_connection_tcp_ping to NodeTestKind.TCP,
+        R.id.action_connection_url_test to NodeTestKind.URL, R.id.action_connection_udp_test to NodeTestKind.UDP,
+        R.id.action_connection_speed_test to NodeTestKind.SPEED)
+
+    private fun refreshSelection() {
+        selectionMode?.title = getString(R.string.node_selected_count, testSelection.size)
+        selectionMode?.invalidate()
+        adapter.groupFragments.values.forEach { it.adapter?.notifyDataSetChanged() }
+    }
+
+    private fun toggleSelection(id: Long) {
+        if (selectionMode == null) beginSelection()
+        if (!testSelection.add(id)) testSelection.remove(id)
+        refreshSelection()
+    }
+
+    private fun beginSelection() {
+        if (selectionMode != null) return
+        selectionMode = (requireActivity() as AppCompatActivity).startSupportActionMode(object : ActionMode.Callback {
+            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+                menu.add(0, R.id.action_select_nodes, 0, R.string.node_test_toggle_all)
+                testKinds.forEach { (id, kind) -> menu.add(0, id, 1, NodeTestUi.title(kind)) }
+                return true
+            }
+            override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+                testKinds.keys.forEach { menu.findItem(it).isEnabled = testSelection.isNotEmpty() && !DataStore.runningTest }
+                return true
+            }
+            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+                if (item.itemId == R.id.action_select_nodes) {
+                    val ids = getCurrentGroupFragment()?.adapter?.configurationIdList.orEmpty()
+                    if (testSelection.containsAll(ids)) testSelection.removeAll(ids.toSet()) else testSelection.addAll(ids)
+                    refreshSelection()
+                } else testKinds[item.itemId]?.let { startSelectedTest(it) }
+                return true
+            }
+            override fun onDestroyActionMode(mode: ActionMode) {
+                selectionMode = null; testSelection.clear(); refreshSelection()
+            }
+        })
+        refreshSelection()
+    }
+
+    private fun startSelectedTest(kind: NodeTestKind) {
+        val ids = testSelection.toList().ifEmpty { listOf(DataStore.selectedProxy) }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val profiles = withContext(Dispatchers.IO) { ids.mapNotNull { SagerDatabase.proxyDao.getById(it) } }
+            selectionMode?.finish()
+            NodeTestUi(this@ConfigurationFragment).start(kind, profiles)
+        }
+    }
+
+    private fun showNodeActions(anchor: View, profile: ProxyEntity) {
+        PopupMenu(requireContext(), anchor).apply {
+            menu.add(0, R.id.edit, 0, R.string.edit)
+            menu.add(0, R.id.remove, 0, R.string.delete)
+            testKinds.forEach { (id, kind) -> menu.add(0, id, 0, NodeTestUi.title(kind)) }
+            menu.add(0, R.id.action_select_nodes, 1, R.string.node_select_multiple)
+            setOnMenuItemClickListener { item ->
+                if (item.itemId == R.id.edit || item.itemId == R.id.remove) (anchor.parent as View).findViewById<View>(item.itemId).performClick()
+                else if (item.itemId == R.id.action_select_nodes) toggleSelection(profile.id)
+                else testKinds[item.itemId]?.let { NodeTestUi(this@ConfigurationFragment).start(it, listOf(profile)) }
+                true
+            }
+            show()
+        }
     }
 
     lateinit var adapter: GroupPagerAdapter
@@ -270,6 +346,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             ProfileManager.removeListener(adapter)
         }
 
+        selectionMode?.finish()
         super.onDestroy()
     }
 
@@ -281,7 +358,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 KeyEvent.KEYCODE_T -> io.nekohasekai.sagernet.bg.proto.NodeTestKind.SPEED
                 else -> null
             }
-            if (kind != null) { NodeTestUi(this).select(kind, DataStore.currentGroupId()); return true }
+            if (kind != null) { startSelectedTest(kind); return true }
         }
         val fragment = getCurrentGroupFragment()
         fragment?.configurationListView?.apply {
@@ -355,6 +432,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_select_nodes -> beginSelection()
             R.id.action_restart_service -> {
                 if (DataStore.serviceState.connected) SagerNet.reloadService()
                 else snackbar(R.string.not_connected).show()
@@ -661,18 +739,18 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
             R.id.action_connection_tcp_ping -> {
-                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.TCP, DataStore.currentGroupId())
+                startSelectedTest(NodeTestKind.TCP)
             }
 
             R.id.action_connection_udp_test -> {
-                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.UDP, DataStore.currentGroupId())
+                startSelectedTest(NodeTestKind.UDP)
             }
             R.id.action_connection_speed_test -> {
-                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.SPEED, DataStore.currentGroupId())
+                startSelectedTest(NodeTestKind.SPEED)
             }
 
             R.id.action_connection_url_test -> {
-                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.URL, DataStore.currentGroupId())
+                startSelectedTest(NodeTestKind.URL)
             }
         }
         return true
@@ -827,6 +905,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         lateinit var undoManager: UndoSnackbarManager<ProxyEntity>
         var adapter: ConfigurationAdapter? = null
+        private var reorderHelper: ItemTouchHelper? = null
 
         override fun onSaveInstanceState(outState: Bundle) {
             super.onSaveInstanceState(outState)
@@ -948,7 +1027,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                 undoManager = UndoSnackbarManager(activity as MainActivity, adapter!!)
 
-                ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+                reorderHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
                     ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.START
                 ) {
                     override fun getSwipeDirs(
@@ -965,6 +1044,8 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     }
+
+                    override fun isLongPressDragEnabled() = false
 
                     override fun onMove(
                         recyclerView: RecyclerView,
@@ -983,7 +1064,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                         super.clearView(recyclerView, viewHolder)
                         adapter?.commitMove()
                     }
-                }).attachToRecyclerView(configurationListView)
+                }).also { it.attachToRecyclerView(configurationListView) }
 
             }
 
@@ -1281,6 +1362,10 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 } else {
                     view.setOnClickListener {
+                        if (pf.selectionMode != null) {
+                            pf.toggleSelection(proxyEntity.id)
+                            return@setOnClickListener
+                        }
                         runOnDefaultDispatcher {
                             var update: Boolean
                             var lastSelected: Long
@@ -1311,6 +1396,17 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 }
 
+                view.findViewById<com.google.android.material.checkbox.MaterialCheckBox>(R.id.node_checked).apply {
+                    isVisible = pf.selectionMode != null
+                    isChecked = proxyEntity.id in pf.testSelection
+                    setOnClickListener { pf.toggleSelection(proxyEntity.id) }
+                }
+                view.findViewById<View>(R.id.node_actions).apply {
+                    isVisible = !select && pf.selectionMode == null
+                    setOnClickListener { pf.showNodeActions(it, proxyEntity) }
+                    setOnLongClickListener { reorderHelper?.startDrag(this@ConfigurationHolder); true }
+                }
+                if (!select) view.setOnLongClickListener { pf.toggleSelection(proxyEntity.id); true }
                 profileName.text = proxyEntity.displayName()
                 profileType.text = proxyEntity.displayType()
                 profileType.setTextColor(requireContext().getProtocolColor(proxyEntity.type))
@@ -1376,6 +1472,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
 
                 val measurements = adapter?.testResults?.get(proxyEntity.id).orEmpty().sortedBy { it.kind }
+                profileStatus.isVisible = measurements.isEmpty()
                 view.findViewById<TextView>(R.id.node_test_results).apply {
                     isGone = measurements.isEmpty()
                     text = measurements.joinToString("  ·  ") { NodeTestUi.resultText(view.context, it) }
@@ -1407,9 +1504,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
 
                 val selectOrChain = select || proxyEntity.type == ProxyEntity.TYPE_CHAIN
-                shareLayout.isGone = selectOrChain
-                editButton.isGone = select
-                removeButton.isGone = select
+                shareLayout.isGone = selectOrChain || pf.selectionMode != null
+                editButton.isGone = true
+                removeButton.isGone = true
 
                 proxyEntity.nekoBean?.apply {
                     shareLayout.isGone = true

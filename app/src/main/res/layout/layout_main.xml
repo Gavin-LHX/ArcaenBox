@@ -43,6 +43,8 @@
             app:tint="?colorOnPrimaryContainer"
             app:layout_anchor="@id/stats"
             app:pressedTranslationZ="6dp"
+            app:fabCustomSize="56dp"
+            app:fabSize="normal"
             app:srcCompat="@drawable/ic_service_idle" />
 
         <io.nekohasekai.sagernet.widget.StatsBar
@@ -51,64 +53,31 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:nextFocusUp="@+id/fab"
-            app:backgroundTint="?colorMaterial300"
+            app:backgroundTint="?colorSurfaceContainer"
             app:contentInsetStart="0dp"
             app:fabAlignmentMode="end"
+            app:fabAnchorMode="embed"
+            app:fabAlignmentModeEndMargin="16dp"
             app:removeEmbeddedFabElevation="false"
-            app:hideOnScroll="true"
+            app:hideOnScroll="false"
             app:layout_scrollFlags="enterAlways|scroll">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackground"
-                android:orientation="vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="96dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp">
-
-                <TextView
-                    android:id="@+id/tx"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_gravity="fill_horizontal"
-                    android:ellipsize="marquee"
-                    android:singleLine="true"
-                    android:textColor="?whiteOrTextPrimary"
-                    android:textAppearance="?attr/textAppearanceBodySmall" />
-
-                <TextView
-                    android:id="@+id/rx"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_gravity="fill_horizontal"
-                    android:ellipsize="marquee"
-                    android:singleLine="true"
-                    android:textColor="?whiteOrTextPrimary"
-                    android:textAppearance="?attr/textAppearanceBodySmall" />
-
-                <TextView
-                    android:id="@+id/status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="fill_horizontal"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="?whiteOrTextPrimary"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    tools:text="@string/connection_test_available" />
-
-                <TextView
-                    android:id="@+id/exit_ip"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:maxLines="2"
-                    android:visibility="gone"
-                    android:textColor="?whiteOrTextPrimary"
-                    android:textAppearance="?attr/textAppearanceBodySmall" />
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="80dp" android:gravity="center_vertical"
+                android:background="?android:attr/selectableItemBackground" android:orientation="vertical"
+                android:paddingStart="16dp" android:paddingEnd="88dp" android:paddingVertical="12dp">
+                <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:maxLines="2" android:ellipsize="end" android:textAppearance="?textAppearanceLabelLarge" android:textColor="?colorOnSurface" />
+                <TextView android:id="@+id/exit_ip" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp" android:visibility="gone" android:breakStrategy="simple"
+                    android:textAppearance="?textAppearanceBodySmall" android:textColor="?colorPrimary" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <TextView android:id="@+id/tx" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                        android:maxLines="1" android:ellipsize="end" android:textAppearance="?textAppearanceLabelSmall" android:textColor="?colorOnSurfaceVariant" />
+                    <TextView android:id="@+id/rx" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                        android:maxLines="1" android:ellipsize="end" android:textAppearance="?textAppearanceLabelSmall" android:textColor="?colorOnSurfaceVariant" />
+                </LinearLayout>
             </LinearLayout>
 
         </io.nekohasekai.sagernet.widget.StatsBar>

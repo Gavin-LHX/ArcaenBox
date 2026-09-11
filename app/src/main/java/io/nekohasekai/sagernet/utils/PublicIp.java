@@ -5,6 +5,17 @@ import java.net.InetAddress;
 
 public final class PublicIp {
     private PublicIp() {}
+    public static String describe(String response) throws Exception {
+        String ip=parse(response);
+        if (!response.trim().startsWith("{")) return ip;
+        com.google.gson.JsonObject json=JsonParser.parseString(response).getAsJsonObject();
+        com.google.gson.JsonElement country=json.get("country_code");
+        if (country==null && json.has("location") && json.get("location").isJsonObject())
+            country=json.getAsJsonObject("location").get("country_code");
+        if (country!=null && country.isJsonPrimitive() && country.getAsString().matches("[A-Za-z]{2}"))
+            return "("+country.getAsString().toUpperCase(java.util.Locale.ROOT)+") "+ip;
+        return ip;
+    }
     public static String parse(String response) throws Exception {
         String value = response.trim();
         if (value.startsWith("{")) value = JsonParser.parseString(value).getAsJsonObject().get("ip").getAsString();

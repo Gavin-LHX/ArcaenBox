@@ -78,14 +78,14 @@
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="globalMuxPadding" app:title="@string/mux_padding_title" app:defaultValue="false" app:dependency="globalMux" />
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/node_test_settings">
-        <EditTextPreference app:key="nodeTestTimeout" app:title="@string/node_test_timeout" app:defaultValue="10" />
-        <EditTextPreference app:key="speedTestURL" app:title="@string/node_test_download_url" app:defaultValue="https://speed.cloudflare.com/__down?bytes=20971520" app:useSimpleSummaryProvider="true" />
-        <EditTextPreference app:key="speedTestLimitMiB" app:title="@string/node_test_limit" app:defaultValue="20" />
-        <EditTextPreference app:key="udpTestHost" app:title="@string/node_test_udp_host" app:defaultValue="time.cloudflare.com" app:summary="@string/node_test_udp_help" />
+        <moe.matsuri.nb4a.ui.TestPresetPreference app:key="nodeTestTimeout" app:title="@string/node_test_timeout" app:defaultValue="10" />
+        <moe.matsuri.nb4a.ui.TestPresetPreference app:key="speedTestURL" app:title="@string/node_test_download_url" app:defaultValue="https://speed.cloudflare.com/__down?bytes=20971520" app:useSimpleSummaryProvider="true" />
+        <moe.matsuri.nb4a.ui.TestPresetPreference app:key="speedTestLimitMiB" app:title="@string/node_test_limit" app:defaultValue="20" />
+        <moe.matsuri.nb4a.ui.TestPresetPreference app:key="udpTestHost" app:title="@string/node_test_udp_host" app:defaultValue="time.cloudflare.com" app:summary="@string/node_test_udp_help" />
         <EditTextPreference app:key="udpTestPort" app:title="@string/node_test_udp_port" app:defaultValue="123" />
-        <moe.matsuri.nb4a.ui.UrlTestPreference app:defaultValue="http://cp.cloudflare.com/" app:icon="@drawable/ic_baseline_cast_connected_24" app:key="connectionTestURL" app:title="@string/connection_test_url" app:useSimpleSummaryProvider="true" />
-        <EditTextPreference app:key="connectionTestConcurrency" app:title="@string/connection_concurrency" />
-        <EditTextPreference app:key="exitIpURL" app:title="@string/exit_ip_url" app:defaultValue="https://api.ipify.org" app:summary="@string/exit_ip_help" />
+        <moe.matsuri.nb4a.ui.TestPresetPreference app:defaultValue="http://cp.cloudflare.com/" app:icon="@drawable/ic_baseline_cast_connected_24" app:key="connectionTestURL" app:title="@string/connection_test_url" app:useSimpleSummaryProvider="true" />
+        <moe.matsuri.nb4a.ui.TestPresetPreference app:key="connectionTestConcurrency" app:title="@string/connection_concurrency" />
+        <moe.matsuri.nb4a.ui.TestPresetPreference app:key="exitIpURL" app:title="@string/exit_ip_url" app:defaultValue="https://api.ipify.org" app:summary="@string/exit_ip_help" />
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/cag_misc">
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:icon="@drawable/baseline_construction_24" app:key="enableClashAPI" app:summary="@string/enable_clash_api_summary" app:title="@string/enable_clash_api" />

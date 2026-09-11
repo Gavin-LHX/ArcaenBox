@@ -14,6 +14,34 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 object ExitIpLookup {
+    suspend fun latency(port: Int, endpoint: String, timeoutSeconds: Int): Long = withContext(Dispatchers.IO) {
+        require(port in 1..65535) { "No proxy probe available" }
+        val client = OkHttpClient.Builder()
+            .proxy(Proxy(Proxy.Type.SOCKS, InetSocketAddress("127.0.0.1", port)))
+            .callTimeout(timeoutSeconds.coerceIn(2, 60).toLong(), TimeUnit.SECONDS)
+            .followRedirects(false).followSslRedirects(false).retryOnConnectionFailure(false).build()
+        try {
+            suspendCancellableCoroutine { continuation ->
+                val call = client.newCall(Request.Builder().url(endpoint).header("Cache-Control", "no-cache").build())
+                val start = System.nanoTime()
+                continuation.invokeOnCancellation { call.cancel() }
+                call.enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        if (continuation.isActive) continuation.resumeWithException(e)
+                    }
+                    override fun onResponse(call: Call, response: Response) {
+                        response.use {
+                            if (!continuation.isActive) return
+                            if (it.isSuccessful) continuation.resume(((System.nanoTime() - start) / 1_000_000).coerceAtLeast(1))
+                            else continuation.resumeWithException(IOException("HTTP ${it.code}"))
+                        }
+                    }
+                })
+            }
+        } finally {
+            client.connectionPool.evictAll(); client.dispatcher.executorService.shutdown()
+        }
+    }
     suspend fun query(port: Int, endpoint: String): String = withContext(Dispatchers.IO) {
         // External protocol processes can begin listening shortly after the TUN
         // reports connected. Every attempt keeps the same explicit proxy; an
@@ -52,8 +80,8 @@ object ExitIpLookup {
                             val result = response.use {
                                 check(it.isSuccessful) { "HTTP ${it.code}" }
                                 val body = it.body ?: error("Empty IP response")
-                                require(body.contentLength() <= 4096) { "IP response too large" }
-                                val bytes = ByteArray(4097)
+                                require(body.contentLength() <= 32768) { "IP response too large" }
+                                val bytes = ByteArray(32769)
                                 var length = 0
                                 val stream = body.byteStream()
                                 while (length < bytes.size) {
@@ -61,8 +89,8 @@ object ExitIpLookup {
                                     if (read < 0) break
                                     length += read
                                 }
-                                require(length <= 4096) { "IP response too large" }
-                                PublicIp.parse(String(bytes, 0, length, Charsets.UTF_8))
+                                require(length <= 32768) { "IP response too large" }
+                                PublicIp.describe(String(bytes, 0, length, Charsets.UTF_8))
                             }
                             if (continuation.isActive) continuation.resume(result)
                         } catch (e: Exception) {

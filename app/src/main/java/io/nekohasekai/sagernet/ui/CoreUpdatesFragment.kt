@@ -46,15 +46,17 @@ class CoreUpdatesFragment : ToolbarFragment(R.layout.layout_core_updates) {
     private fun label(choice: CoreChoice) = getString(R.string.core_status,getString(if (choice.channel == "preview") R.string.core_preview else R.string.core_stable),choice.version,choice.revision,getString(if (choice.installed) R.string.core_downloaded else R.string.core_builtin))
     private fun refresh() {
         val ui = binding ?: return
-        ui.coreRunning.text = label(CoreRuntime.active)
-        ui.coreDetails.text = Libcore.versionBox()
+        ui.coreRunning.text = CoreRuntime.active.version
+        ui.coreDetails.text = label(CoreRuntime.active)
+        ui.coreDetails.setOnClickListener { MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.core_running).setMessage(Libcore.versionBox()).setPositiveButton(android.R.string.ok, null).show() }
         ui.coreDownload.isVisible = update != null
         ui.coreCheck.isEnabled = !busy; ui.coreDownload.isEnabled = !busy
         ui.coreStable.isEnabled = !busy; ui.corePreview.isEnabled = !busy
         ui.coreApply.isEnabled = !busy; ui.coreRestore.isEnabled = !busy
+        val target = channel
         viewLifecycleOwner.lifecycleScope.launch {
-            val choice = withContext(Dispatchers.IO) { CoreRuntime.choice(channel) }
-            binding?.coreSelected?.text = label(choice)
+            val choice = withContext(Dispatchers.IO) { CoreRuntime.choice(target) }
+            if (target == channel && binding === ui) ui.coreSelected.text = label(choice)
         }
     }
     private fun check() {

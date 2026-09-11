@@ -86,7 +86,7 @@ class StatsBar @JvmOverloads constructor(
 
     private fun setStatus(text: CharSequence) {
         statusText.text = text
-        TooltipCompat.setTooltipText(this, text)
+        TooltipCompat.setTooltipText(this, "$text · ${context.getString(R.string.status_retest)}")
     }
 
     fun changeState(state: BaseService.State) {
@@ -96,7 +96,8 @@ class StatsBar @JvmOverloads constructor(
         generation++
         exitIpText.visibility = View.GONE
         isEnabled = true
-        if ((state == BaseService.State.Connected).also { hideOnScroll = it }) {
+        hideOnScroll = false
+        if (state == BaseService.State.Connected) {
             stateJob = activity.lifecycleScope.launch {
                 delay(100L)
                 if (allowShow) performShow()
@@ -120,43 +121,16 @@ class StatsBar @JvmOverloads constructor(
         }
     }
 
-    fun refreshExitIp() {
-        exitJob?.cancel()
-        isEnabled = true
-        val epoch = ++generation
-        if (!DataStore.showExitIp || !DataStore.serviceState.connected) {
-            exitIpText.visibility = View.GONE
-            return
-        }
-        exitIpText.visibility = View.VISIBLE
-        exitIpText.setText(R.string.exit_ip_querying)
-        val activity = context.findActivity() as MainActivity
-        exitJob = activity.lifecycleScope.launch {
-            try {
-                val port = withContext(Dispatchers.IO) { activity.connection.service?.exitProbePort ?: 0 }
-                val ip = ExitIpLookup.query(port, DataStore.exitIpURL)
-                if (epoch == generation && DataStore.serviceState.connected) {
-                    exitIpText.text = context.getString(R.string.exit_ip_value, ip)
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Logs.w("Exit IP lookup failed: ${e.javaClass.simpleName}")
-                if (epoch == generation && DataStore.serviceState.connected) {
-                    exitIpText.setText(R.string.exit_ip_failed)
-                }
-            }
-        }
-    }
+    fun refreshExitIp() = testConnection()
 
     @SuppressLint("SetTextI18n")
     fun updateSpeed(txRate: Long, rxRate: Long) {
-        txText.text = "▲  ${
+        txText.text = "↑ ${
             context.getString(
                 R.string.speed, Formatter.formatFileSize(context, txRate)
             )
         }"
-        rxText.text = "▼  ${
+        rxText.text = "↓ ${
             context.getString(
                 R.string.speed, Formatter.formatFileSize(context, rxRate)
             )
@@ -164,43 +138,43 @@ class StatsBar @JvmOverloads constructor(
     }
 
     fun testConnection() {
+        exitJob?.cancel()
+        val epoch = ++generation
+        if (!DataStore.serviceState.connected) return
         val activity = context.findActivity() as MainActivity
-        refreshExitIp()
-        val epoch = generation
-        isEnabled = false
-        setStatus(app.getText(R.string.connection_test_testing))
-        runOnDefaultDispatcher {
-            try {
-                val elapsed = activity.urlTest()
-                onMainDispatcher {
-                    if (epoch != generation || !DataStore.serviceState.connected) return@onMainDispatcher
-                    isEnabled = true
-                    setStatus(
-                        app.getString(
-                            if (DataStore.connectionTestURL.startsWith("https://")) {
-                                R.string.connection_test_available
-                            } else {
-                                R.string.connection_test_available_http
-                            }, elapsed
-                        )
-                    )
+        isEnabled = true
+        setStatus(context.getText(R.string.status_latency_pending))
+        exitIpText.visibility = if (DataStore.showExitIp) View.VISIBLE else View.GONE
+        exitIpText.setText(R.string.exit_ip_querying)
+        exitJob = activity.lifecycleScope.launch {
+            val port = withContext(Dispatchers.IO) { runCatching { activity.connection.service?.exitProbePort ?: 0 }.getOrDefault(0) }
+            launch {
+                try {
+                    val elapsed = ExitIpLookup.latency(port, DataStore.connectionTestURL, DataStore.nodeTestTimeout)
+                    if (epoch == generation && DataStore.serviceState.connected)
+                        setStatus(context.getString(R.string.status_latency, elapsed))
+                } catch (e: CancellationException) { throw e }
+                catch (e: Exception) {
+                    if (epoch == generation && DataStore.serviceState.connected)
+                        setStatus(context.getText(R.string.status_latency_failed))
                 }
-
-            } catch (e: Exception) {
-                Logs.w(e.toString())
-                onMainDispatcher {
-                    if (epoch != generation || !DataStore.serviceState.connected) return@onMainDispatcher
-                    isEnabled = true
-                    setStatus(app.getText(R.string.vpn_connected))
-
-                    activity.snackbar(
-                        app.getString(
-                            R.string.connection_test_error, e.readableMessage
-                        )
-                    ).show()
+            }
+            if (DataStore.showExitIp) launch {
+                try {
+                    val ip = ExitIpLookup.query(port, DataStore.exitIpURL)
+                    if (epoch == generation && DataStore.serviceState.connected)
+                        exitIpText.text = context.getString(R.string.exit_ip_value, ip)
+                } catch (e: CancellationException) { throw e }
+                catch (e: Exception) {
+                    if (epoch == generation && DataStore.serviceState.connected)
+                        exitIpText.setText(R.string.exit_ip_failed)
                 }
             }
         }
     }
 
+    override fun onDetachedFromWindow() {
+        stateJob?.cancel(); exitJob?.cancel(); generation++
+        super.onDetachedFromWindow()
+    }
 }

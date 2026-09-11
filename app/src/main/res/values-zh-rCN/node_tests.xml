@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="node_test_tcp">测试 TCP 延迟（多选）</string>
-    <string name="node_test_url">测试真连接延迟（多选）</string>
-    <string name="node_test_udp">测试 UDP 延迟（多选）</string>
-    <string name="node_test_speed">测试下载速度（多选）</string>
+    <string name="node_test_tcp">测试 TCP 延迟</string>
+    <string name="node_test_url">测试真连接延迟</string>
+    <string name="node_test_udp">测试 UDP 延迟</string>
+    <string name="node_test_speed">测试下载速度</string>
     <string name="node_test_real_short">真连接</string>
     <string name="node_test_speed_short">下载</string>
     <string name="node_sort_results">按测试结果排序</string>
@@ -14,8 +14,17 @@
     <string name="node_test_timeout">单个节点测试超时（秒）</string>
     <string name="node_test_download_url">测速文件地址（HTTPS）</string>
     <string name="node_test_limit">单节点下载上限（MiB）</string>
-    <string name="node_test_udp_host">UDP 测试 NTP 服务器</string>
-    <string name="node_test_udp_port">UDP 测试 NTP 端口</string>
-    <string name="node_test_udp_help">通过所选代理发送 NTP 请求并校验响应，测量 UDP 往返延迟。UDP 测试失败不会把节点的 TCP 标记为不可用。</string>
+    <string name="node_test_udp_host">UDP 检测方式与服务器</string>
+    <string name="node_test_udp_port">自定义 NTP 端口（无协议前缀时）</string>
+    <string name="node_test_udp_help">可选 NTP、DNS、STUN、Minecraft Bedrock。自定义格式：协议:主机:端口。每次检测都通过所选节点，并校验响应。</string>
     <string name="node_test_unsupported">不支持此项测试</string>
+    <string name="test_preset_custom">自定义…</string>
+    <string name="node_actions">节点操作</string>
+    <string name="node_select_multiple">多选节点</string>
+    <string name="node_selected_count">已选择 %1$d 个节点</string>
+    <string name="node_test_selected">测试所选节点</string>
+    <string name="status_latency">已连接 · 真延迟 %1$d ms</string>
+    <string name="status_latency_pending">已连接 · 真延迟 检测中</string>
+    <string name="status_latency_failed">已连接 · 真延迟 超时或失败</string>
+    <string name="status_retest">点击重新检测延迟和出口 IP</string>
 </resources>

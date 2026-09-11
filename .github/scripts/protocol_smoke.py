@@ -107,6 +107,8 @@ def setup_servers():
 
 def edit_value(label, value):
     ui.tap(ui.scroll_for(text=ui.STRINGS.get(label,label)))
+    custom=ui.find(ui.tree(),text=ui.STRINGS['test_preset_custom'])
+    if custom is not None: ui.tap(custom)
     field=ui.wait_for(resource_id='android:id/edit')
     ui.adb('shell','input','keyevent','KEYCODE_MOVE_END')
     for _ in field.get('text',''): ui.adb('shell','input','keyevent','KEYCODE_DEL')
@@ -147,9 +149,9 @@ def edit_profile(name):
     doc=ui.tree(); parents={child:parent for parent in doc.iter() for child in parent}
     row=ui.find(doc,text=name)
     while row in parents:
-        edit=ui.find(row,resource_id=P+':id/edit')
+        edit=ui.find(row,resource_id=P+':id/node_actions')
         if edit is not None:
-            ui.tap(edit); return
+            ui.tap(edit); ui.tap(ui.wait_for(text=ui.STRINGS['edit'])); return
         row=parents[row]
     raise AssertionError('Profile edit button missing: '+name)
 
