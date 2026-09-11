@@ -3,8 +3,10 @@ import json
 import re
 import socket
 import sqlite3
+import struct
 import threading
 import time
+from pathlib import Path
 import ui_smoke as ui
 import protocol_smoke as protocol
 
@@ -138,6 +140,24 @@ def advanced_settings():
                 response+=block
             assert protocol.PAYLOAD in response
         (ui.OUT/'advanced-generated-config.json').write_text(json.dumps(config,indent=2))
+        # Query DNS over the app's real SOCKS TCP listener. Port 53 is handled by
+        # its DNS rules, so these assertions verify answers rather than JSON alone.
+        answers = []
+        for qtype in [1, 28, 64, 65]:
+            query = struct.pack('!HHHHHH', 0x1234, 0x100, 1, 0, 0, 0)
+            query += b'\x07example\x04test\x00' + struct.pack('!HH', qtype, 1)
+            control, _ = protocol.socks(1, 53)
+            with control:
+                control.sendall(struct.pack('!H', len(query)) + query)
+                size = struct.unpack('!H', protocol.read_exact(control, 2))[0]
+                response = protocol.read_exact(control, size)
+            txid, flags, questions, count, _, _ = struct.unpack('!HHHHHH', response[:12])
+            assert txid == 0x1234 and flags & 15 == 0, response.hex()
+            if qtype == 1:
+                assert count == 1 and socket.inet_aton('192.0.2.123') in response, response.hex()
+            else: assert count == 0, response.hex()
+            answers.append({'type': qtype, 'answer_count': count, 'wire': response.hex()})
+        (ui.OUT/'advanced-dns-answers.json').write_text(json.dumps(answers, indent=2))
     finally:
         ui.tap(button)
     # Presets show their actual active rules and retain custom rules for switching back.
@@ -150,3 +170,52 @@ def advanced_settings():
     ui.navigate('nav_settings')
     for key in ['advanced_dns_aaaa','advanced_dns_https','advanced_dns_optimistic','advanced_core_cache']:
         ui.tap(ui.scroll_for(text=ui.STRINGS[key]))
+
+
+def route_import():
+    def rule_rows():
+        path = ui.OUT/'routing-snapshot.db'
+        path.write_bytes(ui.adb('exec-out','cat','/data/user/0/'+P+'/databases/sager_net.db',binary=True))
+        with sqlite3.connect(path) as db:
+            return db.execute('SELECT name,domains,ip,port,network,outbound FROM rules ORDER BY userOrder').fetchall()
+    def choose_file(path):
+        ui.adb('push',str(path),'/sdcard/Download/'+path.name)
+        ui.tap(ui.wait_for(content_desc='More options'))
+        ui.tap(ui.wait_for(text=ui.STRINGS['route_import']))
+        ui.tap(ui.wait_for(text='From file'))
+        node=ui.find(ui.tree(),text=path.name)
+        if node is None:
+            drawer=ui.find(ui.tree(),content_desc='Show roots')
+            if drawer is not None: ui.tap(drawer)
+            ui.tap(ui.wait_for(text='Downloads'))
+            node=ui.scroll_for(text=path.name)
+        ui.tap(node)
+    ui.launch(); ui.navigate('nav_route')
+    before=rule_rows()
+    fixture=ui.OUT/'routing-import.json'
+    fixture.write_text(json.dumps({'route':{'rules':[
+        {'name':'Imported DNS host','domain':['example.test'],'outbound':'direct'},
+        {'name':'Imported UDP block','network':'udp','port':[8443],'action':'reject'},
+        {'name':'Imported subnet','ip_cidr':['192.0.2.0/24'],'outbound':'proxy'}]}}))
+    choose_file(fixture)
+    ui.wait_for(text='Import 3 rules'); ui.capture('routing-import-preview')
+    # Cancelling the preview leaves every existing rule intact.
+    ui.tap(ui.wait_for(resource_id='android:id/button2')); assert rule_rows()==before
+    choose_file(fixture); ui.tap(ui.wait_for(resource_id='android:id/button1'))
+    ui.wait_for(text='Routing: Custom rules')
+    after=rule_rows(); assert after[:len(before)]==before and len(after)==len(before)+3, after
+    assert after[-3][1]=='full:example.test' and after[-2][3:] == ('8443','udp',-2), after
+    bad=ui.OUT/'unsupported-routing.json'
+    bad.write_text(json.dumps({'rules':[{'domain':['valid.test'],'outbound':'direct'},
+                                     {'process_name':['desktop.exe'],'outbound':'proxy'}]}))
+    choose_file(bad); ui.wait_for(text=ui.STRINGS['error_title'])
+    ui.capture('routing-import-rejects-unsupported-fields')
+    ui.tap(ui.wait_for(resource_id='android:id/button1')); assert rule_rows()==after
+    ui.tap(ui.wait_for(content_desc='More options'))
+    ui.tap(ui.wait_for(text=ui.STRINGS['route_export']))
+    ui.tap(ui.wait_for(resource_id='android:id/button1'))
+    ui.wait_for(resource_id=P+':id/route_preset')
+    exported=json.loads(ui.adb('shell','cat','/sdcard/Download/ArcaenBox-routes.json'))
+    assert exported['format']=='arcaenbox-route-rules' and len(exported['rules'])==len(after)
+    assert exported['rules'][-3]['outbound']=='direct' and exported['rules'][-2]['outbound']=='block'
+    (ui.OUT/'routing-import-result.json').write_text(json.dumps({'before':before,'after':after,'export':exported},indent=2))

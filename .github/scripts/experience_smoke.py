@@ -308,10 +308,11 @@ def main():
         ui.adb('shell','logcat','-c')
         for name,function in [('permissions',permissions),('exit-ip',exit_ip),('resources',resources),('settings-routes',settings_and_routes),('native-cache',native_cache)]:
             run(name,function)
-        if not CHECKS or CHECKS.intersection({'node-tests','advanced-settings'}):
+        if not CHECKS or CHECKS.intersection({'node-tests','advanced-settings','route-import'}):
             import node_features_smoke
             run('node-tests',node_features_smoke.node_tests)
             run('advanced-settings',node_features_smoke.advanced_settings)
+            run('route-import',node_features_smoke.route_import)
         if 'native-downloads' in CHECKS: run('native-downloads',native_downloads)
         assert not FAILURES, FAILURES
     finally:
