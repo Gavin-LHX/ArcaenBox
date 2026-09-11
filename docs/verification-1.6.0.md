@@ -14,6 +14,7 @@
 - 签名证书 SHA-256：`8750ecddc7b8ce59ff13a701ed30bb5e4f5bcefef8abfd054d91b10e75822ff2`。
 - arm64-v8a、armeabi-v7a、x86、x86_64 均通过签名、应用名称、包名、图标透明度和内置 ELF 验证。运行回归使用同一构建的 x86_64 APK。
 - sing-box 正式版 `1.14.0`、测试版 `1.15.0-alpha.2` 均为 Android 修订 r3，来自[原生构建 34617688880](https://github.com/Gavin-LHX/ArcaenBox/actions/runs/34617688880)。两渠道均通过配置迁移、实际代理转发及 socket 保护单元测试；本地另外重复通过 10 轮延迟/并发保护测试。
+- [公开 Release](https://github.com/Gavin-LHX/ArcaenBox/releases/tag/v1.6.0-arcaenbox.1) 已发布并成为应用最新版，版本标签指向上述 APK 源码提交。未登录请求可获取四个 APK 与 SHA256SUMS；全部远端摘要匹配本地文件，并从公开下载地址重新下载 arm64 APK，确认 SHA-256 为 `6e99604249a82701b13c49d23075b73320d7be24cc635f2a413cbb83f77cf09b`。
 
 ## 实际转发与更新
 
