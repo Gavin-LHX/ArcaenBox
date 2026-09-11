@@ -521,6 +521,44 @@ def landscape():
     capture('14-landscape-tools')
 
 
+def test_presets():
+    """Preset choices persist through the same editor as custom endpoint values."""
+    import shlex
+    launch(); navigate('nav_settings')
+    for key, choice in [('connection_concurrency','5'),('node_test_timeout','15'),
+                        ('node_test_limit','1'),('node_test_download_url','https://cachefly.cachefly.net/1mb.test'),
+                        ('connection_test_url','https://www.gstatic.com/generate_204'),
+                        ('node_test_udp_host','dns:1.1.1.1'),('exit_ip_url','https://api-ipv4.ip.sb/geoip')]:
+        tap(scroll_for(text=STRINGS[key]))
+        tap(wait_for(text=STRINGS['test_preset_custom']))
+        original=wait_for(resource_id='android:id/edit').get('text','')
+        tap(wait_for(resource_id='android:id/button2'))
+        tap(scroll_for(text=STRINGS[key])); tap(scroll_for(text=choice))
+        tap(scroll_for(text=STRINGS[key]))
+        capture('preset-'+key)
+        # Custom stays reachable even when a long list is scrolled.
+        tap(wait_for(text=STRINGS['test_preset_custom']))
+        field=wait_for(resource_id='android:id/edit')
+        assert field.get('text')==choice, 'Preset did not persist: '+key
+        adb('shell','input','keyevent','KEYCODE_MOVE_END')
+        for _ in choice: adb('shell','input','keyevent','KEYCODE_DEL')
+        if original: adb('shell','input','text',shlex.quote(original))
+        tap(wait_for(resource_id='android:id/button1'))
+        tap(scroll_for(text=STRINGS[key]));tap(wait_for(text=STRINGS['test_preset_custom']))
+        assert wait_for(resource_id='android:id/edit').get('text')==original, 'Custom did not persist: '+key
+        tap(wait_for(resource_id='android:id/button2'))
+
+
+def vless_import():
+    import shlex
+    launch()
+    uri='vless://11111111-1111-4111-8111-111111111111@127.0.0.1:9?encryption=none&type=tcp#VLESS-link-fixture'
+    result=adb('shell','am','start','-W','-a','android.intent.action.VIEW','-d',shlex.quote(uri),'-p',PACKAGE)
+    assert 'unable to resolve' not in result.lower(), 'VLESS intent not registered'
+    tap(wait_for(resource_id='android:id/button1'))
+    wait_for(text='VLESS-link-fixture');capture('vless-system-link-import')
+
+
 def run_check(name, check):
     if ONLY_CHECKS and name not in ONLY_CHECKS:
         return
@@ -561,6 +599,8 @@ def main():
         run_check('launcher', launcher_icon)
         run_check('app-updates', app_updates)
         run_check('core-switch', core_switch)
+        run_check('test-presets', test_presets)
+        run_check('vless-import', vless_import)
         if 'core-download' in ONLY_CHECKS:
             run_check('core-download', core_download)
         adb('shell','cmd','uimode','night','yes')
