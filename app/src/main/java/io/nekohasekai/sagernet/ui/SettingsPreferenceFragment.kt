@@ -96,7 +96,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             findPreference<EditConfigPreference>(key)!!.apply { useConfigStore(key); onPreferenceChangeListener = reloadListener }
         }
         findPreference<Preference>("customDnsDefaults")!!.setOnPreferenceClickListener {
-            val template = """{"servers":[{"type":"udp","tag":"dns-direct","server":"223.5.5.5","detour":"direct"},{"type":"https","tag":"dns-remote","server":"1.1.1.1","path":"/dns-query","detour":"proxy"}],"final":"dns-remote"}"""
+            val template = """{"servers":[{"type":"udp","tag":"dns-direct","server":"223.5.5.5"},{"type":"https","tag":"dns-remote","server":"1.1.1.1","path":"/dns-query","detour":"proxy"}],"final":"dns-remote"}"""
             if (DataStore.customDnsVpn.isBlank()) DataStore.customDnsVpn = template
             if (DataStore.customDnsProxy.isBlank()) DataStore.customDnsProxy = template
             needReload()

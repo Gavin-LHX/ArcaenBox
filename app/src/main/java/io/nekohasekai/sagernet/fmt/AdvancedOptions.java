@@ -74,7 +74,8 @@ public final class AdvancedOptions {
                 validateIp(options.bootstrap);
                 JsonObject bootstrap = new JsonObject();
                 bootstrap.addProperty("type", "udp"); bootstrap.addProperty("tag", "arcaenbox-bootstrap");
-                bootstrap.addProperty("server", options.bootstrap); bootstrap.addProperty("detour", "direct");
+                // Typed DNS servers dial directly by default; an empty direct outbound is not a valid detour.
+                bootstrap.addProperty("server", options.bootstrap);
                 servers.add(bootstrap);
                 for (JsonElement element : servers) {
                     JsonObject server = element.getAsJsonObject();

@@ -45,7 +45,7 @@ class NodeTestSession(profile: ProxyEntity) : BoxInstance(profile) {
     suspend fun measure(kind: NodeTestKind): NodeTestResult = withContext(Dispatchers.IO) {
         val timeout = DataStore.nodeTestTimeout.coerceIn(2, 60) * 1000
         if (kind == NodeTestKind.TCP) {
-            if (!profile.requireBean().canTCPing()) throw IOException("This protocol does not expose a TCP server port")
+            if (!profile.requireBean().canTCPing()) throw UnsupportedOperationException("This protocol does not expose a TCP server port")
             var socket: Socket? = null
             val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
             val elapsed = cancellableIO({ cancelled.set(true); socket?.close() }) {

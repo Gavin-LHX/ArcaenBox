@@ -26,6 +26,7 @@ class NodeTestUi(private val fragment: Fragment) {
             val label = when (result.kind) { "TCP" -> "TCP"; "URL" -> context.getString(R.string.node_test_real_short)
                 "UDP" -> "UDP"; else -> context.getString(R.string.node_test_speed_short) }
             return "$label: " + when {
+                result.value == -2L -> context.getString(R.string.node_test_unsupported)
                 result.value < 0 -> context.getString(R.string.unavailable)
                 result.kind == "SPEED" -> String.format(Locale.ROOT, "%.2f MiB/s", result.value / 1048576.0)
                 else -> "${result.value} ms"
@@ -109,7 +110,7 @@ class NodeTestUi(private val fragment: Fragment) {
                                     ensureActive()
                                     NodeTestResult(profile.id, kind.name, -1, System.currentTimeMillis(), e.cause?.readableMessage ?: e.readableMessage)
                                 } catch (e: Exception) {
-                                    NodeTestResult(profile.id, kind.name, -1, System.currentTimeMillis(), e.readableMessage.take(512))
+                                    NodeTestResult(profile.id, kind.name, if (e is UnsupportedOperationException) -2 else -1, System.currentTimeMillis(), e.readableMessage.take(512))
                                 }
                                 ensureActive()
                                 withContext(Dispatchers.IO) {
@@ -117,7 +118,7 @@ class NodeTestUi(private val fragment: Fragment) {
                                     SagerDatabase.instance.runInTransaction {
                                         if (SagerDatabase.proxyDao.getById(profile.id) != null) {
                                             SagerDatabase.nodeTests.put(result)
-                                            if (kind == NodeTestKind.TCP || kind == NodeTestKind.URL)
+                                            if (kind == NodeTestKind.URL || (kind == NodeTestKind.TCP && profile.requireBean().canTCPing()))
                                                 SagerDatabase.proxyDao.updateTestStatus(profile.id, if (result.value >= 0) 1 else 3,
                                                     result.value.coerceAtLeast(0).toInt(), result.error)
                                         }

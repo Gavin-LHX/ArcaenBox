@@ -17,4 +17,5 @@
     <string name="node_test_udp_host">UDP test NTP server</string>
     <string name="node_test_udp_port">UDP test NTP port</string>
     <string name="node_test_udp_help">Send an NTP request through each selected proxy and validate its reply. This measures UDP round-trip latency. A failed UDP test does not mark TCP unavailable.</string>
+    <string name="node_test_unsupported">Unsupported test</string>
 </resources>

@@ -117,6 +117,16 @@ def node_tests():
         ui.tap(ui.scroll_for(text=ui.STRINGS['node_sort_results']))
         ui.tap(ui.wait_for(text=ui.STRINGS['node_test_speed']))
         ui.wait_for(resource_id=P+':id/node_test_results'); ui.capture('nodes-sorted-by-speed')
+        protocol.create_mieru('Measure-Mieru-UDP','UDP',18089)
+        before=int(time.time()*1000)
+        start_test('node_test_tcp',['Measure-Mieru-UDP'])
+        unsupported=wait_results('TCP',1,before)[0]
+        assert unsupported['value']==-2,unsupported
+        with sqlite3.connect(ui.OUT/'node-tests-snapshot.db') as db:
+            status=db.execute('SELECT status FROM proxy_entities WHERE id=?',(unsupported['profileId'],)).fetchone()[0]
+        assert status==0,'Unsupported TCP test incorrectly marked a UDP node unavailable'
+        ui.wait_for(resource_id=P+':id/action_misc');ui.capture('udp-protocol-tcp-test-unsupported')
+        collected.append(unsupported)
         (ui.OUT/'node-measurements.json').write_text(json.dumps({'results':collected,'ntp_requests':ntp_requests,'cancelled':True,'unselected_unchanged':True},indent=2))
     finally:
         stop.set(); ntp.close()

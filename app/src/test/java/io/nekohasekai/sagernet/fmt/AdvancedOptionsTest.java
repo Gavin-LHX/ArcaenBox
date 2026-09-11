@@ -15,6 +15,7 @@ public class AdvancedOptionsTest {
         assertEquals("AAAA", dns.getAsJsonArray("rules").get(0).getAsJsonObject().getAsJsonArray("query_type").get(0).getAsString());
         assertEquals("keep.example", dns.getAsJsonArray("rules").get(2).getAsJsonObject().getAsJsonArray("domain").get(0).getAsString());
         assertEquals("arcaenbox-bootstrap", dns.getAsJsonArray("servers").get(0).getAsJsonObject().get("address_resolver").getAsString());
+        assertFalse(dns.getAsJsonArray("servers").get(2).getAsJsonObject().has("detour"));
         assertEquals(2, dns.getAsJsonArray("servers").get(3).getAsJsonObject().getAsJsonObject("predefined").getAsJsonArray("sample.example").size());
     }
 

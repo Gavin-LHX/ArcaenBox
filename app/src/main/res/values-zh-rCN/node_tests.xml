@@ -17,4 +17,5 @@
     <string name="node_test_udp_host">UDP 测试 NTP 服务器</string>
     <string name="node_test_udp_port">UDP 测试 NTP 端口</string>
     <string name="node_test_udp_help">通过所选代理发送 NTP 请求并校验响应，测量 UDP 往返延迟。UDP 测试失败不会把节点的 TCP 标记为不可用。</string>
+    <string name="node_test_unsupported">不支持此项测试</string>
 </resources>

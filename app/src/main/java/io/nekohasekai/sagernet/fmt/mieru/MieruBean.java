@@ -45,6 +45,11 @@ public class MieruBean extends AbstractBean {
     }
 
     @Override
+    public boolean canTCPing() {
+        return !"UDP".equalsIgnoreCase(protocol);
+    }
+
+    @Override
     public void serialize(ByteBufferOutput output) {
         output.writeInt(0);
         super.serialize(output);
