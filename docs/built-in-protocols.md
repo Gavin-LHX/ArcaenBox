@@ -4,9 +4,11 @@
 
 当前 NaïveProxy 官方二进制最低要求 Android 7.0（API 24）。应用在较旧系统上仍可使用其他协议；选择 NaïveProxy 时会显示版本要求。
 
-添加节点 → 手动输入 → Snell，可选择服务端 v4 或 v5，设置 PSK、UDP 转发、连接复用及可选的 HTTP/TLS 混淆。版本选择保存在节点、备份和分享链接中。支持 `snell://PSK@host:port?version=4`、`version=5` 及 Clash YAML 节点导入。不支持的版本和混淆参数会报错。
+添加节点 → 手动输入 → Snell，可选择服务端 v4、v5 或 v6，设置 PSK、UDP 转发、连接复用。v4/v5 支持可选的 HTTP/TLS 混淆。版本选择保存在节点、备份和分享链接中。支持 `snell://PSK@host:port?version=4`、`version=5`、`version=6&mode=default` 及 Clash YAML 节点导入。不支持的版本和混淆参数会报错。
 
-Snell 使用 mihomo 的实现。其 v5 选项通过服务端的 v4 兼容协议连接，支持 TCP 和经 TCP 转发的 UDP；不实现 v5 独有的 QUIC 传输。应用设置中也显示此限制。
+Snell 正式渠道使用 mihomo 的实现。其 v5 选项通过服务端的 v4 兼容协议连接，支持 TCP 和经 TCP 转发的 UDP；不实现 v5 独有的 QUIC 传输。应用设置中也显示此限制。
+
+从 `1.6.0-arcaenbox.1` 起，Snell 测试渠道内置 sing-snell 客户端，支持 v4/v5/v6。使用 v6 时，先在「内核管理 → Snell」应用测试渠道，然后在节点中选择 v6 及与服务端一致的 default / unshaped / unsafe-raw 模式。unsafe-raw 不加密流量，v6 不使用 v4/v5 的混淆设置。
 
 应用仍使用 sing-box 管理 VPN、DNS、路由和代理链；内置客户端只监听本机 SOCKS 端口。客户端连接服务器时经过 sing-box 的本机端口映射，继续使用受 VPN 保护的出站套接字。Snell 的 mihomo 实例关闭 DNS、控制接口、进程查找和地理数据自动更新。
 
@@ -20,12 +22,15 @@ Snell 使用 mihomo 的实现。其 v5 选项通过服务端的 v4 兼容协议�
 | NaïveProxy | 150.0.7871.63-1 | [源码与构建工作流](https://github.com/klzgrad/naiveproxy/tree/v150.0.7871.63-1)，BSD-3-Clause 与 Chromium 第三方许可 |
 | Mieru | 3.36.1 | [源码提交](https://github.com/enfein/mieru/tree/316cc6606c287d45a321b99ac86a1f2e7f2b785a)，GPL-3.0 |
 | mihomo（Snell） | 1.19.30 | [源码与构建工作流](https://github.com/MetaCubeX/mihomo/tree/v1.19.30)，GPL-3.0 |
+| sing-snell（Snell 测试渠道） | bc5a12ac736f / adapter 1 | [锁定的源码提交](https://github.com/SagerNet/sing-snell/tree/bc5a12ac736f235b2de2926ecd2791cc925e6b8c)，GPL-3.0-or-later；本项目适配器位于 `buildScript/snell-client` |
 
-Mieru 使用锁定源码在 CI 中通过 Go 和 Android NDK 编译四种架构。其余客户端提取自表中版本的官方 Android 发布物。重建需要 Android SDK、NDK 25.0.8775105、Go 1.25、Python 3.12+ 和 curl：
+Mieru 和 Snell 测试渠道使用锁定源码在 CI 中通过 Go 和 Android NDK 编译四种架构。其余客户端提取自表中版本的官方 Android 发布物。重建需要 Android SDK、NDK 25.0.8775105、Go 1.25、Python 3.12+ 和 curl：
 
 ```sh
 export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/25.0.8775105"
 python3 .github/scripts/package_builtins.py
 ```
 
-然后按照项目的原有流程准备两个 sing-box AAR 并编译 APK。组件清单随应用打包，可在“关于 → 内置协议”查看。升级内置客户端需要更新应用；“sing-box 内核管理”只更新 sing-box。
+然后按照项目的原有流程准备两个 sing-box AAR 并编译 APK。组件清单随应用打包，可在「内核管理」查看。从 1.6.0 起，Trojan-Go、NaïveProxy、Mieru 和 Snell 与 sing-box 一样支持独立更新：检查对应渠道、下载签名兼容包、停止连接后应用，也可恢复 APK 内置版本。未发布 Android 兼容测试包的渠道会明确提示暂不可用。
+
+维护者可运行 `ArcaenBox Native Components` 工作流单独构建组件；修改锁定的源码版本与哈希时，需要递增该渠道的 revision。验证产物后通过 `source_run` 发布同一份签名包。已发布 revision 的字节不可替换，组件发布不会抢占应用的 Latest Release。

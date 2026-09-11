@@ -223,6 +223,48 @@ def native_cache():
     (OUT/'native-package-runtime.json').write_text(json.dumps({'selinux':'Enforcing','origin':'signed CI packages staged for loader verification','protocols':protocol.RESULTS},indent=2))
 
 
+def native_downloads():
+    """Run only after the candidate's signed component releases have been published."""
+    root='/data/user/0/'+P+'/no_backup/components'
+    evidence=[]
+    for component,channel in [('trojan-go','stable'),('naive','stable'),('mieru','stable'),('snell','stable'),('snell','preview')]:
+        ui.launch(); ui.navigate('nav_kernels')
+        ui.tap(ui.scroll_for(text_contains={'naive':'NaïveProxy','mieru':'Mieru','trojan-go':'Trojan-Go','snell':'Snell'}[component]))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_'+channel))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_check',enabled='true'))
+        ui.tap(ui.wait_for(resource_id=P+':id/core_download',enabled='true'))
+        end=time.monotonic()+180
+        while time.monotonic()<end:
+            status=ui.find(ui.tree(),resource_id=P+':id/core_status')
+            value=status.get('text','') if status is not None else ''
+            if value==ui.STRINGS['kernel_ready']: break
+            if status is not None and any(term in value.lower() for term in ['failed','invalid','error']):
+                raise AssertionError(value)
+            time.sleep(1)
+        else: raise AssertionError('Component download timeout: '+value)
+        expected=(Path('core-build/component-updates')/component/channel/'manifest.json').read_bytes()
+        digest=hashlib.sha256(expected).hexdigest()
+        state=json.loads(ui.adb('shell','cat',root+'/state.json'))
+        assert state['installed'][component+':'+channel]==digest
+        apply_native(component,channel)
+        state=json.loads(ui.adb('shell','cat',root+'/state.json'))
+        assert state['enabled'][component]==digest
+        manifest=json.loads(expected)
+        binary=root+'/packages/'+digest+'/libcomponent.so'
+        actual=ui.adb('shell','sha256sum',binary).split()[0]
+        assert actual==manifest['assets']['x86_64']['sha256']
+        ui.capture('downloaded-'+component+'-'+channel)
+        evidence.append({'component':component,'channel':channel,'manifest_sha256':digest,'binary_sha256':actual})
+        apply_native(component,restore=True)
+    # No preview upstream/package exists for these three components. The UI must say so.
+    for component,title in [('trojan-go','Trojan-Go'),('naive','NaïveProxy'),('mieru','Mieru')]:
+        ui.launch(); ui.navigate('nav_kernels'); ui.tap(ui.scroll_for(text_contains=title))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_preview'))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_check',enabled='true'))
+        ui.wait_for(text=ui.STRINGS['kernel_unavailable'])
+    (OUT/'native-network-downloads.json').write_text(json.dumps(evidence,indent=2))
+
+
 def run(name, function):
     if CHECKS and name not in CHECKS: return
     try:
@@ -249,6 +291,7 @@ def main():
         ui.adb('shell','logcat','-c')
         for name,function in [('permissions',permissions),('exit-ip',exit_ip),('resources',resources),('settings-routes',settings_and_routes),('native-cache',native_cache)]:
             run(name,function)
+        if 'native-downloads' in CHECKS: run('native-downloads',native_downloads)
         assert not FAILURES, FAILURES
     finally:
         (OUT/'results.json').write_text(json.dumps({'passed':RESULTS,'failed':FAILURES},indent=2))
