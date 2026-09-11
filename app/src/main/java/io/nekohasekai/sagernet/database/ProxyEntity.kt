@@ -505,6 +505,9 @@ data class ProxyEntity(
         @Query("select * from proxy_entities")
         fun getAll(): List<ProxyEntity>
 
+        @Query("UPDATE proxy_entities SET status = :status, ping = :ping, error = :error WHERE id = :id")
+        fun updateTestStatus(id: Long, status: Int, ping: Int, error: String?)
+
         @Query("SELECT id FROM proxy_entities WHERE groupId = :groupId ORDER BY userOrder")
         fun getIdsByGroup(groupId: Long): List<Long>
 

@@ -48,9 +48,18 @@ def root_emulator():
 
 
 def tree():
-    adb('shell', 'rm', '-f', '/sdcard/arcaenbox-ui.xml')
-    adb('shell', 'uiautomator', 'dump', '/sdcard/arcaenbox-ui.xml')
-    return ET.fromstring(adb('shell', 'cat', '/sdcard/arcaenbox-ui.xml'))
+    # Counters can briefly prevent UIAutomator from reaching idle. Never read a
+    # stale hierarchy, but retry a missing/partial dump before failing the test.
+    for attempt in range(3):
+        adb('shell', 'rm', '-f', '/sdcard/arcaenbox-ui.xml')
+        diagnostic = adb('shell', 'uiautomator', 'dump', '/sdcard/arcaenbox-ui.xml', check=False)
+        content = adb('shell', 'cat', '/sdcard/arcaenbox-ui.xml', check=False)
+        try:
+            return ET.fromstring(content)
+        except ET.ParseError:
+            (OUT/'uiautomator-dump-error.txt').write_text(diagnostic+'\n'+content)
+            if attempt == 2: raise
+            time.sleep(.5)
 
 
 def find(doc, **attrs):
@@ -81,8 +90,8 @@ def assert_connect_button_visible(button):
         raise AssertionError('Connect button is covered despite accessible bounds')
 
 
-def wait_for(**attrs):
-    deadline = time.monotonic() + 25
+def wait_for(timeout=25, **attrs):
+    deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         doc = tree()
         # A Google APIs emulator can leave the launcher ANR dialog in front of

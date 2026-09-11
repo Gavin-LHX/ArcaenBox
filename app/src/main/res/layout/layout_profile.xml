@@ -175,6 +175,15 @@
 
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/node_test_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="12dp"
+                android:paddingBottom="12dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/accentOrTextSecondary"
+                android:visibility="gone" />
         </LinearLayout>
 
     </LinearLayout>

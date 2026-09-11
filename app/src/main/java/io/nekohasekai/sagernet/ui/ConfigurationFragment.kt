@@ -274,6 +274,15 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     override fun onKeyDown(ketCode: Int, event: KeyEvent): Boolean {
+        if (!select && event.isCtrlPressed && event.repeatCount == 0) {
+            val kind = when (ketCode) {
+                KeyEvent.KEYCODE_O -> io.nekohasekai.sagernet.bg.proto.NodeTestKind.TCP
+                KeyEvent.KEYCODE_R -> io.nekohasekai.sagernet.bg.proto.NodeTestKind.URL
+                KeyEvent.KEYCODE_T -> io.nekohasekai.sagernet.bg.proto.NodeTestKind.SPEED
+                else -> null
+            }
+            if (kind != null) { NodeTestUi(this).select(kind, DataStore.currentGroupId()); return true }
+        }
         val fragment = getCurrentGroupFragment()
         fragment?.configurationListView?.apply {
             if (!hasFocus()) requestFocus()
@@ -352,7 +361,11 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
             R.id.action_sort_test_results -> {
                 val group = getCurrentGroupFragment()?.proxyGroup ?: return true
-                runOnDefaultDispatcher { group.order = GroupOrder.BY_DELAY; GroupManager.updateGroup(group) }
+                val kinds = io.nekohasekai.sagernet.bg.proto.NodeTestKind.values()
+                MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.node_sort_results)
+                    .setItems(kinds.map { getString(NodeTestUi.title(it)) }.toTypedArray()) { _, index ->
+                        runOnDefaultDispatcher { group.order = intArrayOf(3, 2, 4, 5)[index]; GroupManager.updateGroup(group) }
+                    }.show()
             }
             R.id.action_export_group_profiles -> {
                 val groupId = DataStore.selectedGroup
@@ -535,8 +548,12 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
             R.id.action_connection_test_clear_results -> {
+                if (DataStore.runningTest) return true
+                val groupId = DataStore.currentGroupId()
                 runOnDefaultDispatcher {
-                    val profiles = SagerDatabase.proxyDao.getByGroup(DataStore.currentGroupId())
+                    SagerDatabase.nodeTests.clearGroup(groupId)
+                    GroupManager.postReload(groupId)
+                    val profiles = SagerDatabase.proxyDao.getByGroup(groupId)
                     val toClear = mutableListOf<ProxyEntity>()
                     if (profiles.isNotEmpty()) for (profile in profiles) {
                         if (profile.status != 0) {
@@ -644,320 +661,21 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
             R.id.action_connection_tcp_ping -> {
-                pingTest(false)
+                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.TCP, DataStore.currentGroupId())
+            }
+
+            R.id.action_connection_udp_test -> {
+                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.UDP, DataStore.currentGroupId())
+            }
+            R.id.action_connection_speed_test -> {
+                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.SPEED, DataStore.currentGroupId())
             }
 
             R.id.action_connection_url_test -> {
-                urlTest()
+                NodeTestUi(this).select(io.nekohasekai.sagernet.bg.proto.NodeTestKind.URL, DataStore.currentGroupId())
             }
         }
         return true
-    }
-
-    inner class TestDialog {
-        val binding = LayoutProgressListBinding.inflate(layoutInflater)
-        val builder = MaterialAlertDialogBuilder(requireContext()).setView(binding.root)
-            .setPositiveButton(R.string.minimize) { _, _ ->
-                minimize()
-            }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                cancel()
-            }
-            .setCancelable(false)
-
-        lateinit var cancel: () -> Unit
-        lateinit var minimize: () -> Unit
-
-        val dialogStatus = AtomicInteger(0) // 1: hidden 2: cancelled
-        var notification: ConnectionTestNotification? = null
-
-        val results: MutableSet<ProxyEntity> = ConcurrentHashMap.newKeySet()
-        var proxyN = 0
-        val finishedN = AtomicInteger(0)
-
-        fun update(profile: ProxyEntity) {
-            if (dialogStatus.get() != 2) {
-                results.add(profile)
-            }
-            runOnMainDispatcher {
-                val context = context ?: return@runOnMainDispatcher
-                val progress = finishedN.addAndGet(1)
-                val status = dialogStatus.get()
-                notification?.updateNotification(
-                    progress,
-                    proxyN,
-                    progress >= proxyN || status == 2
-                )
-                if (status >= 1) return@runOnMainDispatcher
-                if (!isAdded) return@runOnMainDispatcher
-
-                // refresh dialog
-
-                var profileStatusText: String? = null
-                var profileStatusColor = 0
-
-                when (profile.status) {
-                    -1 -> {
-                        profileStatusText = profile.error
-                        profileStatusColor = context.getColorAttr(android.R.attr.textColorSecondary)
-                    }
-
-                    0 -> {
-                        profileStatusText = getString(R.string.connection_test_testing)
-                        profileStatusColor = context.getColorAttr(android.R.attr.textColorSecondary)
-                    }
-
-                    1 -> {
-                        profileStatusText = getString(R.string.available, profile.ping)
-                        profileStatusColor = context.getColour(R.color.material_green_500)
-                    }
-
-                    2 -> {
-                        profileStatusText = profile.error
-                        profileStatusColor = context.getColour(R.color.material_red_500)
-                    }
-
-                    3 -> {
-                        val err = profile.error ?: ""
-                        val msg = Protocols.genFriendlyMsg(err)
-                        profileStatusText = if (msg != err) msg else getString(R.string.unavailable)
-                        profileStatusColor = context.getColour(R.color.material_red_500)
-                    }
-                }
-
-                val text = SpannableStringBuilder().apply {
-                    append("\n" + profile.displayName())
-                    append("\n")
-                    append(
-                        profile.displayType(),
-                        ForegroundColorSpan(context.getProtocolColor(profile.type)),
-                        SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    append(" ")
-                    append(
-                        profileStatusText,
-                        ForegroundColorSpan(profileStatusColor),
-                        SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    append("\n")
-                }
-
-                binding.nowTesting.text = text
-                binding.progress.text = "$progress / $proxyN"
-            }
-        }
-
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    @Suppress("EXPERIMENTAL_API_USAGE")
-    fun pingTest(icmpPing: Boolean) {
-        if (DataStore.runningTest) return else DataStore.runningTest = true
-        val test = TestDialog()
-        val dialog = test.builder.show()
-        val testJobs = mutableListOf<Job>()
-        val group = DataStore.currentGroup()
-
-        val mainJob = runOnDefaultDispatcher {
-            val profilesList = SagerDatabase.proxyDao.getByGroup(group.id).filter {
-                if (icmpPing) {
-                    if (it.requireBean().canICMPing()) {
-                        return@filter true
-                    }
-                } else {
-                    if (it.requireBean().canTCPing()) {
-                        return@filter true
-                    }
-                }
-                return@filter false
-            }
-            test.proxyN = profilesList.size
-            val profiles = ConcurrentLinkedQueue(profilesList)
-            repeat(DataStore.connectionTestConcurrent) {
-                testJobs.add(launch(Dispatchers.IO) {
-                    while (isActive) {
-                        val profile = profiles.poll() ?: break
-
-                        profile.status = 0
-                        var address = profile.requireBean().serverAddress
-                        if (!address.isIpAddress()) {
-                            try {
-                                SagerNet.underlyingNetwork!!.getAllByName(address).apply {
-                                    if (isNotEmpty()) {
-                                        address = this[0].hostAddress
-                                    }
-                                }
-                            } catch (ignored: UnknownHostException) {
-                            }
-                        }
-                        if (!isActive) break
-                        if (!address.isIpAddress()) {
-                            profile.status = 2
-                            profile.error = app.getString(R.string.connection_test_domain_not_found)
-                            test.update(profile)
-                            continue
-                        }
-                        try {
-                            if (icmpPing) {
-                                // removed
-                            } else {
-                                val socket =
-                                    SagerNet.underlyingNetwork?.socketFactory?.createSocket()
-                                        ?: Socket()
-                                try {
-                                    socket.soTimeout = 3000
-                                    socket.bind(InetSocketAddress(0))
-                                    val start = SystemClock.elapsedRealtime()
-                                    socket.connect(
-                                        InetSocketAddress(
-                                            address, profile.requireBean().serverPort
-                                        ), 3000
-                                    )
-                                    if (!isActive) break
-                                    profile.status = 1
-                                    profile.ping = (SystemClock.elapsedRealtime() - start).toInt()
-                                    test.update(profile)
-                                } finally {
-                                    socket.closeQuietly()
-                                }
-                            }
-                        } catch (e: Exception) {
-                            if (!isActive) break
-                            val message = e.readableMessage
-
-                            if (icmpPing) {
-                                profile.status = 2
-                                profile.error = getString(R.string.connection_test_unreachable)
-                            } else {
-                                profile.status = 2
-                                when {
-                                    !message.contains("failed:") -> profile.error =
-                                        getString(R.string.connection_test_timeout)
-
-                                    else -> when {
-                                        message.contains("ECONNREFUSED") -> {
-                                            profile.error =
-                                                getString(R.string.connection_test_refused)
-                                        }
-
-                                        message.contains("ENETUNREACH") -> {
-                                            profile.error =
-                                                getString(R.string.connection_test_unreachable)
-                                        }
-
-                                        else -> {
-                                            profile.status = 3
-                                            profile.error = message
-                                        }
-                                    }
-                                }
-                            }
-                            test.update(profile)
-                        }
-                    }
-                })
-            }
-
-            testJobs.joinAll()
-
-            runOnMainDispatcher {
-                test.cancel()
-            }
-        }
-        test.cancel = {
-            test.dialogStatus.set(2)
-            dialog.dismiss()
-            runOnDefaultDispatcher {
-                mainJob.cancel()
-                testJobs.forEach { it.cancel() }
-                test.results.forEach {
-                    try {
-                        ProfileManager.updateProfile(it)
-                    } catch (e: Exception) {
-                        Logs.w(e)
-                    }
-                }
-                GroupManager.postReload(DataStore.currentGroupId())
-                DataStore.runningTest = false
-            }
-        }
-        test.minimize = {
-            test.dialogStatus.set(1)
-            test.notification = ConnectionTestNotification(
-                dialog.context,
-                "[${group.displayName()}] ${getString(R.string.connection_test)}"
-            )
-            dialog.hide()
-        }
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    fun urlTest() {
-        if (DataStore.runningTest) return else DataStore.runningTest = true
-        val test = TestDialog()
-        val dialog = test.builder.show()
-        val testJobs = mutableListOf<Job>()
-        val group = DataStore.currentGroup()
-
-        val mainJob = runOnDefaultDispatcher {
-            val profilesList = SagerDatabase.proxyDao.getByGroup(group.id)
-            test.proxyN = profilesList.size
-            val profiles = ConcurrentLinkedQueue(profilesList)
-            repeat(DataStore.connectionTestConcurrent) {
-                testJobs.add(launch(Dispatchers.IO) {
-                    val urlTest = UrlTest() // note: this is NOT in bg process
-                    while (isActive) {
-                        val profile = profiles.poll() ?: break
-                        profile.status = 0
-
-                        try {
-                            val result = urlTest.doTest(profile)
-                            profile.status = 1
-                            profile.ping = result
-                        } catch (e: PluginManager.PluginNotFoundException) {
-                            profile.status = 2
-                            profile.error = e.readableMessage
-                        } catch (e: Exception) {
-                            profile.status = 3
-                            profile.error = e.readableMessage
-                        }
-
-                        test.update(profile)
-                    }
-                })
-            }
-
-            testJobs.joinAll()
-
-            runOnMainDispatcher {
-                test.cancel()
-            }
-        }
-        test.cancel = {
-            test.dialogStatus.set(2)
-            dialog.dismiss()
-            runOnDefaultDispatcher {
-                mainJob.cancel()
-                testJobs.forEach { it.cancel() }
-                test.results.forEach {
-                    try {
-                        ProfileManager.updateProfile(it)
-                    } catch (e: Exception) {
-                        Logs.w(e)
-                    }
-                }
-                GroupManager.postReload(DataStore.currentGroupId())
-                DataStore.runningTest = false
-            }
-        }
-        test.minimize = {
-            test.dialogStatus.set(1)
-            test.notification = ConnectionTestNotification(
-                dialog.context,
-                "[${group.displayName()}] ${getString(R.string.connection_test)}"
-            )
-            dialog.hide()
-        }
     }
 
     inner class GroupPagerAdapter : FragmentStateAdapter(this),
@@ -1294,6 +1012,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             var configurationIdList: MutableList<Long> = mutableListOf()
             val configurationList = HashMap<Long, ProxyEntity>()
+            var testResults: Map<Long, List<io.nekohasekai.sagernet.database.NodeTestResult>> = emptyMap()
 
             private fun getItem(profileId: Long): ProxyEntity {
                 var profile = configurationList[profileId]
@@ -1486,15 +1205,20 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             fun reloadProfiles() {
                 var newProfiles = SagerDatabase.proxyDao.getByGroup(proxyGroup.id)
+                testResults = SagerDatabase.nodeTests.forGroup(proxyGroup.id).groupBy { it.profileId }
                 when (proxyGroup.order) {
                     GroupOrder.BY_NAME -> {
                         newProfiles = newProfiles.sortedBy { it.displayName() }
 
                     }
 
-                    GroupOrder.BY_DELAY -> {
-                        newProfiles =
-                            newProfiles.sortedBy { if (it.status == 1) it.ping else 114514 }
+                    GroupOrder.BY_DELAY, 3, 4, 5 -> {
+                        val kind = when (proxyGroup.order) { 3 -> "TCP"; 4 -> "UDP"; 5 -> "SPEED"; else -> "URL" }
+                        newProfiles = newProfiles.sortedBy { profile ->
+                            val result = testResults[profile.id]?.firstOrNull { it.kind == kind }
+                            val value = result?.value ?: if (kind == "URL" && profile.status == 1) profile.ping.toLong() else -1L
+                            if (value < 0) Long.MAX_VALUE else if (kind == "SPEED") -value else value
+                        }
                     }
                 }
 
@@ -1649,6 +1373,21 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 } else {
                     profileStatus.setOnClickListener(null)
+                }
+
+                val measurements = adapter?.testResults?.get(proxyEntity.id).orEmpty().sortedBy { it.kind }
+                view.findViewById<TextView>(R.id.node_test_results).apply {
+                    isGone = measurements.isEmpty()
+                    text = measurements.joinToString("  ·  ") { NodeTestUi.resultText(view.context, it) }
+                    setOnClickListener {
+                        val details = measurements.joinToString("\n\n") { result ->
+                            NodeTestUi.resultText(view.context, result) + "\n" +
+                                java.text.DateFormat.getDateTimeInstance().format(java.util.Date(result.testedAt)) +
+                                if (result.error.isBlank()) "" else "\n${result.error}"
+                        }
+                        MaterialAlertDialogBuilder(view.context).setTitle(proxyEntity.displayName())
+                            .setMessage(details).setPositiveButton(android.R.string.ok, null).show()
+                    }
                 }
 
                 editButton.setOnClickListener {

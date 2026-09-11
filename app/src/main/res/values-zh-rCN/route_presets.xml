@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="route_import">导入路由规则</string>
+    <string name="route_export">导出路由规则</string>
+    <string name="route_import_url">从 HTTPS 链接导入</string>
+    <string name="route_import_count">导入 %1$d 条规则</string>
+    <string name="route_import_help">追加到自定义规则并启用自定义模式，保留已有规则。支持 ArcaenBox 导出及常见 sing-box/Xray 路由字段；遇到不支持的字段会中止整个导入。</string>
+    <string-array name="route_import_sources"><item>从文件导入</item><item>从剪贴板导入</item><item>从 HTTPS 链接导入</item></string-array>
+    <string name="preset_title">路由预设</string>
+    <string name="preset_mode">路由：%1$s</string>
+    <string name="preset_help">预设会保留您的自定义规则，切回“自定义规则”即可编辑或恢复。白名单的其余目标走代理，黑名单的其余目标直连，全局模式均走代理。Po0fw 保护规则仍生效。</string>
+    <string name="preset_lan_ip">绕过局域网 IP</string>
+    <string name="preset_lan_domain">绕过局域网域名</string>
+    <string name="preset_cn_ip">绕过中国大陆 IP</string>
+    <string name="preset_cn_domain">绕过中国大陆域名</string>
+    <string name="preset_global_domain">代理境外域名</string>
+    <string-array name="route_preset_entries"><item>自定义规则</item><item>绕过大陆 · 白名单</item><item>代理列表域名 · 黑名单</item><item>全局代理</item></string-array>
+</resources>

@@ -66,6 +66,53 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         number("tlsFragmentDelay", 1..1000)
         number("globalMuxStreams", 1..1024)
         number("connectionTestConcurrency", 1..32)
+        number("nodeTestTimeout", 2..60)
+        number("speedTestLimitMiB", 1..256)
+        number("udpTestPort", 1..65535)
+        number("secondMixedPort", 1..65535)
+        number("dnsQueryTimeout", 1..60)
+        number("dnsCacheCapacity", 1024..65536)
+        listOf("dnsCache", "dnsOptimistic", "dnsBlockAAAA", "dnsBlockHttps", "dnsSystemHosts", "customDnsEnabled",
+            "coreCacheFile", "protocolSniffers", "defaultFingerprint", "inboundUsername", "inboundPassword", "secondMixedEnabled")
+            .forEach { findPreference<Preference>(it)!!.onPreferenceChangeListener = reloadListener }
+        findPreference<EditTextPreference>("inboundPassword")!!.setOnBindEditTextListener {
+            it.inputType = EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
+        }
+        findPreference<EditTextPreference>("dnsHosts")!!.apply {
+            setOnBindEditTextListener { it.inputType = EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE }
+            setOnPreferenceChangeListener { _, value ->
+                val valid = runCatching { io.nekohasekai.sagernet.fmt.AdvancedOptions.parseHosts(value.toString()) }.isSuccess
+                if (valid) needReload() else snackbar(R.string.invalid_setting).show()
+                valid
+            }
+        }
+        findPreference<EditTextPreference>("bootstrapDns")!!.setOnPreferenceChangeListener { _, value ->
+            val valid = value.toString().isBlank() || runCatching { io.nekohasekai.sagernet.fmt.AdvancedOptions.validateIp(value.toString().trim()) }.isSuccess
+            if (valid) needReload() else snackbar(R.string.invalid_setting).show()
+            valid
+        }
+        listOf("customDnsVpn", "customDnsProxy").forEach { key ->
+            findPreference<EditConfigPreference>(key)!!.apply { useConfigStore(key); onPreferenceChangeListener = reloadListener }
+        }
+        findPreference<Preference>("customDnsDefaults")!!.setOnPreferenceClickListener {
+            val template = """{"servers":[{"type":"udp","tag":"dns-direct","server":"223.5.5.5","detour":"direct"},{"type":"https","tag":"dns-remote","server":"1.1.1.1","path":"/dns-query","detour":"proxy"}],"final":"dns-remote"}"""
+            if (DataStore.customDnsVpn.isBlank()) DataStore.customDnsVpn = template
+            if (DataStore.customDnsProxy.isBlank()) DataStore.customDnsProxy = template
+            listOf("customDnsVpn", "customDnsProxy").forEach { key -> findPreference<EditConfigPreference>(key)!!.notifyChanged() }
+            true
+        }
+        findPreference<EditTextPreference>("speedTestURL")!!.setOnPreferenceChangeListener { _, value ->
+            val url = value.toString().toHttpUrlOrNull()
+            val valid = url?.isHttps == true && url.username.isEmpty() && url.password.isEmpty()
+            if (!valid) snackbar(R.string.invalid_setting).show()
+            valid
+        }
+        findPreference<EditTextPreference>("udpTestHost")!!.setOnPreferenceChangeListener { _, value ->
+            val host = value.toString().trim()
+            val valid = host.length in 1..253 && host.matches(Regex("[A-Za-z0-9.-]+"))
+            if (!valid) snackbar(R.string.invalid_setting).show()
+            valid
+        }
         listOf("tlsFragment", "globalMux", "globalMuxProtocol", "globalMuxPadding", "showExitIp",
             "domain_strategy_for_remote", "domain_strategy_for_direct", "domain_strategy_for_server")
             .forEach { findPreference<Preference>(it)!!.onPreferenceChangeListener = reloadListener }
@@ -220,6 +267,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         if (::globalCustomConfig.isInitialized) {
             globalCustomConfig.notifyChanged()
         }
+        listOf("customDnsVpn", "customDnsProxy").forEach { findPreference<EditConfigPreference>(it)?.notifyChanged() }
     }
 
 }

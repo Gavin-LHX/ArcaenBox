@@ -156,6 +156,14 @@ class ConfigEditActivity : ThemedActivity() {
 
     fun saveAndExit() {
         formatText()?.let {
+            if (key == "customDnsVpn" || key == "customDnsProxy") {
+                try {
+                    if (it.isNotBlank()) io.nekohasekai.sagernet.fmt.AdvancedOptions.validateDns(it)
+                } catch (e: Exception) {
+                    MaterialAlertDialogBuilder(this).setTitle(R.string.error_title).setMessage(e.readableMessage).show()
+                    return
+                }
+            }
             if (useConfigStore) {
                 DataStore.configurationStore.putString(key, it)
             } else {

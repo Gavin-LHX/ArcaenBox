@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="advanced_bootstrap">Bootstrap DNS IP</string>
+    <string name="advanced_bootstrap_help">解析直连 DNS 服务器域名。填写 IP 地址，留空使用 Android 系统 DNS。</string>
+    <string name="advanced_username">第二个监听端口用户名</string>
+    <string name="advanced_password">第二个监听端口密码</string>
+    <string name="advanced_auth_help">认证用于第二个监听端口。填写用户名与密码后，原端口仅监听本机，供应用内部请求使用。</string>
+    <string name="advanced_second_listener">开启第二个本地代理监听端口</string>
+    <string name="advanced_second_port">第二个混合监听端口</string>
+    <string name="advanced_dns">DNS 高级设置</string>
+    <string name="advanced_dns_cache">启用 DNS 缓存</string>
+    <string name="advanced_dns_capacity">DNS 缓存条目数</string>
+    <string name="advanced_dns_optimistic">乐观 DNS 缓存</string>
+    <string name="advanced_dns_optimistic_help">返回近期过期的缓存记录，同时在后台刷新。</string>
+    <string name="advanced_dns_timeout">DNS 查询超时（秒）</string>
+    <string name="advanced_dns_aaaa">阻止 AAAA 查询</string>
+    <string name="advanced_dns_https">阻止 SVCB 和 HTTPS 查询</string>
+    <string name="advanced_dns_https_help">为空响应，可能影响 ECH 和 HTTP/3 的服务发现。</string>
+    <string name="advanced_system_hosts">使用 Android 系统 Hosts</string>
+    <string name="advanced_hosts">自定义 DNS Hosts</string>
+    <string name="advanced_hosts_help">每行填写：域名 IP [IP…]。例如 example.com 192.0.2.1</string>
+    <string name="advanced_custom_dns">启用 sing-box 自定义 DNS</string>
+    <string name="advanced_custom_dns_help">按服务模式替换基础和高级 DNS 设置。保留 dns-direct、dns-remote 标签。完整自定义配置仍使用自身 DNS。</string>
+    <string name="advanced_custom_dns_vpn">自定义 DNS JSON · VPN 模式</string>
+    <string name="advanced_custom_dns_proxy">自定义 DNS JSON · 仅代理模式</string>
+    <string name="advanced_dns_defaults">将默认 DNS 导入空白模板</string>
+    <string name="advanced_sniffers">流量探测协议</string>
+    <string name="advanced_sniffers_help">开启流量探测后生效。全部不选时使用内核默认协议。</string>
+    <string name="advanced_fingerprint">默认 TLS 指纹</string>
+    <string name="advanced_core_cache">缓存远程规则集和 FakeIP</string>
+    <string name="advanced_core_cache_help">重启后保留内核缓存。节点测试使用独立实例。</string>
+    <string-array name="advanced_fingerprint_entries"><item>内核默认</item><item>chrome</item><item>firefox</item><item>safari</item><item>randomized</item></string-array>
+</resources>

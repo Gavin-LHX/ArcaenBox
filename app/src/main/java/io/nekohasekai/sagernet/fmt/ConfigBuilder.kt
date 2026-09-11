@@ -133,7 +133,11 @@ fun buildConfig(
         return list
     }
 
-    val extraRules = if (forTest) listOf() else SagerDatabase.rulesDao.enabledRules()
+    val extraRules = when {
+        forTest -> listOf()
+        DataStore.routePreset != "custom" -> io.nekohasekai.sagernet.database.RoutePresets.rules(DataStore.routePreset)
+        else -> SagerDatabase.rulesDao.enabledRules()
+    }
     val extraProxies =
         if (forTest) mapOf() else SagerDatabase.proxyDao.getEntities(extraRules.mapNotNull { rule ->
             rule.outbound.takeIf { it > 0 && it != proxy.id }
@@ -253,6 +257,7 @@ fun buildConfig(
             auto_detect_interface = true
             rules = mutableListOf()
             rule_set = mutableListOf()
+            final_ = if (!forTest && DataStore.routePreset == "blacklist") TAG_DIRECT else TAG_PROXY
         }
 
         // returns outbound tag
@@ -684,7 +689,7 @@ fun buildConfig(
             })
         }
 
-        dns.final_ = if (forTest) "dns-direct" else "dns-remote"
+        dns.final_ = if (forTest || DataStore.routePreset == "blacklist") "dns-direct" else "dns-remote"
 
         // dns object user rules
         if (enableDnsRouting) {
@@ -753,9 +758,35 @@ fun buildConfig(
     }.let {
         val configMap = it.asMap()
         Util.mergeJSON(configMap, proxy.requireBean().customConfigJson)
-        val tunedConfig = ConnectionOptions.apply(gson.toJson(configMap), DataStore.udpTimeout,
+        var tunedConfig = ConnectionOptions.apply(gson.toJson(configMap), DataStore.udpTimeout,
             DataStore.tlsFragment, DataStore.tlsFragmentDelay, DataStore.globalMux,
             DataStore.globalMuxProtocol, DataStore.globalMuxStreams, DataStore.globalMuxPadding)
+        if (!forTest) tunedConfig = AdvancedOptions.apply(tunedConfig, AdvancedOptions.Settings().apply {
+            dnsCache = DataStore.dnsCache
+            optimistic = DataStore.dnsOptimistic
+            blockAAAA = DataStore.dnsBlockAAAA
+            blockHttps = DataStore.dnsBlockHttps
+            systemHosts = DataStore.dnsSystemHosts
+            hosts = DataStore.dnsHosts
+            bootstrap = DataStore.bootstrapDns.trim()
+            dnsTimeout = DataStore.dnsQueryTimeout
+            dnsCapacity = DataStore.dnsCacheCapacity
+            if (DataStore.customDnsEnabled) {
+                customDns = if (isVPN) DataStore.customDnsVpn else DataStore.customDnsProxy
+                if (customDns.isBlank()) throw IllegalArgumentException("Custom DNS is enabled but the current mode has no DNS configuration")
+            }
+            sniffers = DataStore.protocolSniffers.sorted().joinToString(",")
+            fingerprint = DataStore.defaultFingerprint
+            username = DataStore.inboundUsername
+            password = DataStore.inboundPassword
+            secondPort = if (DataStore.secondMixedEnabled) DataStore.secondMixedPort else 0
+            cacheFile = DataStore.coreCacheFile && !forExport
+            cachePath = java.io.File(SagerNet.application.filesDir, "sing-box-cache.db").absolutePath
+            cacheId = "profile-${proxy.id}"
+        })
+        else tunedConfig = AdvancedOptions.apply(tunedConfig, AdvancedOptions.Settings().apply {
+            fingerprint = DataStore.defaultFingerprint
+        })
         ConfigBuildResult(
             ExitProbeConfig.apply(Po0RouteConfig.apply(tunedConfig, po0Configured), exitProbePort, TAG_PROXY),
             externalIndexMap,

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="route_import">Import routing rules</string>
+    <string name="route_export">Export routing rules</string>
+    <string name="route_import_url">Import from HTTPS URL</string>
+    <string name="route_import_count">Import %1$d rules</string>
+    <string name="route_import_help">Append to custom rules and activate Custom mode. Existing rules are preserved. Supports ArcaenBox exports and common sing-box/Xray route fields; unsupported fields reject the entire import.</string>
+    <string-array name="route_import_sources"><item>From file</item><item>From clipboard</item><item>From HTTPS URL</item></string-array>
+    <string name="preset_title">Routing preset</string>
+    <string name="preset_mode">Routing: %1$s</string>
+    <string name="preset_help">Presets preserve your custom rules. Select Custom to edit or restore them. Whitelist proxies other destinations; Blacklist directs other destinations; Global proxies all destinations. Po0fw protection remains active.</string>
+    <string name="preset_lan_ip">Direct local network IPs</string>
+    <string name="preset_lan_domain">Direct local network domains</string>
+    <string name="preset_cn_ip">Direct mainland China IPs</string>
+    <string name="preset_cn_domain">Direct mainland China domains</string>
+    <string name="preset_global_domain">Proxy domains outside mainland China</string>
+    <string-array name="route_preset_entries"><item>Custom rules</item><item>Bypass mainland China · Whitelist</item><item>Proxy listed domains · Blacklist</item><item>Global proxy</item></string-array>
+</resources>

@@ -14,6 +14,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.ProfileManager
 import io.nekohasekai.sagernet.database.RuleEntity
+import io.nekohasekai.sagernet.database.RoutePresets
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.databinding.LayoutEmptyRouteBinding
 import io.nekohasekai.sagernet.databinding.LayoutRouteItemBinding
@@ -27,6 +28,10 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
     lateinit var ruleListView: RecyclerView
     lateinit var ruleAdapter: RuleAdapter
     lateinit var undoManager: UndoSnackbarManager<RuleEntity>
+    private val routeImport = RouteImportUi(this) {
+        needReload()
+        runOnDefaultDispatcher { if (::ruleAdapter.isInitialized) ruleAdapter.reload() }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -50,7 +55,7 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
             override fun getSwipeDirs(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
-            ) = if (viewHolder is RuleAdapter.DocumentHolder) {
+            ) = if (viewHolder is RuleAdapter.DocumentHolder || DataStore.routePreset != "custom") {
                 0
             } else {
                 super.getSwipeDirs(recyclerView, viewHolder)
@@ -59,7 +64,7 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
             override fun getDragDirs(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
-            ) = if (viewHolder is RuleAdapter.DocumentHolder) {
+            ) = if (viewHolder is RuleAdapter.DocumentHolder || DataStore.routePreset != "custom") {
                 0
             } else {
                 super.getDragDirs(recyclerView, viewHolder)
@@ -102,12 +107,15 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
 
     override fun onResume() {
         super.onResume()
-        if (::ruleAdapter.isInitialized) ruleAdapter.notifyItemChanged(0)
+        if (::ruleAdapter.isInitialized) runOnDefaultDispatcher { ruleAdapter.reload() }
     }
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_import_routes -> routeImport.open()
+            R.id.action_export_routes -> routeImport.export()
             R.id.action_new_route -> {
+                DataStore.routePreset = "custom"
                 startActivity(Intent(context, RouteSettingsActivity::class.java))
             }
             R.id.action_reset_route -> {
@@ -134,7 +142,7 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
 
         val ruleList = ArrayList<RuleEntity>()
         suspend fun reload() {
-            val rules = ProfileManager.getRules()
+            val rules = if (DataStore.routePreset == "custom") ProfileManager.getRules() else RoutePresets.rules(DataStore.routePreset)
             ruleListView.post {
                 ruleList.clear()
                 ruleList.addAll(rules)
@@ -268,6 +276,18 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
 
         inner class DocumentHolder(private val binding: LayoutEmptyRouteBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind() {
+                val modes = resources.getStringArray(R.array.route_preset_entries)
+                val mode = RoutePresets.values.indexOf(DataStore.routePreset).coerceAtLeast(0)
+                binding.routePreset.text = getString(R.string.preset_mode, modes[mode])
+                binding.routePreset.setOnClickListener {
+                    MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.preset_title)
+                        .setSingleChoiceItems(modes, mode) { dialog, index ->
+                            DataStore.routePreset = RoutePresets.values[index]
+                            needReload()
+                            runOnDefaultDispatcher { reload() }
+                            dialog.dismiss()
+                        }.setNegativeButton(android.R.string.cancel, null).show()
+                }
                 val values = resources.getStringArray(R.array.destination_strategy_values)
                 val entries = resources.getStringArray(R.array.destination_strategy_entries)
                 val effective = if (!DataStore.resolveDestination) "" else DataStore.destinationStrategy.ifEmpty {
@@ -314,6 +334,8 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
                 itemView.setOnClickListener { editButton.performClick() }
                 enableSwitch.setOnCheckedChangeListener(null)
                 enableSwitch.isChecked = rule.enabled
+                enableSwitch.isEnabled = DataStore.routePreset == "custom"
+                editButton.isEnabled = DataStore.routePreset == "custom"
                 enableSwitch.contentDescription = rule.displayName()
                 enableSwitch.setOnCheckedChangeListener { _, isChecked ->
                     runOnDefaultDispatcher {

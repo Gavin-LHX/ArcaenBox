@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="advanced_bootstrap">Bootstrap DNS IP</string>
+    <string name="advanced_bootstrap_help">Resolve the direct DNS server hostname. Enter an IP address; empty uses Android DNS.</string>
+    <string name="advanced_username">Second listener username</string>
+    <string name="advanced_password">Second listener password</string>
+    <string name="advanced_auth_help">Authentication applies to the second listener. When credentials are set, the original port listens only on this device for internal app traffic.</string>
+    <string name="advanced_second_listener">Enable a second local proxy listener</string>
+    <string name="advanced_second_port">Second mixed port</string>
+    <string name="advanced_dns">Advanced DNS</string>
+    <string name="advanced_dns_cache">Enable DNS cache</string>
+    <string name="advanced_dns_capacity">DNS cache entries</string>
+    <string name="advanced_dns_optimistic">Optimistic DNS cache</string>
+    <string name="advanced_dns_optimistic_help">Return recently expired records while refreshing them in the background.</string>
+    <string name="advanced_dns_timeout">DNS query timeout (seconds)</string>
+    <string name="advanced_dns_aaaa">Block AAAA queries</string>
+    <string name="advanced_dns_https">Block SVCB and HTTPS queries</string>
+    <string name="advanced_dns_https_help">Return an empty response for service binding queries, which can affect ECH and HTTP/3 discovery.</string>
+    <string name="advanced_system_hosts">Use Android system Hosts</string>
+    <string name="advanced_hosts">Custom DNS Hosts</string>
+    <string name="advanced_hosts_help">One entry per line: domain IP [IP…]. Example: example.com 192.0.2.1</string>
+    <string name="advanced_custom_dns">Enable custom sing-box DNS</string>
+    <string name="advanced_custom_dns_help">Replaces basic and advanced DNS settings for the selected service mode. Keep dns-direct and dns-remote tags. Full custom profiles retain their own DNS.</string>
+    <string name="advanced_custom_dns_vpn">Custom DNS JSON · VPN</string>
+    <string name="advanced_custom_dns_proxy">Custom DNS JSON · Proxy only</string>
+    <string name="advanced_dns_defaults">Load default DNS into empty templates</string>
+    <string name="advanced_sniffers">Traffic sniffing protocols</string>
+    <string name="advanced_sniffers_help">Applies when traffic sniffing is enabled. Leave all unchecked for the core defaults.</string>
+    <string name="advanced_fingerprint">Default TLS fingerprint</string>
+    <string name="advanced_core_cache">Cache remote rule sets and FakeIP</string>
+    <string name="advanced_core_cache_help">Persist core cache between restarts. Node tests use independent instances.</string>
+    <string-array name="advanced_sniffers"><item>http</item><item>tls</item><item>quic</item><item>dns</item></string-array>
+    <string-array name="advanced_fingerprint_entries"><item>Core default</item><item>chrome</item><item>firefox</item><item>safari</item><item>randomized</item></string-array>
+    <string-array name="advanced_fingerprint_values"><item></item><item>chrome</item><item>firefox</item><item>safari</item><item>randomized</item></string-array>
+</resources>

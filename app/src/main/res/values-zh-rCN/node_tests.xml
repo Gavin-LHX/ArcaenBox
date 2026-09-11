@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="node_test_tcp">测试 TCP 延迟（多选）</string>
+    <string name="node_test_url">测试真连接延迟（多选）</string>
+    <string name="node_test_udp">测试 UDP 延迟（多选）</string>
+    <string name="node_test_speed">测试下载速度（多选）</string>
+    <string name="node_test_real_short">真连接</string>
+    <string name="node_test_speed_short">下载</string>
+    <string name="node_sort_results">按测试结果排序</string>
+    <string name="node_test_toggle_all">全选 / 全不选</string>
+    <string name="node_test_start">开始测试</string>
+    <string name="node_test_speed_help">依次测试 %1$d 个节点，每个节点最多下载 %2$d MiB，最多 %4$d 秒。总下载上限 %3$d MiB，另有协议开销。测试中可随时取消。</string>
+    <string name="node_test_settings">节点测试</string>
+    <string name="node_test_timeout">单个节点测试超时（秒）</string>
+    <string name="node_test_download_url">测速文件地址（HTTPS）</string>
+    <string name="node_test_limit">单节点下载上限（MiB）</string>
+    <string name="node_test_udp_host">UDP 测试 NTP 服务器</string>
+    <string name="node_test_udp_port">UDP 测试 NTP 端口</string>
+    <string name="node_test_udp_help">通过所选代理发送 NTP 请求并校验响应，测量 UDP 往返延迟。UDP 测试失败不会把节点的 TCP 标记为不可用。</string>
+</resources>

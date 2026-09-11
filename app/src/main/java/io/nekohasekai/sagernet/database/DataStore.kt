@@ -157,6 +157,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var appendHttpProxy by configurationStore.boolean(Key.APPEND_HTTP_PROXY)
     var connectionTestURL by configurationStore.string(Key.CONNECTION_TEST_URL) { CONNECTION_TEST_URL }
     var destinationStrategy by configurationStore.string("destinationStrategy") { "" }
+    var routePreset by configurationStore.string("routePreset") { "custom" }
     var udpTimeout by configurationStore.stringToInt("udpTimeout") { 0 }
     var tlsFragment by configurationStore.string("tlsFragment") { "off" }
     var tlsFragmentDelay by configurationStore.stringToInt("tlsFragmentDelay") { 500 }
@@ -167,6 +168,30 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var showExitIp by configurationStore.boolean("showExitIp") { true }
     var exitIpURL by configurationStore.string("exitIpURL") { "https://api.ipify.org" }
     var connectionTestConcurrent by configurationStore.stringToInt("connectionTestConcurrency") { configurationStore.getInt("connectionTestConcurrent", 5) }
+    var nodeTestTimeout by configurationStore.stringToInt("nodeTestTimeout") { 10 }
+    var speedTestURL by configurationStore.string("speedTestURL") { "https://speed.cloudflare.com/__down?bytes=20971520" }
+    var speedTestLimitMiB by configurationStore.stringToInt("speedTestLimitMiB") { 20 }
+    var udpTestHost by configurationStore.string("udpTestHost") { "time.cloudflare.com" }
+    var udpTestPort by configurationStore.stringToInt("udpTestPort") { 123 }
+    var dnsCache by configurationStore.boolean("dnsCache") { true }
+    var dnsOptimistic by configurationStore.boolean("dnsOptimistic")
+    var dnsBlockAAAA by configurationStore.boolean("dnsBlockAAAA")
+    var dnsBlockHttps by configurationStore.boolean("dnsBlockHttps")
+    var dnsSystemHosts by configurationStore.boolean("dnsSystemHosts")
+    var dnsHosts by configurationStore.string("dnsHosts") { "" }
+    var bootstrapDns by configurationStore.string("bootstrapDns") { "" }
+    var dnsQueryTimeout by configurationStore.stringToInt("dnsQueryTimeout") { 10 }
+    var dnsCacheCapacity by configurationStore.stringToInt("dnsCacheCapacity") { 4096 }
+    var customDnsEnabled by configurationStore.boolean("customDnsEnabled")
+    var customDnsVpn by configurationStore.string("customDnsVpn") { "" }
+    var customDnsProxy by configurationStore.string("customDnsProxy") { "" }
+    var coreCacheFile by configurationStore.boolean("coreCacheFile")
+    val protocolSniffers get() = configurationStore.getStringSet("protocolSniffers") ?: emptySet()
+    var defaultFingerprint by configurationStore.string("defaultFingerprint") { "" }
+    var inboundUsername by configurationStore.string("inboundUsername") { "" }
+    var inboundPassword by configurationStore.string("inboundPassword") { "" }
+    var secondMixedEnabled by configurationStore.boolean("secondMixedEnabled")
+    var secondMixedPort by configurationStore.stringToInt("secondMixedPort") { 2081 }
     var alwaysShowAddress by configurationStore.boolean(Key.ALWAYS_SHOW_ADDRESS)
 
     var tunImplementation by configurationStore.stringToInt(Key.TUN_IMPLEMENTATION) { TunImplementation.GVISOR }

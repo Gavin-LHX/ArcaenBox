@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_import_routes" android:title="@string/route_import" app:showAsAction="never" />
+    <item android:id="@+id/action_export_routes" android:title="@string/route_export" app:showAsAction="never" />
     <item
         android:id="@+id/action_new_route"
         android:icon="@drawable/ic_baseline_add_road_24"

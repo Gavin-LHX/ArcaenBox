@@ -115,7 +115,7 @@ def exit_ip():
     protocol.import_uri(f'snell://{protocol.SECRET}@10.0.2.2:9?version=5', 'Snell-unreachable-exit')
     button = protocol.start_profile('Snell-unreachable-exit')
     try:
-        ui.wait_for(text=ui.STRINGS['exit_ip_failed'])
+        ui.wait_for(timeout=55, text=ui.STRINGS['exit_ip_failed'])
         ui.capture('failed-proxy-no-direct-ip-fallback')
     finally:
         ui.tap(button); wait_tun(False)
@@ -189,7 +189,7 @@ def settings_and_routes():
     ui.tap(ui.scroll_for(text=ui.STRINGS['fragment_title']))
     ui.tap(ui.wait_for(text=ui.STRINGS['off']))
     ui.launch(); ui.tap(ui.wait_for(resource_id=P+':id/action_misc'))
-    for key in ['node_restart','node_delete_group','node_export_group','node_locate','node_sort_delay']:
+    for key in ['node_restart','node_delete_group','node_export_group','node_locate','node_sort_results']:
         ui.scroll_for(text=ui.STRINGS[key])
     ui.capture('node-actions-menu')
     ui.adb('shell','input','keyevent','BACK')
