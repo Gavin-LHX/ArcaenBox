@@ -2,6 +2,8 @@ package io.nekohasekai.sagernet.utils
 
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.io.IOException
@@ -12,13 +14,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 object ExitIpLookup {
-    suspend fun query(port: Int, endpoint: String): String {
+    suspend fun query(port: Int, endpoint: String): String = withContext(Dispatchers.IO) {
         // External protocol processes can begin listening shortly after the TUN
         // reports connected. Every attempt keeps the same explicit proxy; an
         // unavailable node must never reveal the direct connection's public IP.
         for (attempt in 0..2) {
             try {
-                return queryOnce(port, endpoint)
+                return@withContext queryOnce(port, endpoint)
             } catch (e: IOException) {
                 if (attempt == 2) throw e
                 delay(if (attempt == 0) 750L else 1500L)
