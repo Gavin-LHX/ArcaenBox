@@ -72,6 +72,16 @@ def wait_for(**attrs):
     deadline = time.monotonic() + 25
     while time.monotonic() < deadline:
         doc = tree()
+        # A Google APIs emulator can leave the launcher ANR dialog in front of
+        # a healthy foreground app. Dismiss only this identified fixture failure;
+        # ArcaenBox crashes/ANRs must still fail the test and retain their evidence.
+        launcher_anr = find(doc, text="Pixel Launcher isn't responding", package='android')
+        if launcher_anr is not None:
+            close = find(doc, resource_id='android:id/aerr_close')
+            if close is not None:
+                (OUT/'emulator-launcher-anr.xml').write_text(ET.tostring(doc,encoding='unicode'),encoding='utf-8')
+                tap(close)
+                continue
         node = find(doc, **attrs)
         if node is not None:
             return node
