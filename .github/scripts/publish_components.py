@@ -13,9 +13,15 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--directory', default='core-build/component-updates')
     p.add_argument('--target', required=True)
+    p.add_argument('--component', default='all', choices=['all','trojan-go','naive','mieru','snell'])
+    p.add_argument('--channel', default='all', choices=['all','stable','preview'])
     args = p.parse_args()
     key = serialization.load_der_public_key((ROOT / 'app/src/main/assets/cores/public-key.der').read_bytes())
+    found = False
     for path in sorted(Path(args.directory).glob('*/*/manifest.json')):
+        if args.component != 'all' and path.parent.parent.name != args.component: continue
+        if args.channel != 'all' and path.parent.name != args.channel: continue
+        found = True
         metadata = path.read_bytes()
         key.verify((path.parent / 'manifest.sig').read_bytes(), metadata, padding.PKCS1v15(), hashes.SHA256())
         m = json.loads(metadata)
@@ -39,6 +45,7 @@ def main():
                '--title', f'{m["component"]} {m["version"]} ({m["channel"]})', '--notes-file', str(notes)]
         if m['channel'] == 'preview': cmd.append('--prerelease')
         subprocess.run(cmd, check=True)
+    assert found, 'No compatible component package in the selected channel'
 
 
 if __name__ == '__main__':
