@@ -12,6 +12,8 @@ sing-box / universal proxy toolchain for Android.
 
 侧栏提供 [Po0 防火墙白名单](docs/po0-whitelist.md)，支持多机器 Token、手动加白与自动更新。
 
+节点卡片提供独立测速菜单，长按可在主列表多选；底栏显示当前代理的真连接延迟和出口 IP。测试地址支持预设与自定义，操作说明见[节点测试与高级设置](docs/node-tests-and-advanced-settings.md)。[1.6.1 测试记录](docs/verification-1.6.1.md)列出实际验证结果与范围限制。
+
 ## 下载 / Downloads
 
 [![GitHub All Releases](https://img.shields.io/github/downloads/Gavin-LHX/ArcaenBox/total?label=downloads-total&logo=github&style=flat-square)](https://github.com/Gavin-LHX/ArcaenBox/releases)
@@ -53,6 +55,7 @@ https://matsuridayo.github.io
 * NaïveProxy（内置 / built-in）
 * Mieru（内置 / built-in）
 * Snell v4/v5（内置，可选择服务端版本 / built-in, selectable server version）
+* Snell v6 RC2（内置测试版 / built-in preview）
 
 Trojan-Go、NaïveProxy、Mieru 和 Snell 无需安装插件。[内置组件版本、Snell v5 兼容范围与构建说明](docs/built-in-protocols.md)。Hysteria 1 的特殊模式仍使用可选插件。
 
