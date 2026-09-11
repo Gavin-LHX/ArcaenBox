@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"io"
 	"libcore/device"
+	"libcore/protect"
 	"log"
 	"runtime"
 	"runtime/debug"
 	"strings"
 	"sync"
 
-	"github.com/matsuridayo/libneko/protect_server"
 	"github.com/matsuridayo/libneko/speedtest"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/adapter/certificate"
@@ -185,9 +185,9 @@ func (b *BoxInstance) Wake() {
 	}
 }
 
-func (b *BoxInstance) SetAsMain() {
+func (b *BoxInstance) SetAsMain() error {
 	mainInstance = b
-	goServeProtect(true)
+	return goServeProtect(true)
 }
 
 func (b *BoxInstance) SetV2rayStats(outbounds string) {
@@ -241,14 +241,17 @@ func UrlTest(i *BoxInstance, link string, timeout int32) (latency int32, err err
 
 var protectCloser io.Closer
 
-func goServeProtect(start bool) {
+func goServeProtect(start bool) error {
 	if protectCloser != nil {
 		protectCloser.Close()
 		protectCloser = nil
 	}
 	if start {
-		protectCloser = protect_server.ServeProtect("protect_path", false, 0, func(fd int) {
-			intfBox.AutoDetectInterfaceControl(int32(fd))
+		var err error
+		protectCloser, err = protect.Serve("protect_path", func(fd int) error {
+			return intfBox.AutoDetectInterfaceControl(int32(fd))
 		})
+		return err
 	}
+	return nil
 }

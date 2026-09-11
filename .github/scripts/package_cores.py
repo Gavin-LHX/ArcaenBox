@@ -6,7 +6,7 @@ p=argparse.ArgumentParser()
 p.add_argument('--stable',required=True)
 p.add_argument('--preview',required=True)
 p.add_argument('--keystore')
-p.add_argument('--revision',type=int,default=2)
+p.add_argument('--revision',type=int,default=3)
 a=p.parse_args()
 abis=['arm64-v8a','armeabi-v7a','x86','x86_64']
 def classes(aar):

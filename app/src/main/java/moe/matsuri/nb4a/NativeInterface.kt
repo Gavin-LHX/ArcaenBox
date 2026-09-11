@@ -18,13 +18,16 @@ import libcore.BoxPlatformInterface
 import libcore.Libcore
 import libcore.NB4AInterface
 import java.net.InetSocketAddress
+import java.io.IOException
 
 class NativeInterface : BoxPlatformInterface, NB4AInterface {
 
     //  libbox interface
 
     override fun autoDetectInterfaceControl(fd: Int) {
-        DataStore.vpnService?.protect(fd)
+        if (DataStore.vpnService?.protect(fd) == false) {
+            throw IOException("VPN socket protection was rejected")
+        }
     }
 
     override fun openTun(singTunOptionsJson: String, tunPlatformOptionsJson: String): Long {

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"libcore/procfs"
+	"libcore/protect"
 	"log"
 	"net/netip"
 	"strings"
@@ -47,8 +48,7 @@ func (w *boxPlatformInterfaceWrapper) UsePlatformAutoDetectInterfaceControl() bo
 func (w *boxPlatformInterfaceWrapper) AutoDetectInterfaceControl(fd int) error {
 	// call protect_path
 	if !isBgProcess {
-		_ = sendFdToProtect(fd, "protect_path")
-		return nil
+		return protect.Send("protect_path", fd)
 	}
 	// bg process call VPNService
 	return intfBox.AutoDetectInterfaceControl(int32(fd))
