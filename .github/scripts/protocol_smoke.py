@@ -215,7 +215,8 @@ def traffic(name, library, udp=False, downloaded=False):
         executables=[ui.adb('shell','readlink','/proc/'+line.split()[0]+'/exe').strip() for line in rows]
         (OUT/(name+'-processes.txt')).write_text('\n'.join(rows+executables))
         if downloaded:
-            assert all(exe in ['/system/bin/linker', '/system/bin/linker64'] for exe in executables), executables
+            loaders={ui.adb('shell','readlink','-f',p).strip() for p in ['/system/bin/linker','/system/bin/linker64']}
+            assert all(exe in loaders for exe in executables), executables
             for row in rows:
                 maps=ui.adb('shell','cat','/proc/'+row.split()[0]+'/maps')
                 assert '/no_backup/components/packages/' in maps and '/libcomponent.so' in maps, maps

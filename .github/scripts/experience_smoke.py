@@ -199,6 +199,7 @@ def settings_and_routes():
 
 def native_cache():
     """Verify signed downloaded-package loading under the ordinary app UID, including SELinux."""
+    ui.enable_debug_logs()
     ui.launch(); ui.adb('shell','am','force-stop',P)
     root='/data/user/0/'+P+'/no_backup/components'
     owner=ui.adb('shell','stat','-c','%u:%g','/data/user/0/'+P).strip()

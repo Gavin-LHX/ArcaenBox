@@ -273,7 +273,7 @@ def service():
     # Only the isolated emulator grants VPN consent. No real proxy is used.
     adb('shell', 'appops', 'set', PACKAGE, 'ACTIVATE_VPN', 'allow')
     tap(wait_for(resource_id=PACKAGE + ':id/profile_name'))
-    button=wait_for(resource_id=PACKAGE + ':id/fab')
+    button=wait_for(resource_id=PACKAGE + ':id/fab',enabled='true')
     tap(button)
     deadline=time.monotonic()+25
     while time.monotonic()<deadline:
@@ -336,6 +336,8 @@ def app_updates():
 
 
 def core_switch():
+    profile()
+    enable_debug_logs()
     launch()
     open_core()
     assert '1.14.0' in find(tree(),resource_id=PACKAGE+':id/core_details').get('text','')
@@ -365,6 +367,7 @@ def core_switch():
 def core_download():
     """Opt-in live Release download, JNI loading, corruption recovery and rollback."""
     profile()
+    enable_debug_logs()
     adb('root')
     adb('wait-for-device')
     core_root='/data/user/0/'+PACKAGE+'/no_backup/cores'
@@ -437,6 +440,12 @@ def core_download():
     capture('26-core-startup-rollback')
 
 
+def enable_debug_logs():
+    launch(); navigate('nav_settings')
+    tap(scroll_for(text=STRINGS['log_level'])); tap(wait_for(text='debug'))
+    launch()
+
+
 def compact():
     launch()
     capture('10-compact-main-large-text')
@@ -464,6 +473,7 @@ def run_check(name, check):
         FAILURES.append({'check': name, 'error': str(error)})
         traceback.print_exc()
         (OUT / ('failure-' + name + '.png')).write_bytes(adb('exec-out', 'screencap', '-p', binary=True, check=False))
+        (OUT / ('failure-' + name + '-core.log')).write_text(adb('shell','cat','/data/user/0/'+PACKAGE+'/cache/neko.log',check=False))
         try:
             (OUT / ('failure-' + name + '.xml')).write_text(ET.tostring(tree(), encoding='unicode'), encoding='utf-8')
         except Exception:
