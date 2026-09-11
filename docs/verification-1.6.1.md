@@ -45,6 +45,7 @@
 - 最终 APK 的[未连接批量测试 34636350104](https://github.com/Gavin-LHX/ArcaenBox/actions/runs/34636350104)通过：四种测试区分成功与失败，未勾选节点不变，取消保留旧结果并清理测试进程，下载量受 1 MiB 上限约束，结果排序正常。
 - 最终 APK 的[连接期间批量测试 34636352849](https://github.com/Gavin-LHX/ArcaenBox/actions/runs/34636352849)通过：四种测试不改变 VPN 进程与接口；UDP 请求确实由隔离代理服务端到达目标；Mieru UDP 的 TCP 测试显示不支持，未误改可用状态。
 - 最终构建的预设、VLESS 系统链接、服务启动、大字体及横屏检查全部通过。中文节点菜单、底栏和内核卡片另经本地截图检查。
+- [公开 Release](https://github.com/Gavin-LHX/ArcaenBox/releases/tag/v1.6.1-arcaenbox.1) 已发布为应用最新版，标签指向上述测试源码。四个 APK 与 SHA256SUMS 的远端摘要均匹配本地；未登录重新下载 arm64 APK，SHA-256 为 `00eae1c42bf3a8eef968906542a8f5e46b9919ceb6c1dc7a92e59d5340b2ee85`。
 
 早期界面测试曾使用旧内核按钮选择器，批量测试脚本也曾假定所有操作都在溢出菜单中。宽屏会直接显示部分操作，因此修正脚本同时查找操作栏与菜单；这些脚本定位失败没有作为功能通过记录。
 
