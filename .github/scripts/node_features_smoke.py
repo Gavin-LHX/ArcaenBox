@@ -1,5 +1,6 @@
 """Exercise node selection, actual measurements, cancellation and advanced settings on Android."""
 import json
+import base64
 import re
 import socket
 import sqlite3
@@ -111,9 +112,9 @@ def advanced_settings():
     protocol.import_uri(f'snell://{protocol.SECRET}@10.0.2.2:18085?version=5&udp=true','Advanced-Snell')
     ui.enable_debug_logs(); ui.navigate('nav_settings')
     for title,value in [('advanced_bootstrap','9.9.9.9'),('advanced_dns_timeout','8'),('advanced_dns_capacity','2048'),
-                        ('advanced_hosts','example.test 192.0.2.123')]:
+                        ('advanced_hosts','example.test 192.0.2.123'),('advanced_username','fixture'),('advanced_password','local-ci-only')]:
         protocol.edit_value(title,value)
-    for key in ['advanced_dns_aaaa','advanced_dns_https','advanced_dns_optimistic','advanced_core_cache']:
+    for key in ['advanced_dns_aaaa','advanced_dns_https','advanced_dns_optimistic','advanced_core_cache','advanced_second_listener']:
         ui.tap(ui.scroll_for(text=ui.STRINGS[key]))
     ui.tap(ui.scroll_for(text=ui.STRINGS['advanced_sniffers']))
     ui.tap(ui.wait_for(text='http')); ui.tap(ui.wait_for(text='tls')); ui.tap(ui.wait_for(resource_id='android:id/button1'))
@@ -129,6 +130,9 @@ def advanced_settings():
         assert any(set(r.get('query_type',[]))=={'AAAA','SVCB','HTTPS'} for r in config['dns']['rules'])
         assert any(r.get('action')=='sniff' and set(r.get('sniffer',[]))=={'http','tls'} for r in config['route']['rules'])
         assert config['experimental']['cache_file']['enabled'] is True
+        secondary=next(i for i in config['inbounds'] if i['tag']=='mixed-secondary')
+        assert secondary['listen_port']==2081 and secondary['users']==[{'username':'fixture','password':'local-ci-only'}]
+        assert next(i for i in config['inbounds'] if i['tag']=='mixed-in')['listen']=='127.0.0.1'
         ui.adb('forward','tcp:12080','tcp:2080')
         control,_=protocol.socks(1,18888)
         with control:
@@ -139,6 +143,21 @@ def advanced_settings():
                 if not block: break
                 response+=block
             assert protocol.PAYLOAD in response
+        ui.adb('forward','tcp:12081','tcp:2081')
+        auth_responses=[]
+        for authorized in [False,True]:
+            with socket.create_connection(('127.0.0.1',12081),timeout=15) as connection:
+                headers=b'GET http://127.0.0.1:18888/ HTTP/1.0\r\nHost: localhost\r\n'
+                if authorized: headers+=b'Proxy-Authorization: Basic '+base64.b64encode(b'fixture:local-ci-only')+b'\r\n'
+                connection.sendall(headers+b'\r\n')
+                response=b''
+                while True:
+                    block=connection.recv(8192)
+                    if not block: break
+                    response+=block
+            assert (protocol.PAYLOAD in response) if authorized else (b'407' in response.split(b'\r\n')[0]), response
+            auth_responses.append({'authenticated':authorized,'status':response.split(b'\r\n')[0].decode()})
+        (ui.OUT/'second-listener-auth.json').write_text(json.dumps(auth_responses,indent=2))
         (ui.OUT/'advanced-generated-config.json').write_text(json.dumps(config,indent=2))
         # Query DNS over the app's real SOCKS TCP listener. Port 53 is handled by
         # its DNS rules, so these assertions verify answers rather than JSON alone.
@@ -168,7 +187,7 @@ def advanced_settings():
         ui.capture('route-preset-'+label.split()[0])
     # Restore the options so the other protocol checks retain their expected defaults.
     ui.navigate('nav_settings')
-    for key in ['advanced_dns_aaaa','advanced_dns_https','advanced_dns_optimistic','advanced_core_cache']:
+    for key in ['advanced_dns_aaaa','advanced_dns_https','advanced_dns_optimistic','advanced_core_cache','advanced_second_listener']:
         ui.tap(ui.scroll_for(text=ui.STRINGS[key]))
 
 
