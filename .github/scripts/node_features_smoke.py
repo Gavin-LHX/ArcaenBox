@@ -53,8 +53,13 @@ def start_test(key, targets, speed=False, restart=True):
     ui.tap(ui.scroll_for(text=ui.STRINGS['node_select_multiple']))
     for name in targets: ui.tap(ui.scroll_for(text=name))
     ui.capture('node-list-selection-'+key)
-    ui.tap(ui.wait_for(content_desc='More options'))
-    ui.tap(ui.wait_for(text=ui.STRINGS[key]))
+    # On wider devices ActionMode exposes the first actions directly in its
+    # toolbar; only the remaining actions live in the overflow menu.
+    action=ui.find(ui.tree(),text=ui.STRINGS[key])
+    if action is None:
+        ui.tap(ui.wait_for(content_desc='More options'))
+        action=ui.wait_for(text=ui.STRINGS[key])
+    ui.tap(action)
 
 
 def wait_results(kind, count, since, timeout=65):
