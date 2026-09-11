@@ -123,21 +123,44 @@ def node_compatibility():
     ui.enable_debug_logs(); ui.navigate('nav_settings')
     protocol.edit_value('node_test_timeout','10')
     protocol.edit_value('connection_test_url','http://127.0.0.1:18888/')
+    protocol.edit_value('node_test_udp_host','127.0.0.1')
+    protocol.edit_value('node_test_udp_port','18892')
+    protocol.edit_value('node_test_limit','1')
     # UIAutomator's dump needs a one-second idle window. Keep real traffic
     # counters enabled, using the supported three-second refresh preference.
     ui.tap(ui.scroll_for(text=ui.STRINGS['speed_interval']))
     ui.tap(ui.wait_for(text='3s'))
     button=protocol.start_profile('Measure-OK')
+    stop=threading.Event()
+    ntp=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    ntp.bind(('127.0.0.1',18892));ntp.settimeout(.3)
+    ntp_requests=[]
+    def serve_ntp():
+        while not stop.is_set():
+            try:data,source=ntp.recvfrom(2048)
+            except socket.timeout:continue
+            except OSError:break
+            if len(data)==48:
+                ntp_requests.append(source[0])
+                reply=bytearray(48);reply[0]=0x24;reply[1]=1
+                reply[24:32]=data[40:48];reply[40:48]=b'\x01\x02\x03\x04\x05\x06\x07\x08'
+                ntp.sendto(reply,source)
+    threading.Thread(target=serve_ntp,daemon=True).start()
     try:
         service=ui.adb('shell','pidof',P+':bg').strip()
-        before=int(time.time()*1000)
-        start_test('node_test_url',['Measure-OK','Measure-Failed'],restart=False)
-        active_results=wait_results('URL',2,before)
-        assert sorted(r['value']>=0 for r in active_results)==[False,True],active_results
-        assert ui.adb('shell','pidof',P+':bg').strip()==service and service
-        assert re.search(r'\btun\d+:',ui.adb('shell','ip','-o','link','show'))
-        ui.wait_for(resource_id=P+':id/action_misc');ui.capture('node-tests-preserve-active-vpn')
+        active_results=[]
+        for key,kind in [('node_test_tcp','TCP'),('node_test_url','URL'),('node_test_udp','UDP'),('node_test_speed','SPEED')]:
+            before=int(time.time()*1000)
+            start_test(key,['Measure-OK','Measure-Failed'],speed=kind=='SPEED',restart=False)
+            records=wait_results(kind,2,before)
+            assert sorted(r['value']>=0 for r in records)==[False,True],records
+            active_results.extend(records)
+            assert ui.adb('shell','pidof',P+':bg').strip()==service and service
+            assert re.search(r'\btun\d+:',ui.adb('shell','ip','-o','link','show'))
+            ui.wait_for(resource_id=P+':id/action_misc');ui.capture('node-tests-active-vpn-'+kind)
+        assert ntp_requests and all(source=='127.0.0.1' for source in ntp_requests),ntp_requests
     finally:
+        stop.set();ntp.close()
         ui.tap(button)
     protocol.create_mieru('Measure-Mieru-UDP','UDP',18089)
     before=int(time.time()*1000)
