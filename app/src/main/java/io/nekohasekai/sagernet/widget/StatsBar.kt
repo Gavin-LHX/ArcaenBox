@@ -104,7 +104,9 @@ class StatsBar @JvmOverloads constructor(
                 refreshExitIp()
             }
         } else {
-            performHide()
+            // Material 3 anchors the connect button inside this bar. Hiding it
+            // while disconnected also moves the only connect control off-screen.
+            if (allowShow) performShow() else performHide()
             updateSpeed(0, 0)
             setStatus(
                 context.getText(
@@ -139,6 +141,7 @@ class StatsBar @JvmOverloads constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                Logs.w("Exit IP lookup failed: ${e.javaClass.simpleName}")
                 if (epoch == generation && DataStore.serviceState.connected) {
                     exitIpText.setText(R.string.exit_ip_failed)
                 }
