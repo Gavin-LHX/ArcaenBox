@@ -285,6 +285,11 @@ def run(name, function):
         (OUT/(name+'-failure.txt')).write_text(traceback.format_exc())
         (OUT/(name+'-failure-logcat.txt')).write_text(ui.adb('shell','logcat','-d',check=False))
         (OUT/(name+'-core.log')).write_text(ui.adb('shell','cat','/data/user/0/'+P+'/cache/neko.log',check=False))
+        (OUT/(name+'-screen.png')).write_bytes(ui.adb('exec-out','screencap','-p',binary=True,check=False))
+        try:
+            import xml.etree.ElementTree as ET
+            (OUT/(name+'-screen.xml')).write_text(ET.tostring(ui.tree(),encoding='unicode'))
+        except Exception: pass
         print('FAIL:',name,traceback.format_exc(),flush=True)
         try: ui.capture(name+'-failure')
         except Exception: pass
@@ -297,6 +302,7 @@ def main():
         protocol.setup_servers()
         ui.adb('root'); ui.adb('wait-for-device')
         ui.adb('shell','svc','power','stayon','true')
+        ui.adb('shell','input','keyevent','KEYCODE_WAKEUP')
         ui.adb('shell','wm','dismiss-keyguard')
         ui.adb('install','-r','-g',str(next(Path('dist').glob('*x86_64*.apk'))))
         ui.adb('shell','cmd','uimode','night','no')
