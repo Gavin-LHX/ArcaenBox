@@ -66,15 +66,23 @@ def wait_for(**attrs):
 
 
 def scroll_for(**attrs):
-    """Reach controls and validation messages in the variable-height Po0 form."""
-    for direction in [None, 'top', 'top', 'bottom', 'bottom', 'bottom', 'bottom', 'bottom']:
-        if direction:
-            width,height=map(int,re.findall(r'(\d+)x(\d+)',adb('shell','wm','size'))[-1])
+    """Search long preference lists and forms, stopping at either scroll boundary."""
+    doc=tree()
+    node=find(doc,**attrs)
+    if node is not None: return node
+    width,height=map(int,re.findall(r'(\d+)x(\d+)',adb('shell','wm','size'))[-1])
+    def signature(doc):
+        return [(n.get('resource-id'),n.get('text'),n.get('bounds')) for n in doc.iter('node')
+                if n.get('package') != 'com.android.systemui']
+    for direction in ['bottom','top']:
+        for _ in range(20):
+            before=signature(doc)
             start,end=(height//3,3*height//4) if direction == 'top' else (3*height//4,height//3)
             adb('shell','input','swipe',str(width//2),str(start),str(width//2),str(end),'350')
-        node=find(tree(),**attrs)
-        if node is not None:
-            return node
+            doc=tree()
+            node=find(doc,**attrs)
+            if node is not None: return node
+            if before==signature(doc): break
     raise AssertionError(f'Scrollable control did not appear: {attrs}')
 
 
