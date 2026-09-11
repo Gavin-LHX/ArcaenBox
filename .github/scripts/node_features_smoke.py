@@ -55,7 +55,10 @@ def start_test(key, targets, speed=False, restart=True):
     ui.capture('node-list-selection-'+key)
     # On wider devices ActionMode exposes the first actions directly in its
     # toolbar; only the remaining actions live in the overflow menu.
-    action=ui.find(ui.tree(),text=ui.STRINGS[key])
+    action_id={'node_test_tcp':'action_connection_tcp_ping','node_test_url':'action_connection_url_test',
+               'node_test_udp':'action_connection_udp_test','node_test_speed':'action_connection_speed_test'}[key]
+    # ActionMode renders English titles in uppercase, unlike popup menu titles.
+    action=ui.find(ui.tree(),resource_id=P+':id/'+action_id)
     if action is None:
         ui.tap(ui.wait_for(content_desc='More options'))
         action=ui.wait_for(text=ui.STRINGS[key])
