@@ -128,6 +128,7 @@
                 <data android:scheme="socksa" />
                 <data android:scheme="sock5" />
                 <data android:scheme="vmess" />
+                <data android:scheme="vless" />
                 <data android:scheme="trojan" />
                 <data android:scheme="trojan-go" />
                 <data android:scheme="snell" />
