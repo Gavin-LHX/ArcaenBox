@@ -1,0 +1,31 @@
+name: ArcaenBox Stage Verified Release Assets
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Successful signed APK workflow run
+        required: true
+      release_id:
+        description: Existing draft release ID with the same target commit
+        required: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  stage:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ArcaenBox-APKs
+          path: dist
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+      - name: Verify and upload missing assets without publishing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+          RELEASE_ID: ${{ inputs.release_id }}
+        run: python3 .github/scripts/stage_release.py
