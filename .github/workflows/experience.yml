@@ -38,6 +38,7 @@ jobs:
           github-token: ${{ github.token }}
       - name: Prepare verification fixtures
         run: |
+          python3 -m pip install Pillow
           cd dist
           sha256sum -c SHA256SUMS.txt
           cd ..

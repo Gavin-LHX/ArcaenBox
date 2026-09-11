@@ -34,6 +34,7 @@ jobs:
           SOURCE_RUN: ${{ inputs.run_id }}
         run: |
           mkdir -p ui-smoke
+          python3 -m pip install Pillow
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" --jq '{id, head_sha, html_url}' > ui-smoke/apk-source.json
           cd dist
           sha256sum -c SHA256SUMS.txt

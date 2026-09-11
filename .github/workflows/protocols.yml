@@ -40,7 +40,9 @@ jobs:
           cd dist
           sha256sum -c SHA256SUMS.txt
       - name: Prepare isolated protocol servers
-        run: python3 .github/scripts/prepare_protocol_tests.py
+        run: |
+          python3 -m pip install Pillow
+          python3 .github/scripts/prepare_protocol_tests.py
       - run: sudo chmod a+rw /dev/kvm
       - name: Test built-in clients, traffic, version selection and database upgrade
         env:

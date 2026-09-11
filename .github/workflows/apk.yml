@@ -126,6 +126,13 @@ jobs:
             app/src/main/assets/builtins/manifest.json
             buildScript/builtins/versions.json
           if-no-files-found: error
+      - name: Upload native component updates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NativeComponentUpdates
+          path: core-build/component-updates/
+          if-no-files-found: error
       - name: Enable emulator acceleration
         run: sudo chmod a+rw /dev/kvm
       - name: Verify Material 3 screens on Android 15
@@ -140,13 +147,6 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: python3 .github/scripts/ui_smoke.py
-      - name: Upload native component updates
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: NativeComponentUpdates
-          path: core-build/component-updates/
-          if-no-files-found: error
       - name: Upload UI verification evidence
         if: always()
         uses: actions/upload-artifact@v4

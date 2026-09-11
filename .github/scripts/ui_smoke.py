@@ -68,6 +68,19 @@ def tap(node):
     time.sleep(.4)
 
 
+def assert_connect_button_visible(button):
+    """Catch a FAB covered by the bar even when accessibility says it is visible."""
+    import io
+    from PIL import Image
+    data = adb('exec-out', 'screencap', '-p', binary=True)
+    pixels = Image.open(io.BytesIO(data)).convert('RGB').crop(bounds(button))
+    # The high-contrast service icon must be rendered. A covered FAB leaves only
+    # the uniform status-bar background in this reserved area of the layout.
+    if max(high-low for low,high in pixels.getextrema()) < 40:
+        (OUT/'connect-button-covered.png').write_bytes(data)
+        raise AssertionError('Connect button is covered despite accessible bounds')
+
+
 def wait_for(**attrs):
     deadline = time.monotonic() + 25
     while time.monotonic() < deadline:
@@ -309,6 +322,7 @@ def service():
     adb('shell', 'appops', 'set', PACKAGE, 'ACTIVATE_VPN', 'allow')
     tap(wait_for(resource_id=PACKAGE + ':id/profile_name'))
     button=wait_for(resource_id=PACKAGE + ':id/fab',enabled='true')
+    assert_connect_button_visible(button)
     tap(button)
     deadline=time.monotonic()+25
     while time.monotonic()<deadline:

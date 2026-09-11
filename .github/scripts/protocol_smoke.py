@@ -159,6 +159,7 @@ def start_profile(name):
     ui.adb('shell','appops','set',P,'ACTIVATE_VPN','allow')
     ui.tap(ui.scroll_for(text=name))
     button=ui.wait_for(resource_id=P+':id/fab',enabled='true')
+    ui.assert_connect_button_visible(button)
     ui.tap(button)
     deadline=time.monotonic()+30
     while time.monotonic()<deadline:
