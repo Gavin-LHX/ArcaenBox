@@ -9,7 +9,7 @@ on:
         description: Protocols to verify (rerun a failed Mieru fixture independently)
         type: choice
         default: all
-        options: [all, mieru]
+        options: [all, mieru, naive, preview]
 permissions:
   contents: read
   actions: read

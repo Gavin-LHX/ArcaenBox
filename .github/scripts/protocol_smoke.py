@@ -158,7 +158,7 @@ def start_profile(name):
     ui.launch()
     ui.adb('shell','appops','set',P,'ACTIVATE_VPN','allow')
     ui.tap(ui.scroll_for(text=name))
-    button=ui.wait_for(resource_id=P+':id/fab')
+    button=ui.wait_for(resource_id=P+':id/fab',enabled='true')
     ui.tap(button)
     deadline=time.monotonic()+30
     while time.monotonic()<deadline:
@@ -251,6 +251,9 @@ def check_traffic(name,lib,udp):
         FAILURES.append(name)
         (OUT/(name+'-failure.txt')).write_text(traceback.format_exc())
         (OUT/(name+'-failure-logcat.txt')).write_text(ui.adb('shell','logcat','-d',check=False))
+        (OUT/(name+'-core.log')).write_text(ui.adb('shell','cat','/data/user/0/'+P+'/cache/neko.log',check=False))
+        try: ui.capture(name+'-failure')
+        except Exception: pass
         print('FAIL traffic:',name,traceback.format_exc(),flush=True)
         ui.adb('shell','am','force-stop',P)
 
@@ -264,6 +267,25 @@ def main():
         ui.adb('shell','svc','power','stayon','true')
         ui.adb('shell','input','keyevent','KEYCODE_WAKEUP')
         ui.adb('shell','wm','dismiss-keyguard')
+        if os.environ.get('PROTOCOL_SMOKE_SCOPE') in ('naive','preview'):
+            ui.adb('install','-r','-g',str(next(Path('dist').glob('*x86_64*.apk'))))
+            ui.launch(); ui.navigate('nav_settings')
+            ui.tap(ui.scroll_for(text=ui.STRINGS['log_level'])); ui.tap(ui.wait_for(text='debug'))
+            if os.environ['PROTOCOL_SMOKE_SCOPE']=='naive':
+                cert=urllib.parse.quote((OUT/'cert.pem').read_text(),safe='')
+                import_uri(f'naive+https://test:{SECRET}@10.0.2.2:18090?sni=localhost&cert={cert}','NaiveProxy')
+                check_traffic('NaiveProxy','libnaive.so',False)
+            else:
+                import_uri(f'snell://{SECRET}@10.0.2.2:18085?version=5&udp=true','Snell-v5')
+                ui.open_core(); ui.tap(ui.scroll_for(resource_id=P+':id/core_preview'))
+                ui.tap(ui.scroll_for(resource_id=P+':id/core_apply',enabled='true'))
+                ui.tap(ui.wait_for(resource_id='android:id/button1')); time.sleep(4)
+                state=json.loads(ui.adb('shell','cat','/data/user/0/'+P+'/no_backup/cores/state.json'))
+                assert state['channel']=='preview',state
+                (OUT/'preview-core-state.json').write_text(json.dumps(state))
+                check_traffic('Snell-v5','libmihomo.so',True)
+            assert not FAILURES,FAILURES
+            return
         ui.adb('install','-r','-g',str(BIN/'previous.apk'))
         ui.adb('shell','logcat','-c')
         ui.adb('shell','cmd','uimode','night','no')
@@ -314,7 +336,7 @@ def main():
             check_traffic(name,'libsnell.so',True)
         ui.launch(); ui.navigate('nav_kernels')
         ui.tap(ui.scroll_for(text_contains='Snell'))
-        ui.tap(ui.scroll_for(resource_id=P+':id/core_restore'))
+        ui.tap(ui.scroll_for(resource_id=P+':id/core_restore',enabled='true'))
         ui.tap(ui.wait_for(resource_id='android:id/button1'))
         ui.wait_for(text=ui.STRINGS['kernel_applied'])
         ui.launch(); ui.open_core()
