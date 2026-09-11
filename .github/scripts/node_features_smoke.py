@@ -238,3 +238,36 @@ def route_import():
     assert exported['format']=='arcaenbox-route-rules' and len(exported['rules'])==len(after)
     assert exported['rules'][-3]['outbound']=='direct' and exported['rules'][-2]['outbound']=='block'
     (ui.OUT/'routing-import-result.json').write_text(json.dumps({'before':before,'after':after,'export':exported},indent=2))
+
+
+def custom_dns():
+    protocol.import_uri(f'snell://{protocol.SECRET}@10.0.2.2:18085?version=5&udp=true','Custom-DNS-Snell')
+    ui.enable_debug_logs(); ui.navigate('nav_settings')
+    ui.tap(ui.scroll_for(text=ui.STRINGS['advanced_dns_defaults']))
+    ui.tap(ui.scroll_for(text=ui.STRINGS['advanced_custom_dns_vpn']))
+    ui.wait_for(resource_id=P+':id/editor'); ui.capture('custom-dns-vpn-template')
+    ui.adb('shell','input','keyevent','BACK')
+    ui.wait_for(resource_id=P+':id/toolbar')
+    ui.tap(ui.scroll_for(text=ui.STRINGS['advanced_custom_dns']))
+    button=protocol.start_profile('Custom-DNS-Snell')
+    try:
+        log=ui.adb('shell','cat','/data/user/0/'+P+'/cache/neko.log')
+        config=json.loads([line.split('[ProxyInstance] ',1)[1] for line in log.splitlines() if '[ProxyInstance] {' in line][-1])
+        dns=config['dns']
+        assert len(dns['servers'])==2 and dns['final']=='dns-remote',dns
+        assert {s['tag'] for s in dns['servers']}=={'dns-direct','dns-remote'}
+        ui.adb('forward','tcp:12080','tcp:2080')
+        query=struct.pack('!HHHHHH',0x2345,0x100,1,0,0,0)+b'\x07example\x03com\x00'+struct.pack('!HH',1,1)
+        control,_=protocol.socks(1,53)
+        with control:
+            control.sendall(struct.pack('!H',len(query))+query)
+            size=struct.unpack('!H',protocol.read_exact(control,2))[0]
+            response=protocol.read_exact(control,size)
+        txid,flags,_,answers,_,_=struct.unpack('!HHHHHH',response[:12])
+        assert txid==0x2345 and flags&15==0 and answers>0,response.hex()
+        (ui.OUT/'custom-dns-runtime.json').write_text(json.dumps({'dns':dns,'answer_count':answers,'wire':response.hex()},indent=2))
+        ui.capture('custom-dns-connected')
+    finally:
+        ui.tap(button)
+        ui.launch();ui.navigate('nav_settings')
+        ui.tap(ui.scroll_for(text=ui.STRINGS['advanced_custom_dns']))
