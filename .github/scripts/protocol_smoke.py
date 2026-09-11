@@ -188,7 +188,7 @@ def socks(command, port):
     return sock,bound
 
 
-def traffic(name, library, udp=False):
+def traffic(name, library, udp=False, downloaded=False):
     button=start_profile(name)
     ui.adb('forward','tcp:12080','tcp:2080')
     try:
@@ -214,7 +214,14 @@ def traffic(name, library, udp=False):
         # executable symlink instead of assuming argv[0] contains a full path.
         executables=[ui.adb('shell','readlink','/proc/'+line.split()[0]+'/exe').strip() for line in rows]
         (OUT/(name+'-processes.txt')).write_text('\n'.join(rows+executables))
-        assert all(exe.startswith('/data/app/') and exe.endswith('/'+library) for exe in executables), executables
+        if downloaded:
+            assert all(exe in ['/system/bin/linker', '/system/bin/linker64'] for exe in executables), executables
+            for row in rows:
+                maps=ui.adb('shell','cat','/proc/'+row.split()[0]+'/maps')
+                assert '/no_backup/components/packages/' in maps and '/libcomponent.so' in maps, maps
+                (OUT/(name+'-maps.txt')).write_text(maps)
+        else:
+            assert all(exe.startswith('/data/app/') and exe.endswith('/'+library) for exe in executables), executables
         if udp:
             control,port=socks(3,0)
             with control:

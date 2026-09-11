@@ -13,7 +13,7 @@ object Protocols {
 
     // Deduplication
 
-    class Deduplication(bean: AbstractBean, private val type: String) {
+    class Deduplication(val bean: AbstractBean, private val type: String) {
         // Compare complete connection settings while ignoring only the display name.
         // Address and port alone collapse different credentials, transports and Snell versions.
         private val bytes = io.nekohasekai.sagernet.fmt.KryoConverters.serialize(bean.clone().apply { name = "" })

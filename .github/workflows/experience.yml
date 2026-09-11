@@ -1,0 +1,62 @@
+name: ArcaenBox Connection Experience Verification
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Signed candidate APK run
+        required: true
+      checks:
+        description: Comma-separated focused checks, blank runs all
+        required: false
+permissions:
+  contents: read
+  actions: read
+jobs:
+  experience:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.1'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ArcaenBox-APKs
+          path: dist
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: NativeComponentUpdates
+          path: core-build/component-updates
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Prepare verification fixtures
+        run: |
+          cd dist
+          sha256sum -c SHA256SUMS.txt
+          cd ..
+          python3 .github/scripts/prepare_protocol_tests.py
+          python3 .github/scripts/build_vpn_fixture.py
+      - run: sudo chmod a+rw /dev/kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        env:
+          EXPERIENCE_CHECKS: ${{ inputs.checks }}
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: python3 .github/scripts/experience_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ArcaenBox-connection-experience
+          path: experience-smoke/
+          if-no-files-found: warn
