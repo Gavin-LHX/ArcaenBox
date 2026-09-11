@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="core_manager">sing-box 更新与切换</string>
+    <string name="core_manager">sing-box 内核</string>
     <string name="core_running">当前运行的内核</string>
     <string name="core_stable">正式版</string>
     <string name="core_preview">测试版</string>
     <string name="core_builtin">内置</string>
     <string name="core_downloaded">已下载</string>
-    <string name="core_channel_help">选择渠道后，点击应用并重启即可切换。测试版可能存在问题；切换会保留节点和应用设置。</string>
+    <string name="core_channel_help">选择渠道，可切换已有版本或检查在线更新。</string>
     <string name="core_check">检查内核更新</string>
     <string name="core_download">下载内核更新</string>
     <string name="core_switch">应用并重启</string>

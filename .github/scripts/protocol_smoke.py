@@ -108,6 +108,8 @@ def setup_servers():
 def edit_value(label, value):
     ui.tap(ui.scroll_for(text=ui.STRINGS.get(label,label)))
     custom=ui.find(ui.tree(),text=ui.STRINGS['test_preset_custom'])
+    if custom is None and ui.find(ui.tree(),resource_id=P+':id/select_dialog_listview') is not None:
+        custom=ui.scroll_for(text=ui.STRINGS['test_preset_custom'])
     if custom is not None: ui.tap(custom)
     field=ui.wait_for(resource_id='android:id/edit')
     ui.adb('shell','input','keyevent','KEYCODE_MOVE_END')

@@ -24,6 +24,9 @@ public class ConnectionExperienceTest {
         assertEquals("selector", ExitProbeConfig.proxyTag("{\"outbounds\":[{\"type\":\"selector\",\"tag\":\"selector\"}],\"route\":{\"final\":\"selector\"}}"));
     }
     @Test public void publicIpParsesPlainAndJsonWithoutDns() throws Exception {
+        assertEquals("(HK) 1.1.1.1", PublicIp.describe("{\"ip\":\"1.1.1.1\",\"country_code\":\"hk\"}"));
+        assertEquals("(SG) 8.8.8.8", PublicIp.describe("{\"ip\":\"8.8.8.8\",\"location\":{\"country_code\":\"SG\"}}"));
+        assertEquals("1.1.1.1", PublicIp.describe("{\"ip\":\"1.1.1.1\",\"country_code\":\"arbitrary text\"}"));
         assertEquals("8.8.8.8", PublicIp.parse(" 8.8.8.8\n"));
         assertEquals("1.1.1.1", PublicIp.parse("{\"ip\":\"1.1.1.1\"}"));
         assertTrue(PublicIp.parse("2606:4700:4700::1111").contains(":"));

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="core_manager">sing-box updates and channels</string>
+    <string name="core_manager">sing-box</string>
     <string name="core_running">Running core</string>
     <string name="core_stable">Stable</string>
     <string name="core_preview">Preview</string>
     <string name="core_builtin">Built in</string>
     <string name="core_downloaded">Downloaded</string>
-    <string name="core_channel_help">Choose a channel, then switch and restart. Preview builds may contain bugs. Profiles and app settings are kept.</string>
+    <string name="core_channel_help">Choose a channel to switch versions or check for updates.</string>
     <string name="core_check">Check core updates</string>
     <string name="core_download">Download core update</string>
     <string name="core_switch">Apply and restart</string>

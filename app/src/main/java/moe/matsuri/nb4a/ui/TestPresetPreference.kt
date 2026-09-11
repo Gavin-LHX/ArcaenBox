@@ -12,14 +12,14 @@ class TestPresetPreference @JvmOverloads constructor(context: Context, attrs: At
     var presets: List<Pair<String, String>> = emptyList()
 
     override fun onClick() {
-        val options = presets.map { it.first } + context.getString(R.string.test_preset_custom)
-        val selected = presets.indexOfFirst { it.second == text }.takeIf { it >= 0 } ?: presets.size
+        val options = presets.map { it.first }
+        val selected = presets.indexOfFirst { it.second == text }
         MaterialAlertDialogBuilder(context).setTitle(title)
             .setSingleChoiceItems(options.toTypedArray(), selected) { dialog, which ->
                 dialog.dismiss()
-                if (which == presets.size) showCustom()
-                else if (callChangeListener(presets[which].second)) text = presets[which].second
-            }.setNegativeButton(android.R.string.cancel, null).show()
+                if (callChangeListener(presets[which].second)) text = presets[which].second
+            }.setNeutralButton(R.string.test_preset_custom) { _, _ -> showCustom() }
+            .setNegativeButton(android.R.string.cancel, null).show()
     }
 
     private fun showCustom() = super.onClick()

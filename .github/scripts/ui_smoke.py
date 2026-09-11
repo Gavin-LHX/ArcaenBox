@@ -374,7 +374,7 @@ def backup():
 
 def open_core():
     navigate('nav_kernels')
-    tap(scroll_for(text_contains='sing-box',clickable='true'))
+    tap(scroll_for(text='sing-box'))
     wait_for(resource_id=PACKAGE+':id/core_running')
 
 
@@ -418,7 +418,7 @@ def core_switch():
     time.sleep(4)
     launch()
     open_core()
-    assert STRINGS['core_builtin'] in find(tree(),resource_id=PACKAGE+':id/core_running').get('text','')
+    assert STRINGS['core_builtin'] in find(tree(),resource_id=PACKAGE+':id/core_details').get('text','')
     capture('22-core-restored')
 
 
