@@ -308,9 +308,10 @@ def main():
         ui.adb('shell','logcat','-c')
         for name,function in [('permissions',permissions),('exit-ip',exit_ip),('resources',resources),('settings-routes',settings_and_routes),('native-cache',native_cache)]:
             run(name,function)
-        if not CHECKS or CHECKS.intersection({'node-tests','advanced-settings','route-import','custom-dns'}):
+        if not CHECKS or CHECKS.intersection({'node-tests','node-compatibility','advanced-settings','route-import','custom-dns'}):
             import node_features_smoke
             run('node-tests',node_features_smoke.node_tests)
+            run('node-compatibility',node_features_smoke.node_compatibility)
             run('advanced-settings',node_features_smoke.advanced_settings)
             run('route-import',node_features_smoke.route_import)
             run('custom-dns',node_features_smoke.custom_dns)

@@ -108,37 +108,48 @@ def node_tests():
         processes = ui.adb('shell','ps','-A','-o','PID,ARGS')
         assert not any('/libmihomo.so' in line or '/libsnell_preview.so' in line for line in processes.splitlines()), processes
         assert results() == before, 'Cancellation overwrote completed results'
-        # Measuring a bad node while a good VPN is connected must not silently
-        # use that VPN's proxy, nor interrupt its service.
-        button=protocol.start_profile('Measure-OK')
-        try:
-            service=ui.adb('shell','pidof',P+':bg').strip()
-            before=int(time.time()*1000)
-            start_test('node_test_url',['Measure-OK','Measure-Failed'],restart=False)
-            active_results=wait_results('URL',2,before)
-            assert sorted(r['value']>=0 for r in active_results)==[False,True],active_results
-            assert ui.adb('shell','pidof',P+':bg').strip()==service and service
-            assert re.search(r'\btun\d+:',ui.adb('shell','ip','-o','link','show'))
-            ui.wait_for(resource_id=P+':id/action_misc');ui.capture('node-tests-preserve-active-vpn')
-        finally:
-            ui.tap(button)
         ui.launch(); ui.tap(ui.wait_for(resource_id=P+':id/action_misc'))
         ui.tap(ui.scroll_for(text=ui.STRINGS['node_sort_results']))
         ui.tap(ui.wait_for(text=ui.STRINGS['node_test_speed']))
         ui.wait_for(resource_id=P+':id/node_test_results'); ui.capture('nodes-sorted-by-speed')
-        protocol.create_mieru('Measure-Mieru-UDP','UDP',18089)
-        before=int(time.time()*1000)
-        start_test('node_test_tcp',['Measure-Mieru-UDP'])
-        unsupported=wait_results('TCP',1,before)[0]
-        assert unsupported['value']==-2,unsupported
-        with sqlite3.connect(ui.OUT/'node-tests-snapshot.db') as db:
-            status=db.execute('SELECT status FROM proxy_entities WHERE id=?',(unsupported['profileId'],)).fetchone()[0]
-        assert status==0,'Unsupported TCP test incorrectly marked a UDP node unavailable'
-        ui.wait_for(resource_id=P+':id/action_misc');ui.capture('udp-protocol-tcp-test-unsupported')
-        collected.append(unsupported)
         (ui.OUT/'node-measurements.json').write_text(json.dumps({'results':collected,'ntp_requests':ntp_requests,'cancelled':True,'unselected_unchanged':True},indent=2))
     finally:
         stop.set(); ntp.close()
+
+
+def node_compatibility():
+    for name,port in [('Measure-OK',18085),('Measure-Failed',9)]:
+        protocol.import_uri(f'snell://{protocol.SECRET}@10.0.2.2:{port}?version=5&udp=true',name)
+    ui.enable_debug_logs(); ui.navigate('nav_settings')
+    protocol.edit_value('node_test_timeout','10')
+    protocol.edit_value('connection_test_url','http://127.0.0.1:18888/')
+    # UIAutomator's dump needs a one-second idle window. Keep real traffic
+    # counters enabled, using the supported three-second refresh preference.
+    ui.tap(ui.scroll_for(text=ui.STRINGS['speed_interval']))
+    ui.tap(ui.wait_for(text='3s'))
+    button=protocol.start_profile('Measure-OK')
+    try:
+        service=ui.adb('shell','pidof',P+':bg').strip()
+        before=int(time.time()*1000)
+        start_test('node_test_url',['Measure-OK','Measure-Failed'],restart=False)
+        active_results=wait_results('URL',2,before)
+        assert sorted(r['value']>=0 for r in active_results)==[False,True],active_results
+        assert ui.adb('shell','pidof',P+':bg').strip()==service and service
+        assert re.search(r'\btun\d+:',ui.adb('shell','ip','-o','link','show'))
+        ui.wait_for(resource_id=P+':id/action_misc');ui.capture('node-tests-preserve-active-vpn')
+    finally:
+        ui.tap(button)
+    protocol.create_mieru('Measure-Mieru-UDP','UDP',18089)
+    before=int(time.time()*1000)
+    start_test('node_test_tcp',['Measure-Mieru-UDP'])
+    unsupported=wait_results('TCP',1,before)[0]
+    assert unsupported['value']==-2,unsupported
+    with sqlite3.connect(ui.OUT/'node-tests-snapshot.db') as db:
+        status=db.execute('SELECT status FROM proxy_entities WHERE id=?',(unsupported['profileId'],)).fetchone()[0]
+    assert status==0,'Unsupported TCP test incorrectly marked a UDP node unavailable'
+    ui.wait_for(resource_id=P+':id/action_misc');ui.capture('udp-protocol-tcp-test-unsupported')
+    (ui.OUT/'node-compatibility.json').write_text(json.dumps({'active_vpn_results':active_results,
+        'vpn_process_preserved':True,'unsupported':unsupported,'availability':status},indent=2))
 
 
 def advanced_settings():
