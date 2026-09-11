@@ -12,6 +12,9 @@ on:
       preview_core_run:
         description: Native Cores run containing the verified preview AAR
         required: true
+      builtins_run:
+        description: Reuse a signed NativeComponentUpdates artifact with matching pinned versions (optional)
+        required: false
       ui_checks:
         description: Optional focused checks after an existing full UI regression (blank runs all)
         required: false
@@ -62,9 +65,23 @@ jobs:
       - name: Prepare assets
         run: ./run init action gradle
       - name: Package built-in protocol components
+        if: inputs.builtins_run == ''
         run: |
           export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/25.0.8775105"
           python3 .github/scripts/package_builtins.py
+      - name: Download pinned native components
+        if: inputs.builtins_run != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: NativeComponentUpdates
+          path: core-build/reused-components
+          run-id: ${{ inputs.builtins_run }}
+          github-token: ${{ github.token }}
+      - name: Verify and restore signed native components
+        if: inputs.builtins_run != ''
+        run: |
+          python3 -m pip install cryptography
+          python3 .github/scripts/reuse_components.py core-build/reused-components
       - name: Build signed release APKs
         env:
           SIGNING_KEYSTORE: ${{ secrets.ARCAENBOX_KEYSTORE }}
