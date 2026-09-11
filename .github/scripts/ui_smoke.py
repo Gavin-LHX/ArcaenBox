@@ -316,7 +316,7 @@ def backup():
 
 def open_core():
     navigate('nav_kernels')
-    tap(scroll_for(text_contains='sing-box'))
+    tap(scroll_for(text_contains='sing-box',clickable='true'))
     wait_for(resource_id=PACKAGE+':id/core_running')
 
 
