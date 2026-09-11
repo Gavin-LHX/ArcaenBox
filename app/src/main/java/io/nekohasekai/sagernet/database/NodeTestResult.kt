@@ -13,7 +13,7 @@ data class NodeTestResult(
     val error: String = "",
     val transferred: Long = 0,
 ) {
-    @Dao interface Dao {
+    @androidx.room.Dao interface Dao {
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         fun put(result: NodeTestResult)
         @Query("SELECT * FROM node_test_results WHERE profileId IN (:ids)")

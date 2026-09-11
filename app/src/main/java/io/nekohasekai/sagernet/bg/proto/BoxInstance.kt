@@ -1,6 +1,5 @@
 package io.nekohasekai.sagernet.bg.proto
 
-import android.os.SystemClock
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.bg.AbstractInstance
 import io.nekohasekai.sagernet.bg.GuardedProcessPool
@@ -84,9 +83,7 @@ abstract class BoxInstance(
                     is HysteriaBean -> {
                         initPlugin("hysteria-plugin")
                         pluginConfigs[port] = profile.type to bean.buildHysteria1Config(port) {
-                            File(
-                                app.cacheDir, "hysteria_" + SystemClock.elapsedRealtime() + ".ca"
-                            ).apply {
+                            File.createTempFile("hysteria_", ".ca", app.cacheDir).apply {
                                 parentFile?.mkdirs()
                                 cacheFiles.add(this)
                             }
@@ -115,9 +112,7 @@ abstract class BoxInstance(
                     }
 
                     bean is TrojanGoBean -> {
-                        val configFile = File(
-                            cacheDir, "trojan_go_" + SystemClock.elapsedRealtime() + ".json"
-                        )
+                        val configFile = File.createTempFile("trojan_go_", ".json", cacheDir)
                         configFile.parentFile?.mkdirs()
                         configFile.writeText(config)
                         cacheFiles.add(configFile)
@@ -144,9 +139,7 @@ abstract class BoxInstance(
                     }
 
                     bean is MieruBean -> {
-                        val configFile = File(
-                            cacheDir, "mieru_" + SystemClock.elapsedRealtime() + ".json"
-                        )
+                        val configFile = File.createTempFile("mieru_", ".json", cacheDir)
 
                         configFile.parentFile?.mkdirs()
                         configFile.writeText(config)
@@ -163,9 +156,7 @@ abstract class BoxInstance(
                     }
 
                     bean is NaiveBean -> {
-                        val configFile = File(
-                            cacheDir, "naive_" + SystemClock.elapsedRealtime() + ".json"
-                        )
+                        val configFile = File.createTempFile("naive_", ".json", cacheDir)
 
                         configFile.parentFile?.mkdirs()
                         configFile.writeText(config)
@@ -174,9 +165,7 @@ abstract class BoxInstance(
                         val envMap = mutableMapOf<String, String>()
 
                         if (bean.certificates.isNotBlank()) {
-                            val certFile = File(
-                                cacheDir, "naive_" + SystemClock.elapsedRealtime() + ".crt"
-                            )
+                            val certFile = File.createTempFile("naive_", ".crt", cacheDir)
 
                             certFile.parentFile?.mkdirs()
                             certFile.writeText(bean.certificates)
@@ -191,9 +180,7 @@ abstract class BoxInstance(
                     }
 
                     bean is HysteriaBean -> {
-                        val configFile = File(
-                            cacheDir, "hysteria_" + SystemClock.elapsedRealtime() + ".json"
-                        )
+                        val configFile = File.createTempFile("hysteria_", ".json", cacheDir)
 
                         configFile.parentFile?.mkdirs()
                         configFile.writeText(config)

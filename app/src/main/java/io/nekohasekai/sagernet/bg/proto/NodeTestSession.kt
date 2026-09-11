@@ -26,7 +26,7 @@ enum class NodeTestKind { TCP, URL, UDP, SPEED }
 
 /** Each test owns a core and a private inbound; user routes and the active VPN cannot select a different node. */
 class NodeTestSession(profile: ProxyEntity) : BoxInstance(profile) {
-    private val port = mkPort()
+    private val port by lazy { mkPort() }
 
     override fun buildConfig() {
         config = buildConfig(profile, forTest = true)

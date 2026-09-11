@@ -24,6 +24,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
     private lateinit var isProxyApps: SwitchPreference
 
     private lateinit var globalCustomConfig: EditConfigPreference
+    private var dnsEditorSnapshot: List<String>? = null
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -98,6 +99,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             val template = """{"servers":[{"type":"udp","tag":"dns-direct","server":"223.5.5.5","detour":"direct"},{"type":"https","tag":"dns-remote","server":"1.1.1.1","path":"/dns-query","detour":"proxy"}],"final":"dns-remote"}"""
             if (DataStore.customDnsVpn.isBlank()) DataStore.customDnsVpn = template
             if (DataStore.customDnsProxy.isBlank()) DataStore.customDnsProxy = template
+            needReload()
             listOf("customDnsVpn", "customDnsProxy").forEach { key -> findPreference<EditConfigPreference>(key)!!.notifyChanged() }
             true
         }
@@ -258,8 +260,16 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         globalCustomConfig.onPreferenceChangeListener = reloadListener
     }
 
+    override fun onPause() {
+        dnsEditorSnapshot = listOf(DataStore.customDnsVpn, DataStore.customDnsProxy)
+        super.onPause()
+    }
+
     override fun onResume() {
         super.onResume()
+        val dnsValues = listOf(DataStore.customDnsVpn, DataStore.customDnsProxy)
+        if (dnsEditorSnapshot != null && dnsEditorSnapshot != dnsValues) needReload()
+        dnsEditorSnapshot = dnsValues
 
         if (::isProxyApps.isInitialized) {
             isProxyApps.isChecked = DataStore.proxyApps

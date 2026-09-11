@@ -44,7 +44,10 @@ class NodeTestUi(private val fragment: Fragment) {
             }
             val selected = BooleanArray(profiles.size) { true }
             val dialog = MaterialAlertDialogBuilder(fragment.requireContext()).setTitle(title(kind))
-                .setMultiChoiceItems(profiles.map { "${it.displayName()} · ${it.displayType()}" }.toTypedArray(), selected) { _, index, checked -> selected[index] = checked }
+                .setMultiChoiceItems(profiles.map { "${it.displayName()} · ${it.displayType()}" }.toTypedArray(), selected) { alert, index, checked ->
+                    selected[index] = checked
+                    (alert as androidx.appcompat.app.AlertDialog).getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).isEnabled = selected.any { it }
+                }
                 .setNeutralButton(R.string.node_test_toggle_all, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.node_test_start, null).create()
@@ -66,6 +69,7 @@ class NodeTestUi(private val fragment: Fragment) {
                 }
                 dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
                     val check = selected.any { !it }
+                    start.isEnabled = check
                     selected.indices.forEach { index -> selected[index] = check; dialog.listView.setItemChecked(index, check) }
                 }
             }
