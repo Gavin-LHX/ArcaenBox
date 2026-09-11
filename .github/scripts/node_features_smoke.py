@@ -247,6 +247,7 @@ def custom_dns():
     ui.tap(ui.scroll_for(text=ui.STRINGS['advanced_custom_dns_vpn']))
     ui.wait_for(resource_id=P+':id/editor'); ui.capture('custom-dns-vpn-template')
     ui.adb('shell','input','keyevent','BACK')
+    if ui.find(ui.tree(),resource_id=P+':id/editor') is not None: ui.adb('shell','input','keyevent','BACK')
     ui.wait_for(resource_id=P+':id/toolbar')
     ui.tap(ui.scroll_for(text=ui.STRINGS['advanced_custom_dns']))
     button=protocol.start_profile('Custom-DNS-Snell')
