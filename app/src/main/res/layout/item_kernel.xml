@@ -1,19 +1,23 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.Material3.CardView.Filled" android:layout_width="match_parent" android:layout_height="wrap_content"
     android:layout_marginBottom="12dp" android:clickable="true" android:focusable="true" app:cardCornerRadius="20dp">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:padding="16dp">
-        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:layout_marginEnd="16dp"
-            android:importantForAccessibility="no" android:src="@drawable/ic_baseline_layers_24" app:tint="?colorPrimary" />
-        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:id="@+id/kernel_name" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textAppearance="?textAppearanceTitleMedium" android:textColor="?colorOnSurface" />
-                <TextView android:id="@+id/kernel_channel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp"
-                    android:textAppearance="?textAppearanceLabelSmall" android:textColor="?colorPrimary" />
-            </LinearLayout>
-            <TextView android:id="@+id/kernel_version" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
-                android:textAppearance="?textAppearanceBodyMedium" android:textColor="?colorOnSurfaceVariant" android:breakStrategy="simple" />
-        </LinearLayout>
-        <TextView android:layout_width="24dp" android:layout_height="wrap_content" android:layout_marginStart="12dp"
-            android:gravity="center" android:text="›" android:textSize="24sp" android:textColor="?colorOnSurfaceVariant" android:importantForAccessibility="no" />
-    </LinearLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp">
+        <ImageView android:id="@+id/kernel_icon" android:layout_width="32dp" android:layout_height="32dp"
+            android:importantForAccessibility="no" android:src="@drawable/ic_baseline_layers_24" app:tint="?colorPrimary"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        <TextView android:id="@+id/kernel_name" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginStart="16dp" android:layout_marginEnd="8dp"
+            android:textAppearance="?textAppearanceTitleMedium" android:textColor="?colorOnSurface"
+            app:layout_constraintStart_toEndOf="@id/kernel_icon" app:layout_constraintEnd_toStartOf="@id/kernel_channel" app:layout_constraintTop_toTopOf="parent" />
+        <TextView android:id="@+id/kernel_channel" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp" android:textAppearance="?textAppearanceLabelSmall" android:textColor="?colorPrimary"
+            app:layout_constraintEnd_toStartOf="@id/kernel_chevron" app:layout_constraintBaseline_toBaselineOf="@id/kernel_name" />
+        <TextView android:id="@+id/kernel_version" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginTop="4dp"
+            android:layout_marginEnd="12dp" android:textAppearance="?textAppearanceBodyMedium" android:textColor="?colorOnSurfaceVariant" android:breakStrategy="simple"
+            app:layout_constraintStart_toStartOf="@id/kernel_name" app:layout_constraintEnd_toStartOf="@id/kernel_chevron"
+            app:layout_constraintTop_toBottomOf="@id/kernel_name" app:layout_constraintBottom_toBottomOf="parent" />
+        <TextView android:id="@+id/kernel_chevron" android:layout_width="24dp" android:layout_height="wrap_content"
+            android:gravity="center" android:text="›" android:textSize="24sp" android:textColor="?colorOnSurfaceVariant" android:importantForAccessibility="no"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
