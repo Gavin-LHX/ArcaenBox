@@ -262,7 +262,7 @@ def check_traffic(name,lib,udp):
 def main():
     try:
         setup_servers()
-        ui.adb('root'); ui.adb('wait-for-device')
+        ui.root_emulator()
         # A fresh emulator may still show its boot lock screen. Keep this isolated
         # test device awake while exercising long-running protocol transfers.
         ui.adb('shell','svc','power','stayon','true')

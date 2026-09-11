@@ -33,6 +33,20 @@ def bounds(node):
     return tuple(map(int, re.findall(r'\d+', node.get('bounds', ''))))
 
 
+def root_emulator():
+    """adbd may close its transport while the emulator runner restarts it."""
+    for _ in range(4):
+        adb('root', check=False)
+        adb('wait-for-device')
+        if adb('shell', 'id', '-u', check=False).strip() == '0':
+            adb('shell', 'svc', 'power', 'stayon', 'true')
+            adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
+            adb('shell', 'wm', 'dismiss-keyguard')
+            return
+        time.sleep(1)
+    raise AssertionError('Isolated test emulator adbd did not become available')
+
+
 def tree():
     adb('shell', 'rm', '-f', '/sdcard/arcaenbox-ui.xml')
     adb('shell', 'uiautomator', 'dump', '/sdcard/arcaenbox-ui.xml')
@@ -68,7 +82,16 @@ def wait_for(**attrs):
 def scroll_for(**attrs):
     """Search long preference lists and forms, stopping at either scroll boundary."""
     doc=tree()
-    node=find(doc,**attrs)
+    def exposed(doc):
+        node=find(doc,**attrs)
+        if node is None: return None
+        # UIAutomator includes preference rows behind the fixed status bar.
+        # Scroll those rows into view before tapping their reported bounds.
+        stats=find(doc, resource_id=PACKAGE+':id/stats')
+        if stats is not None and node not in stats.iter('node'):
+            if bounds(node)[3] > bounds(stats)[1]: return None
+        return node
+    node=exposed(doc)
     if node is not None: return node
     width,height=map(int,re.findall(r'(\d+)x(\d+)',adb('shell','wm','size'))[-1])
     def signature(doc):
@@ -80,13 +103,15 @@ def scroll_for(**attrs):
             start,end=(height//3,3*height//4) if direction == 'top' else (3*height//4,height//3)
             adb('shell','input','swipe',str(width//2),str(start),str(width//2),str(end),'350')
             doc=tree()
-            node=find(doc,**attrs)
+            node=exposed(doc)
             if node is not None: return node
             if before==signature(doc): break
     raise AssertionError(f'Scrollable control did not appear: {attrs}')
 
 
 def launch():
+    adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
+    adb('shell', 'wm', 'dismiss-keyguard')
     adb('shell', 'am', 'force-stop', PACKAGE)
     adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/io.nekohasekai.sagernet.ui.MainActivity')
     wait_for(resource_id=PACKAGE + ':id/toolbar')
@@ -487,8 +512,7 @@ def main():
     try:
         # The isolated Google APIs emulator permits root diagnostics. Android 15
         # denies netlink interface inspection to shell; the app still runs as its own UID.
-        adb('root')
-        adb('wait-for-device')
+        root_emulator()
         apk=next(Path('dist').glob('*x86_64*.apk'))
         adb('install','-r','-g',str(apk))
         adb('shell','logcat','-c')

@@ -86,9 +86,7 @@ def permissions():
 
 def exit_ip():
     ensure_snell('Snell-public-exit')
-    ui.navigate('nav_settings')
-    ui.tap(ui.scroll_for(text=ui.STRINGS['log_level']))
-    ui.tap(ui.wait_for(text='debug'))
+    ui.enable_debug_logs()
     button = protocol.start_profile('Snell-public-exit')
     try:
         end = time.monotonic() + 40
@@ -301,7 +299,7 @@ def run(name, function):
 def main():
     try:
         protocol.setup_servers()
-        ui.adb('root'); ui.adb('wait-for-device')
+        ui.root_emulator()
         ui.adb('shell','svc','power','stayon','true')
         ui.adb('shell','input','keyevent','KEYCODE_WAKEUP')
         ui.adb('shell','wm','dismiss-keyguard')
