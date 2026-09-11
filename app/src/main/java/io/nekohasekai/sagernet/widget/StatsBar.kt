@@ -120,6 +120,7 @@ class StatsBar @JvmOverloads constructor(
 
     fun refreshExitIp() {
         exitJob?.cancel()
+        isEnabled = true
         val epoch = ++generation
         if (!DataStore.showExitIp || !DataStore.serviceState.connected) {
             exitIpText.visibility = View.GONE

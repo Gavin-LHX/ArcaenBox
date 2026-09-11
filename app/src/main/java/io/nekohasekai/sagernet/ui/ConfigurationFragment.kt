@@ -347,17 +347,8 @@ class ConfigurationFragment @JvmOverloads constructor(
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_restart_service -> {
-                if (DataStore.serviceState.connected) runOnLifecycleDispatcher {
-                    SagerNet.stopService()
-                    val stopped = kotlinx.coroutines.withTimeoutOrNull(15000) {
-                        while (DataStore.serviceState.canStop) kotlinx.coroutines.delay(100)
-                        true
-                    } == true
-                    onMainDispatcher {
-                        if (stopped) startActivity(Intent(requireContext(), VpnRequestActivity::class.java))
-                        else snackbar(R.string.update_stop_failed).show()
-                    }
-                } else snackbar(R.string.not_connected).show()
+                if (DataStore.serviceState.connected) SagerNet.reloadService()
+                else snackbar(R.string.not_connected).show()
             }
             R.id.action_sort_test_results -> {
                 val group = getCurrentGroupFragment()?.proxyGroup ?: return true
@@ -1581,7 +1572,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                             if (update) {
                                 ProfileManager.postUpdate(lastSelected)
                                 if (DataStore.serviceState.canStop && reloadAccess.tryLock()) {
-                                    SagerNet.reloadService()
+                                    SagerNet.reloadService(force = false)
                                     reloadAccess.unlock()
                                 }
                             } else if (SagerNet.isTv) {
