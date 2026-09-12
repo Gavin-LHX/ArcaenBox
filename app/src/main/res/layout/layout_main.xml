@@ -13,7 +13,7 @@
         android:layout_height="match_parent"
         android:clipChildren="false">
 
-        <androidx.coordinatorlayout.widget.CoordinatorLayout
+        <io.nekohasekai.sagernet.widget.MainContentLayout
             android:id="@+id/fragment_holder"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
