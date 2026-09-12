@@ -15,6 +15,9 @@ import androidx.annotation.IdRes
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.graphics.Insets
 import androidx.preference.PreferenceDataStore
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
@@ -57,6 +60,8 @@ class MainActivity : ThemedActivity(),
 
     lateinit var binding: LayoutMainBinding
     lateinit var navigation: NavigationView
+    override val drawBehindBottomNavigationBar = true
+    private var bottomNavigationInset = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,6 +92,14 @@ class MainActivity : ThemedActivity(),
         binding.stats.setOnClickListener { if (DataStore.serviceState.connected) binding.stats.testConnection() }
 
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHolder) { _, insets ->
+            bottomNavigationInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            updateContentSpace()
+            // The fragment already ends above the complete bar (including its safe area).
+            WindowInsetsCompat.Builder(insets)
+                .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.NONE)
+                .build()
+        }
         binding.stats.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateContentSpace() }
         changeState(BaseService.State.Idle)
         connection.connect(this, this)
@@ -325,7 +338,7 @@ class MainActivity : ThemedActivity(),
 
     private fun updateContentSpace() {
         val params = binding.fragmentHolder.layoutParams as android.view.ViewGroup.MarginLayoutParams
-        val bottom = if (binding.stats.allowShow) binding.stats.height else 0
+        val bottom = if (binding.stats.allowShow) binding.stats.height else bottomNavigationInset
         if (params.bottomMargin != bottom) {
             params.bottomMargin = bottom
             binding.fragmentHolder.layoutParams = params

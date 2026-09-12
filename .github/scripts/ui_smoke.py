@@ -601,6 +601,9 @@ def main():
         run_check('core-switch', core_switch)
         run_check('test-presets', test_presets)
         run_check('vless-import', vless_import)
+        import bottom_edges
+        import sys
+        run_check('bottom-edges', lambda: bottom_edges.check(sys.modules[__name__]))
         if 'core-download' in ONLY_CHECKS:
             run_check('core-download', core_download)
         adb('shell','cmd','uimode','night','yes')

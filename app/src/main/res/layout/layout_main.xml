@@ -55,6 +55,7 @@
             android:nextFocusUp="@+id/fab"
             app:backgroundTint="?colorSurfaceContainer"
             app:contentInsetStart="0dp"
+            app:paddingBottomSystemWindowInsets="true"
             app:fabAlignmentMode="end"
             app:fabAnchorMode="embed"
             app:fabAlignmentModeEndMargin="16dp"
@@ -90,6 +91,8 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        app:drawerLayoutCornerSize="0dp"
+        app:bottomInsetScrimEnabled="false"
         app:headerLayout="@layout/layout_drawer_header"
         app:menu="@menu/main_drawer_menu" />
 

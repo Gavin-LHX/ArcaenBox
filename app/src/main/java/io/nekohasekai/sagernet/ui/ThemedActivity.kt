@@ -14,6 +14,7 @@ import androidx.core.view.updatePadding
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.graphics.Insets
+import androidx.core.graphics.ColorUtils
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import com.google.android.material.snackbar.Snackbar
 import io.nekohasekai.sagernet.R
@@ -26,6 +27,8 @@ abstract class ThemedActivity : AppCompatActivity {
     var themeResId = 0
     var uiMode = 0
     open val isDialog = false
+    // MainActivity lets the bottom bar and drawer paint the navigation safe area.
+    protected open val drawBehindBottomNavigationBar = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!isDialog) {
@@ -45,20 +48,27 @@ abstract class ThemedActivity : AppCompatActivity {
             // Older Android versions cannot draw dark system-bar icons.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) window.statusBarColor = Color.BLACK
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) window.navigationBarColor = Color.BLACK
-            val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+            val lightSurface = ColorUtils.calculateLuminance(getColorAttr(R.attr.colorSurface)) > 0.5
             WindowInsetsControllerCompat(window, window.decorView).apply {
-                isAppearanceLightStatusBars = !night
-                isAppearanceLightNavigationBars = !night
+                isAppearanceLightStatusBars = lightSurface
+                isAppearanceLightNavigationBars = lightSurface
+            }
+            if (drawBehindBottomNavigationBar && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
             }
             val content = findViewById<android.view.View>(android.R.id.content)
             ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
                 val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
                 val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
+                val bottomOwnedByChildren = drawBehindBottomNavigationBar && keyboard.bottom <= bars.bottom
                 view.updatePadding(left = bars.left, top = bars.top, right = bars.right,
-                    bottom = maxOf(bars.bottom, keyboard.bottom))
-                // The root owns the safe area; nested lists must not add it again.
+                    bottom = if (bottomOwnedByChildren) 0 else maxOf(bars.bottom, keyboard.bottom))
+                // Only MainActivity passes the bottom safe area to its bar and drawer.
+                // Other activities keep the existing content/keyboard inset ownership.
                 WindowInsetsCompat.Builder(insets)
                     .setInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime(), Insets.NONE)
+                    .setInsets(WindowInsetsCompat.Type.navigationBars(),
+                        if (bottomOwnedByChildren) Insets.of(0, 0, 0, bars.bottom) else Insets.NONE)
                     .build()
             }
             ViewCompat.requestApplyInsets(content)
