@@ -36,6 +36,11 @@ def check(ui):
         doc = ui.tree()
         image = Image.open(io.BytesIO(adb('exec-out', 'screencap', '-p', binary=True))).convert('RGB')
         width, height = image.size
+        display = adb('shell', 'dumpsys', 'window', 'displays')
+        frames = re.findall(r'type=navigationBars frame=\[(\d+),(\d+)\]\[(\d+),(\d+)\]', display)
+        navigation_top = next((int(y1) for x1,y1,x2,y2 in frames
+                               if int(y2) == height and int(x1) == 0 and int(x2) == width), None)
+        assert navigation_top is not None, 'Bottom navigation frame unavailable'
         target = ui.find(doc, resource_id=ui.PACKAGE + (':id/nav_view' if drawer else ':id/stats'))
         assert target is not None, 'Bottom surface missing'
         left, top, right, bottom = ui.bounds(target)
@@ -50,15 +55,12 @@ def check(ui):
         if not drawer:
             button = ui.find(doc, resource_id=ui.PACKAGE + ':id/fab')
             ui.assert_connect_button_visible(button)
-            # At least 24dp is reserved for gesture navigation (3-button needs 48dp).
-            density = int(re.findall(r'\d+', adb('shell', 'wm', 'density'))[-1]) / 160
-            safe_bottom = height - round((24 if mode == 'gestural' else 48) * density)
             for view_id in ('fab', 'status', 'tx', 'rx'):
                 node = ui.find(doc, resource_id=ui.PACKAGE + ':id/' + view_id)
-                assert ui.bounds(node)[3] <= safe_bottom, f'{name}: {view_id} overlaps navigation'
+                assert ui.bounds(node)[3] <= navigation_top, f'{name}: {view_id} overlaps navigation'
         if mode == 'gestural':
             # The system gesture handle must remain visible on both light and dark surfaces.
-            pixels = image.crop((width//3, height-24, 2*width//3, height))
+            pixels = image.crop((width//3, navigation_top, 2*width//3, height))
             assert max(hi-lo for lo,hi in pixels.getextrema()) >= 60, f'{name}: invisible gesture handle'
 
     try:
