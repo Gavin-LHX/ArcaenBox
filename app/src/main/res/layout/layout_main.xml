@@ -64,7 +64,9 @@
             app:layout_scrollFlags="enterAlways|scroll">
 
             <LinearLayout
+                android:id="@+id/stats_content"
                 android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:visibility="invisible"
                 android:minHeight="80dp" android:gravity="center_vertical"
                 android:background="?android:attr/selectableItemBackground" android:orientation="vertical"
                 android:paddingStart="16dp" android:paddingEnd="88dp" android:paddingVertical="12dp">

@@ -2,6 +2,8 @@ package io.nekohasekai.sagernet.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.text.format.Formatter
 import android.util.AttributeSet
 import android.view.View
@@ -9,8 +11,8 @@ import android.widget.TextView
 import androidx.appcompat.widget.TooltipCompat
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.whenStarted
 import com.google.android.material.bottomappbar.BottomAppBar
+import com.google.android.material.shape.MaterialShapeDrawable
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
@@ -32,6 +34,9 @@ class StatsBar @JvmOverloads constructor(
     private lateinit var txText: TextView
     private lateinit var rxText: TextView
     private lateinit var exitIpText: TextView
+    private lateinit var statsContent: View
+    private val connectedBackgroundTint = backgroundTint
+    private val connectedElevation = (background as? MaterialShapeDrawable)?.elevation ?: elevation
     private var stateJob: Job? = null
     private var exitJob: Job? = null
     private var generation = 0
@@ -81,6 +86,7 @@ class StatsBar @JvmOverloads constructor(
         txText = findViewById(R.id.tx)
         rxText = findViewById(R.id.rx)
         exitIpText = findViewById(R.id.exit_ip)
+        statsContent = findViewById(R.id.stats_content)
         super.setOnClickListener(l)
     }
 
@@ -95,9 +101,18 @@ class StatsBar @JvmOverloads constructor(
         exitJob?.cancel()
         generation++
         exitIpText.visibility = View.GONE
-        isEnabled = true
+        val connected = state == BaseService.State.Connected
+        // Keep the inset-aware anchor laid out so the A button stays in place.
+        // Only a live connection needs a visible surface or a tappable status area.
+        statsContent.visibility = if (connected) View.VISIBLE else View.INVISIBLE
+        backgroundTint = if (connected) connectedBackgroundTint else ColorStateList.valueOf(Color.TRANSPARENT)
+        elevation = if (connected) connectedElevation else 0f
+        isEnabled = connected
+        isClickable = connected
+        isFocusable = connected
         hideOnScroll = false
-        if (state == BaseService.State.Connected) {
+        if (allowShow) performShow() else performHide()
+        if (connected) {
             stateJob = activity.lifecycleScope.launch {
                 delay(100L)
                 if (allowShow) performShow()
@@ -105,19 +120,9 @@ class StatsBar @JvmOverloads constructor(
                 refreshExitIp()
             }
         } else {
-            // Material 3 anchors the connect button inside this bar. Hiding it
-            // while disconnected also moves the only connect control off-screen.
-            if (allowShow) performShow() else performHide()
             updateSpeed(0, 0)
-            setStatus(
-                context.getText(
-                    when (state) {
-                        BaseService.State.Connecting -> R.string.connecting
-                        BaseService.State.Stopping -> R.string.stopping
-                        else -> R.string.not_connected
-                    }
-                )
-            )
+            statusText.text = null
+            TooltipCompat.setTooltipText(this, null)
         }
     }
 

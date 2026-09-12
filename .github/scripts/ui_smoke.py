@@ -90,6 +90,27 @@ def assert_connect_button_visible(button):
         raise AssertionError('Connect button is covered despite accessible bounds')
 
 
+def assert_disconnected_footer(doc=None):
+    """Idle screens show only the A button, without text or a separate bottom strip."""
+    import io
+    from PIL import Image
+    doc = tree() if doc is None else doc
+    for view_id in ('status', 'exit_ip', 'tx', 'rx'):
+        assert find(doc, resource_id=PACKAGE + ':id/' + view_id) is None, f'Idle footer exposes {view_id}'
+    button = find(doc, resource_id=PACKAGE + ':id/fab')
+    assert button is not None, 'Idle connect button missing'
+    assert_connect_button_visible(button)
+    pixels = Image.open(io.BytesIO(adb('exec-out', 'screencap', '-p', binary=True))).convert('RGB')
+    width, height = pixels.size
+    top = max(0, bounds(button)[1] - (bounds(button)[3] - bounds(button)[1]))
+    for x in (4, width - 4):
+        expected = pixels.getpixel((x, top))
+        for y in (bounds(button)[1], bounds(button)[3], height - 2):
+            actual = pixels.getpixel((x, min(y, height - 1)))
+            assert max(abs(a-b) for a,b in zip(expected, actual)) <= 2, 'Idle footer has a visible background strip'
+    return button
+
+
 def wait_for(timeout=25, **attrs):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -200,6 +221,7 @@ def auto_connect_switch():
 
 def startup():
     launch()
+    assert_disconnected_footer()
     capture('01-light-main')
     open_drawer()
     doc = tree()
@@ -331,7 +353,7 @@ def service():
     adb('shell', 'appops', 'set', PACKAGE, 'ACTIVATE_VPN', 'allow')
     tap(wait_for(resource_id=PACKAGE + ':id/profile_name'))
     button=wait_for(resource_id=PACKAGE + ':id/fab',enabled='true')
-    assert_connect_button_visible(button)
+    assert_disconnected_footer()
     tap(button)
     deadline=time.monotonic()+25
     while time.monotonic()<deadline:
@@ -350,6 +372,13 @@ def service():
     # Record the real service state and screenshot, then reuse the unchanged FAB bounds.
     (OUT/'06-light-service-started.txt').write_text(services,encoding='utf-8')
     (OUT/'06-light-service-started.png').write_bytes(adb('exec-out','screencap','-p',binary=True))
+    # A live service must restore the footer text. Avoid UIAutomator's idle wait
+    # while the traffic counters update; inspect the rendered area left of A.
+    from PIL import Image
+    pixels = Image.open(OUT/'06-light-service-started.png').convert('RGB')
+    left, top, right, bottom = bounds(button)
+    text_area = pixels.crop((16, top, left - 16, bottom))
+    assert max(hi-lo for lo,hi in text_area.getextrema()) >= 40, 'Connected footer text missing'
     RESULTS.append('06-light-service-started')
     tap(button)
     wait_for(content_desc=STRINGS['connect'])
@@ -362,6 +391,8 @@ def service():
         time.sleep(.5)
     else:
         raise AssertionError('VPN foreground service or TUN interface did not stop')
+    assert_disconnected_footer()
+    capture('06-light-service-stopped')
 
 
 def backup():

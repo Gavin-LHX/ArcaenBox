@@ -41,7 +41,7 @@ def check(ui):
         navigation_top = next((int(y1) for x1,y1,x2,y2 in frames
                                if int(y2) == height and int(x1) == 0 and int(x2) == width), None)
         assert navigation_top is not None, 'Bottom navigation frame unavailable'
-        target = ui.find(doc, resource_id=ui.PACKAGE + (':id/nav_view' if drawer else ':id/stats'))
+        target = ui.find(doc, resource_id=ui.PACKAGE + (':id/nav_view' if drawer else ':id/coordinator'))
         assert target is not None, 'Bottom surface missing'
         left, top, right, bottom = ui.bounds(target)
         assert bottom == height, f'{name}: surface stops at {bottom}, screen ends at {height}'
@@ -53,11 +53,8 @@ def check(ui):
             assert max(abs(a-b) for a,b in zip(expected, actual)) <= 2, (
                 f'{name}: bottom background mismatch at x={x}: {expected} != {actual}')
         if not drawer:
-            button = ui.find(doc, resource_id=ui.PACKAGE + ':id/fab')
-            ui.assert_connect_button_visible(button)
-            for view_id in ('fab', 'status', 'tx', 'rx'):
-                node = ui.find(doc, resource_id=ui.PACKAGE + ':id/' + view_id)
-                assert ui.bounds(node)[3] <= navigation_top, f'{name}: {view_id} overlaps navigation'
+            button = ui.assert_disconnected_footer(doc)
+            assert ui.bounds(button)[3] <= navigation_top, f'{name}: A overlaps navigation'
         if mode == 'gestural':
             # The system gesture handle must remain visible on both light and dark surfaces.
             pixels = image.crop((width//3, navigation_top, 2*width//3, height))
