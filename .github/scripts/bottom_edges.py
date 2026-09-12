@@ -17,6 +17,19 @@ def check(ui):
     original_font = adb('shell', 'settings', 'get', 'system', 'font_scale').strip()
     original_size = adb('shell', 'wm', 'size')
     original_density = adb('shell', 'wm', 'density')
+    original_bottom_bar = None
+
+    def bottom_bar_switch():
+        ui.scroll_for(text=ui.STRINGS['show_bottom_bar'])
+        doc = ui.tree()
+        row = ui.find(doc, text=ui.STRINGS['show_bottom_bar'])
+        parents = {child: parent for parent in doc.iter() for child in parent}
+        while row is not None:
+            switch = ui.find(row, resource_id=ui.PACKAGE + ':id/material_switch')
+            if switch is not None:
+                return switch
+            row = parents.get(row)
+        raise AssertionError('Bottom bar preference missing')
 
     def screenshot(name, drawer=False):
         ui.capture(name)
@@ -49,6 +62,12 @@ def check(ui):
             assert max(hi-lo for lo,hi in pixels.getextrema()) >= 60, f'{name}: invisible gesture handle'
 
     try:
+        ui.launch()
+        ui.navigate('nav_settings')
+        switch = bottom_bar_switch()
+        original_bottom_bar = switch.get('checked')
+        if original_bottom_bar != 'true':
+            ui.tap(switch)
         for mode, overlay in navigation_modes.items():
             assert overlay in original_overlays, f'Navigation overlay unavailable: {overlay}'
             adb('shell', 'cmd', 'overlay', 'enable-exclusive', '--category', overlay)
@@ -75,3 +94,9 @@ def check(ui):
         adb('shell', 'wm', 'density', density.group(1) if density else 'reset')
         adb('shell', 'settings', 'put', 'system', 'font_scale', original_font)
         adb('shell', 'cmd', 'uimode', 'night', 'no')
+        if original_bottom_bar is not None:
+            ui.launch()
+            ui.navigate('nav_settings')
+            switch = bottom_bar_switch()
+            if switch.get('checked') != original_bottom_bar:
+                ui.tap(switch)
