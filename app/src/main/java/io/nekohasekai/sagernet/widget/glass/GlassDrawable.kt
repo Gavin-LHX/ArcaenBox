@@ -98,7 +98,11 @@ class GlassDrawable(
         paint.shader = null
     }
 
-    override fun setAlpha(alpha: Int) { opacity = alpha; invalidateSelf() }
+    override fun setAlpha(alpha: Int) {
+        if (opacity == alpha) return
+        opacity = alpha
+        invalidateSelf()
+    }
     override fun setColorFilter(colorFilter: ColorFilter?) = Unit
     @Deprecated("Deprecated in Android") override fun getOpacity() = PixelFormat.TRANSLUCENT
 }

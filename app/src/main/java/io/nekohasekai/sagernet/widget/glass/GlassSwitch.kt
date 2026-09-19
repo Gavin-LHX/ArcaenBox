@@ -60,8 +60,18 @@ class GlassSwitch @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        // A horizontal thumb gesture belongs to the switch, including its first move.
+        // RecyclerView's swipe-to-delete otherwise intercepts a fast drag before
+        // SwitchCompat can enter its dragging state.
+        if (glass != null && isEnabled && event.actionMasked == MotionEvent.ACTION_DOWN) {
+            parent?.requestDisallowInterceptTouchEvent(true)
+        }
         touch?.onTouch(event)
-        return super.onTouchEvent(event)
+        val handled = super.onTouchEvent(event)
+        if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+            parent?.requestDisallowInterceptTouchEvent(false)
+        }
+        return handled
     }
 
     override fun onDetachedFromWindow() {
