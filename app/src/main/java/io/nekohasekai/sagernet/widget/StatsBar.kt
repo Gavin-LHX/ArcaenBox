@@ -6,6 +6,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.text.format.Formatter
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.TooltipCompat
@@ -43,6 +44,11 @@ class StatsBar @JvmOverloads constructor(
     private lateinit var behavior: YourBehavior
 
     var allowShow = true
+
+    // Toolbar otherwise consumes touches even with no visible/clickable content.
+    // The floating A is a sibling and keeps its own touch target.
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean =
+        DataStore.serviceState.connected && super.dispatchTouchEvent(event)
 
     override fun getBehavior(): YourBehavior {
         if (!this::behavior.isInitialized) behavior = YourBehavior { allowShow }
