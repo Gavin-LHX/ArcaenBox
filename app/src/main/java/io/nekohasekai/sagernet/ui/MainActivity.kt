@@ -92,6 +92,9 @@ class MainActivity : ThemedActivity(),
         binding.stats.setOnClickListener { if (DataStore.serviceState.connected) binding.stats.testConnection() }
 
         setContentView(binding.root)
+        binding.stats.allowShow = savedInstanceState == null || DataStore.showBottomBar ||
+            supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment
+        if (!binding.stats.allowShow) binding.fab.hide()
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHolder) { _, insets ->
             bottomNavigationInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             updateContentSpace()
