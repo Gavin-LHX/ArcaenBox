@@ -23,6 +23,9 @@ class GlassTouch(
     private var progress = 0f
     private var dx = 0f
     private var dy = 0f
+    private var originX = 0f
+    private var originY = 0f
+    private var hasOrigin = false
     private val density = view.resources.displayMetrics.density
     private val pressSpring = spring { progress = it; render() }
     private val xSpring = spring { dx = it; render() }
@@ -38,6 +41,12 @@ class GlassTouch(
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 if (!view.isEnabled) return
+                if (transform) {
+                    // BottomAppBar positions its FAB with translation. Preserve that anchor.
+                    originX = view.translationX - dx * 8f * density
+                    originY = view.translationY - dy * 8f * density
+                    hasOrigin = true
+                }
                 pointer = event.getPointerId(0)
                 downX = event.rawX; downY = event.rawY
                 glass.lightX = (event.x / view.width.coerceAtLeast(1)).coerceIn(0f, 1f)
@@ -75,14 +84,14 @@ class GlassTouch(
 
     private fun render() {
         glass.press = progress.coerceIn(0f, 1f)
-        if (transform) {
+        if (transform && hasOrigin) {
             val p = if (motionEnabled(view)) progress.coerceIn(-.15f, 1.15f) else 0f
             val sx = (4f * density / view.width.coerceAtLeast(1)).coerceAtMost(.09f)
             val sy = (4f * density / view.height.coerceAtLeast(1)).coerceAtMost(.09f)
             view.scaleX = 1f + p * sx + abs(dx) * sx * .6f
             view.scaleY = 1f + p * sy + abs(dy) * sy * .6f
-            view.translationX = dx * 8f * density
-            view.translationY = dy * 8f * density
+            view.translationX = originX + dx * 8f * density
+            view.translationY = originY + dy * 8f * density
         }
         view.invalidate()
     }
