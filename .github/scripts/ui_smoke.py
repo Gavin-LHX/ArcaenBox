@@ -210,12 +210,19 @@ def navigate(item):
     label = MENU[item]
     for direction in ['up', 'down', 'down', 'up']:
         doc = tree()
-        node = find(doc, text=label)
+        drawer = find(doc, resource_id=PACKAGE + ':id/nav_view')
+        assert drawer is not None, 'Navigation drawer is not open'
+        # A composited content layer can remain in the accessibility tree behind
+        # the drawer. Restrict selection to the actual drawer, not its page title.
+        node = find(drawer, text=label)
         if node is not None:
             tap(node)
+            deadline = time.monotonic() + 10
+            while find(tree(), resource_id=PACKAGE + ':id/nav_view') is not None:
+                assert time.monotonic() < deadline, 'Navigation drawer did not close'
+                time.sleep(.2)
             wait_for(resource_id=PACKAGE + ':id/toolbar')
             return
-        drawer = find(doc, resource_id=PACKAGE + ':id/nav_view')
         x1,y1,x2,y2 = bounds(drawer)
         x=(x1+x2)//2; top=y1+(y2-y1)//4; bottom=y1+3*(y2-y1)//4
         start,end=(top,bottom) if direction == 'up' else (bottom,top)
