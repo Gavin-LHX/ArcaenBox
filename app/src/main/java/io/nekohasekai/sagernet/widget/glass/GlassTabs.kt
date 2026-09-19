@@ -16,7 +16,7 @@ class GlassTabs @JvmOverloads constructor(context: Context, attrs: AttributeSet?
             touch = GlassTouch(this, glass)
             setSelectedTabIndicator(GlassDrawable(this, radiusDp = 20f))
             setSelectedTabIndicatorHeight((36 * resources.displayMetrics.density).toInt())
-            tabIndicatorGravity = INDICATOR_GRAVITY_CENTER
+            setSelectedTabIndicatorGravity(INDICATOR_GRAVITY_CENTER)
             tabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_ELASTIC
             isTabIndicatorFullWidth = true
         }

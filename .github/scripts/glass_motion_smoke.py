@@ -5,6 +5,20 @@ from PIL import Image, ImageChops, ImageStat
 
 
 def check(ui):
+    # CI normally disables animation for deterministic form tests. This check explicitly
+    # enables it, then restores every global setting even if an assertion fails.
+    keys = ('animator_duration_scale', 'transition_animation_scale', 'window_animation_scale')
+    previous = {key: ui.adb('shell','settings','get','global',key).strip() for key in keys}
+    try:
+        for key in keys: ui.adb('shell','settings','put','global',key,'1')
+        return _check(ui)
+    finally:
+        for key, value in previous.items():
+            if value == 'null': ui.adb('shell','settings','delete','global',key)
+            else: ui.adb('shell','settings','put','global',key,value)
+
+
+def _check(ui):
     adb = ui.adb
     assert adb('get-serialno').strip().startswith('emulator-')
     ui.navigate('nav_configuration')
