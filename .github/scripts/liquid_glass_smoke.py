@@ -28,7 +28,7 @@ def check(ui):
 
     try:
         adb('shell','cmd','uimode','night','no')
-        ui.launch(); ui.navigate('nav_configuration')
+        ui.launch(); style('Material Design 3'); ui.navigate('nav_configuration')
         before=Image.open(io.BytesIO(adb('exec-out','screencap','-p',binary=True))).convert('RGB')
         style('Liquid Glass')
         ui.navigate('nav_configuration'); idle(); ui.capture('glass-light-main')

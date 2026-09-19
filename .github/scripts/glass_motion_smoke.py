@@ -30,7 +30,7 @@ def _check(ui):
     def frame(name):
         data = adb('exec-out', 'screencap', '-p', binary=True)
         (ui.OUT/(name+'.png')).write_bytes(data)
-        ui.RESULTS.append(name)
+        if name not in ui.RESULTS: ui.RESULTS.append(name)
         return Image.open(io.BytesIO(data)).convert('RGB').crop(area)
 
     def difference(a, b):
@@ -39,20 +39,31 @@ def _check(ui):
     def motion(action, px, py):
         adb('shell', 'input', 'motionevent', action, str(px), str(py))
 
+    def rendered(name, reference, changed):
+        # SwiftShader can return the previous display buffer immediately after input.
+        # Wait for an actual rendered response instead of assuming a 180 ms GPU budget.
+        deadline = time.monotonic()+4
+        while True:
+            result = frame(name)
+            delta = difference(reference, result)
+            if (delta > 1 if changed else delta < 2) or time.monotonic() >= deadline:
+                return result
+            time.sleep(.15)
+
     before = frame('glass-motion-rest')
     try:
         motion('DOWN', x, y)
         time.sleep(.18)
-        pressed = frame('glass-motion-pressed')
+        pressed = rendered('glass-motion-pressed', before, True)
         motion('MOVE', right-8, top+8)
         time.sleep(.18)
-        dragged = frame('glass-motion-dragged')
+        dragged = rendered('glass-motion-dragged', pressed, True)
         # Moving outside cancels the button action while preserving release feedback.
         motion('MOVE', left-120, top-120)
     finally:
         motion('UP', left-120, top-120)
     time.sleep(1)
-    released = frame('glass-motion-released')
+    released = rendered('glass-motion-released', before, False)
     assert difference(before, pressed) > 1, 'Press has no visible glass feedback'
     assert difference(pressed, dragged) > .5, 'Light and shape do not follow the pointer'
     assert difference(before, released) < 2, 'Button did not spring back to rest'
