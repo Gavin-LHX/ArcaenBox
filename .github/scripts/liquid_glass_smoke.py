@@ -11,9 +11,8 @@ def check(ui):
 
     def style(name):
         ui.navigate('nav_settings')
-        ui.wait_for(text=ui.STRINGS['interface_style'])
         ui.tap(ui.scroll_for(text=ui.STRINGS['interface_style']))
-        ui.tap(ui.wait_for(text=name))
+        ui.tap(ui.wait_for(text=name, resource_id='android:id/text1'))
         time.sleep(1)  # Activity recreation is asynchronous; don't reuse the outgoing preference tree.
         ui.wait_for(text=ui.STRINGS['interface_style'])
         assert ui.find(ui.tree(), text=name) is not None, 'Style did not persist after activity recreation'
@@ -52,11 +51,11 @@ def check(ui):
         ui.launch();ui.navigate('nav_settings');ui.capture('glass-large-font-settings')
         ui.tap(ui.scroll_for(text=ui.STRINGS['glass_reduce_transparency']))
         time.sleep(1)
-        ui.wait_for(text=ui.STRINGS['interface_style'])
+        ui.wait_for(resource_id=ui.PACKAGE+':id/toolbar')
         ui.navigate('nav_configuration');idle();ui.capture('glass-reduced-transparency')
         ui.navigate('nav_settings');ui.tap(ui.scroll_for(text=ui.STRINGS['glass_reduce_transparency']))
         time.sleep(1)
-        ui.wait_for(text=ui.STRINGS['interface_style'])
+        ui.wait_for(resource_id=ui.PACKAGE+':id/toolbar')
         style('Material Design 3')
         adb('shell','settings','put','system','font_scale','1.0')
         adb('shell','cmd','uimode','night','no')

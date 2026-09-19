@@ -37,6 +37,8 @@ class GlassDrawable(
     private val lightMatrix = Matrix()
     var lightX = .3f
     var lightY = .2f
+    /** A control can supply its own layer below the glass, e.g. the switch track. */
+    var underlay: ((Canvas) -> Unit)? = null
     var press = 0f
         set(value) { field = value; invalidateSelf() }
 
@@ -69,9 +71,10 @@ class GlassDrawable(
                 backdrop.translate(-rect.left, -rect.top)
                 scene.draw(backdrop)
                 if (sampleContent) view.rootView.findViewById<MainContentLayout>(R.id.fragment_holder)?.drawGlassBackdrop(backdrop, view)
+                underlay?.invoke(backdrop)
             }
             canvas.translate(-rect.left, -rect.top)
-            paint.shader = wash; paint.alpha = opacity
+            paint.shader = wash; paint.alpha = (opacity * (1f - press * .4f)).toInt()
             canvas.drawPath(path, paint)
         }
         if (press > 0f && !reduced) {

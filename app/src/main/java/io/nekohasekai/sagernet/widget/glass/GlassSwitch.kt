@@ -36,6 +36,7 @@ class GlassSwitch @JvmOverloads constructor(
                 )
             }
             material.callback = this
+            material.underlay = { canvas -> trackDrawable?.draw(canvas) }
             thumbDrawable = object : Drawable() {
                 override fun getIntrinsicWidth() = (28 * density).toInt()
                 override fun getIntrinsicHeight() = (28 * density).toInt()
