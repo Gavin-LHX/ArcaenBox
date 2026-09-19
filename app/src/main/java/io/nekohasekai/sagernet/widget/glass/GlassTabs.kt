@@ -14,8 +14,9 @@ class GlassTabs @JvmOverloads constructor(context: Context, attrs: AttributeSet?
             val glass = GlassDrawable(this, radiusDp = 24f, insetDp = 10f)
             background = glass
             touch = GlassTouch(this, glass)
-            setSelectedTabIndicator(GlassDrawable(this, radiusDp = 20f))
-            setSelectedTabIndicatorHeight((36 * resources.displayMetrics.density).toInt())
+            // Keep the moving pill inside the inset outer rail, including the end tabs.
+            setSelectedTabIndicator(GlassDrawable(this, radiusDp = 20f, insetDp = 14f))
+            setSelectedTabIndicatorHeight((44 * resources.displayMetrics.density).toInt())
             setSelectedTabIndicatorGravity(INDICATOR_GRAVITY_CENTER)
             tabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_ELASTIC
             isTabIndicatorFullWidth = true

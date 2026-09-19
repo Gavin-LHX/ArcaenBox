@@ -39,8 +39,10 @@ def check(ui):
     ui.capture('glass-tabs-backup')
     pager = ui.wait_for(resource_id=ui.PACKAGE+':id/tools_pager')
     l,t,r,b = ui.bounds(pager)
-    y = t+(b-t)//3
+    # Swipe the page's open area, not an export button with its own drag feedback.
+    y = b-(b-t)//5
     adb('shell','input','swipe',str(l+(r-l)//5),str(y),str(l+4*(r-l)//5),str(y),'450')
+    ui.wait_for(text=ui.STRINGS['network'], selected='true')
     time.sleep(.5)
     assert ui.find(ui.tree(),resource_id=ui.PACKAGE+':id/action_export') is None
     ui.capture('glass-tabs-swiped-back')
