@@ -343,7 +343,7 @@ def settings():
     tap(auto_connect_switch())
     assert auto_connect_switch().get('checked') == original, 'Switch did not restore'
     capture('04-light-settings-switch')
-    tap(wait_for(text=STRINGS['service_mode']))
+    tap(scroll_for(text=STRINGS['service_mode']))
     wait_for(resource_id=PACKAGE + ':id/select_dialog_listview')
     capture('04-light-single-choice-dialog')
     adb('shell','input','keyevent','BACK')
