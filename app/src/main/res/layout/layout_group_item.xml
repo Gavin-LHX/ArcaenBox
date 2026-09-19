@@ -120,7 +120,7 @@
 
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
+            <io.nekohasekai.sagernet.widget.glass.GlassButton
                 android:id="@+id/group_update"
                 style="?attr/borderlessButtonStyle"
                 android:layout_width="wrap_content"

@@ -18,7 +18,7 @@
                     android:inputType="textPassword|textNoSuggestions" android:maxLength="11000"
                     android:importantForAutofill="no" android:saveEnabled="false" android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/po0_automatic"
+            <io.nekohasekai.sagernet.widget.glass.GlassSwitch android:id="@+id/po0_automatic"
                 android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp"
                 android:layout_marginTop="12dp" android:text="@string/po0_automatic" android:paddingVertical="8dp"
                 android:textAppearance="?textAppearanceTitleMedium" />
@@ -28,11 +28,11 @@
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="8dp" android:text="@string/po0_direct_route_help"
                 android:textAppearance="?textAppearanceBodySmall" android:textColor="?colorOnSurfaceVariant" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/po0_save"
+            <io.nekohasekai.sagernet.widget.glass.GlassButton android:id="@+id/po0_save"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="16dp" android:text="@string/po0_save" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/po0_add"
+            <io.nekohasekai.sagernet.widget.glass.GlassButton android:id="@+id/po0_add"
                 android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/po0_add" />
             <com.google.android.material.card.MaterialCardView
                 style="?attr/materialCardViewStyle"
@@ -49,7 +49,7 @@
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="16dp" android:text="@string/po0_slot_help"
                 android:textAppearance="?textAppearanceBodySmall" android:textColor="?colorOnSurfaceVariant" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/po0_guide"
+            <io.nekohasekai.sagernet.widget.glass.GlassButton android:id="@+id/po0_guide"
                 style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:text="@string/po0_guide" />
         </LinearLayout>

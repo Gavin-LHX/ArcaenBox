@@ -1,6 +1,7 @@
 """Real style switching, persistence, rendering and service regression on an isolated emulator."""
 import io
 import json
+import time
 from PIL import Image, ImageChops, ImageStat
 
 
@@ -10,8 +11,10 @@ def check(ui):
 
     def style(name):
         ui.navigate('nav_settings')
+        ui.wait_for(text=ui.STRINGS['interface_style'])
         ui.tap(ui.scroll_for(text=ui.STRINGS['interface_style']))
         ui.tap(ui.wait_for(text=name))
+        time.sleep(1)  # Activity recreation is asynchronous; don't reuse the outgoing preference tree.
         ui.wait_for(text=ui.STRINGS['interface_style'])
         assert ui.find(ui.tree(), text=name) is not None, 'Style did not persist after activity recreation'
 
@@ -34,6 +37,8 @@ def check(ui):
         w,h=after.size
         area=(0,h//2,w,h*3//4)
         assert max(ImageStat.Stat(ImageChops.difference(before.crop(area),after.crop(area))).mean)>3, 'Glass renders the same surface as MD3'
+        from glass_motion_smoke import check as motion_check
+        motion_results = motion_check(ui)
         for target in ('nav_route','nav_settings','nav_kernels'):
             ui.navigate(target); ui.capture('glass-light-'+target)
         ui.open_drawer(); ui.capture('glass-light-drawer'); adb('shell','input','keyevent','BACK')
@@ -46,9 +51,11 @@ def check(ui):
         adb('shell','settings','put','system','font_scale','1.3')
         ui.launch();ui.navigate('nav_settings');ui.capture('glass-large-font-settings')
         ui.tap(ui.scroll_for(text=ui.STRINGS['glass_reduce_transparency']))
+        time.sleep(1)
         ui.wait_for(text=ui.STRINGS['interface_style'])
         ui.navigate('nav_configuration');idle();ui.capture('glass-reduced-transparency')
         ui.navigate('nav_settings');ui.tap(ui.scroll_for(text=ui.STRINGS['glass_reduce_transparency']))
+        time.sleep(1)
         ui.wait_for(text=ui.STRINGS['interface_style'])
         style('Material Design 3')
         adb('shell','settings','put','system','font_scale','1.0')
@@ -61,6 +68,7 @@ def check(ui):
             'rendering_differs_from_md3':True,'idle_no_reserved_bar':True,
             'light_dark_large_font':True,'reduce_transparency':True,
             'vpn_lifecycle':True,
+            'motion':motion_results,
         },indent=2))
     finally:
         adb('shell','settings','put','system','font_scale','1.0')

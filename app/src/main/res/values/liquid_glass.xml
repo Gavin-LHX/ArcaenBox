@@ -6,8 +6,25 @@
     <string-array name="interface_style_values"><item>md3</item><item>liquid_glass</item></string-array>
     <color name="glass_card">#BBFFFFFF</color>
     <color name="glass_outline">#DCFFFFFF</color>
+    <color name="glass_popup">#F2F5FAFD</color>
     <style name="ThemeOverlay.ArcaenBox.LiquidGlass" parent="">
         <item name="materialCardViewStyle">@style/Widget.ArcaenBox.GlassCard</item>
+        <item name="popupMenuStyle">@style/Widget.ArcaenBox.GlassPopup</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.ArcaenBox.GlassDialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.ArcaenBox.GlassDialog</item>
+    </style>
+    <style name="Widget.ArcaenBox.GlassPopup" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/glass_popup</item>
+        <item name="android:popupAnimationStyle">@style/Animation.ArcaenBox.Glass</item>
+    </style>
+    <style name="ThemeOverlay.ArcaenBox.GlassDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/glass_popup</item>
+        <item name="android:windowBackground">@drawable/glass_popup</item>
+        <item name="android:windowAnimationStyle">@style/Animation.ArcaenBox.Glass</item>
+    </style>
+    <style name="Animation.ArcaenBox.Glass" parent="">
+        <item name="android:windowEnterAnimation">@anim/glass_enter</item>
+        <item name="android:windowExitAnimation">@anim/glass_exit</item>
     </style>
     <style name="Widget.ArcaenBox.GlassCard" parent="Widget.ArcaenBox.Card">
         <item name="cardBackgroundColor">@color/glass_card</item>

@@ -96,6 +96,12 @@ class MainActivity : ThemedActivity(),
             binding.drawerLayout.background = io.nekohasekai.sagernet.widget.glass.GlassScene(binding.drawerLayout)
             navigation.background = io.nekohasekai.sagernet.widget.glass.GlassDrawable(navigation, radiusDp = 0f, sampleContent = true, heavy = true)
             navigation.elevation = 0f
+            binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
+                override fun onDrawerSlide(drawerView: android.view.View, slideOffset: Float) {
+                    // Its sampling origin follows the moving drawer, rather than a cached open position.
+                    navigation.invalidate()
+                }
+            })
         }
         binding.stats.allowShow = savedInstanceState == null || DataStore.showBottomBar ||
             supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment
@@ -337,7 +343,12 @@ class MainActivity : ThemedActivity(),
             binding.fab.hide()
         }
         updateContentSpace()
-        supportFragmentManager.beginTransaction()
+        supportFragmentManager.beginTransaction().apply {
+            if (DataStore.interfaceStyle == "liquid_glass" &&
+                io.nekohasekai.sagernet.widget.glass.GlassTouch.motionEnabled(binding.root)) {
+                setCustomAnimations(R.anim.glass_enter, R.anim.glass_exit)
+            }
+        }
             .replace(R.id.fragment_holder, fragment)
             .commitAllowingStateLoss()
         binding.drawerLayout.closeDrawers()

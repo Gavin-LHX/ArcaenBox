@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <com.google.android.material.button.MaterialButton
+    <io.nekohasekai.sagernet.widget.glass.GlassButton
         android:id="@+id/reset_settings"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
@@ -38,7 +38,7 @@
         android:text="@string/backup_settings"
         android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-    <com.google.android.material.button.MaterialButton
+    <io.nekohasekai.sagernet.widget.glass.GlassButton
         android:id="@+id/action_export"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
@@ -46,7 +46,7 @@
         android:text="@string/action_export"
         android:textColor="?whiteOrTextPrimary" />
 
-    <com.google.android.material.button.MaterialButton
+    <io.nekohasekai.sagernet.widget.glass.GlassButton
         android:id="@+id/action_share"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
@@ -61,7 +61,7 @@
         android:text="@string/backup_summary"
         android:textColor="?android:textColorTertiary" />
 
-    <com.google.android.material.button.MaterialButton
+    <io.nekohasekai.sagernet.widget.glass.GlassButton
         android:id="@+id/action_import_file"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"

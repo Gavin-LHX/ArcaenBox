@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <com.google.android.material.button.MaterialButton
+    <io.nekohasekai.sagernet.widget.glass.GlassButton
         android:id="@+id/debug_crash"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
@@ -13,7 +13,7 @@
         android:text="Crash From Kt"
         android:textColor="?whiteOrTextPrimary" />
 
-    <com.google.android.material.button.MaterialButton
+    <io.nekohasekai.sagernet.widget.glass.GlassButton
         android:id="@+id/reset_settings"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"

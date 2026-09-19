@@ -33,6 +33,10 @@ class GlassDrawable(
     private var wash: Shader? = null
     private var radius = 0f
     private var opacity = 255
+    private val glow = RadialGradient(0f, 0f, 1f, intArrayOf(0xB3FFFFFF.toInt(), 0x30D5F7FF, Color.TRANSPARENT), floatArrayOf(0f, .42f, 1f), Shader.TileMode.CLAMP)
+    private val lightMatrix = Matrix()
+    var lightX = .3f
+    var lightY = .2f
     var press = 0f
         set(value) { field = value; invalidateSelf() }
 
@@ -68,6 +72,16 @@ class GlassDrawable(
             }
             canvas.translate(-rect.left, -rect.top)
             paint.shader = wash; paint.alpha = opacity
+            canvas.drawPath(path, paint)
+        }
+        if (press > 0f && !reduced) {
+            // The reflected light follows the finger; foreground text/icons remain untouched.
+            val spread = maxOf(rect.width(), rect.height()) * .85f
+            lightMatrix.setScale(spread, spread)
+            lightMatrix.postTranslate(rect.left + lightX * rect.width(), rect.top + lightY * rect.height())
+            glow.setLocalMatrix(lightMatrix)
+            paint.shader = glow
+            paint.alpha = (opacity * press * (if (dark) .35f else .55f)).toInt()
             canvas.drawPath(path, paint)
         }
         canvas.restoreToCount(save)

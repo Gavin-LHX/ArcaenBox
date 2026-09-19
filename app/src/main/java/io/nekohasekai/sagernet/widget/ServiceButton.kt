@@ -4,9 +4,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Color
-import android.animation.ValueAnimator
 import android.view.MotionEvent
-import android.view.animation.OvershootInterpolator
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.AttributeSet
@@ -25,6 +23,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.widget.glass.GlassDrawable
+import io.nekohasekai.sagernet.widget.glass.GlassTouch
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.ktx.findActivity
 import kotlinx.coroutines.Job
@@ -39,7 +38,7 @@ class ServiceButton @JvmOverloads constructor(
     FloatingActionButton(context, attrs, defStyleAttr), DynamicAnimation.OnAnimationEndListener {
 
     private val glass = if (DataStore.interfaceStyle == "liquid_glass") GlassDrawable(this, radiusDp = 28f, sampleContent = true, lens = true) else null
-    private var glassAnimator: ValueAnimator? = null
+    private val glassTouch = glass?.let { GlassTouch(this, it, transform = true) }
 
     init {
         if (glass != null) {
@@ -57,34 +56,12 @@ class ServiceButton @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (glass != null && isEnabled) {
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> animateGlass(1f)
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> animateGlass(0f)
-            }
-        }
+        glassTouch?.onTouch(event)
         return super.onTouchEvent(event)
     }
 
-    private fun animateGlass(target: Float) {
-        val drawable = glass ?: return
-        glassAnimator?.cancel()
-        if (Build.VERSION.SDK_INT >= 26 && !ValueAnimator.areAnimatorsEnabled()) return
-        glassAnimator = ValueAnimator.ofFloat(drawable.press, target).apply {
-            duration = if (target == 1f) 130 else 280
-            if (target == 0f) interpolator = OvershootInterpolator(.8f)
-            addUpdateListener {
-                drawable.press = (it.animatedValue as Float).coerceIn(0f, 1f)
-                scaleX = 1f - drawable.press * .045f
-                scaleY = 1f - drawable.press * .065f
-                invalidate()
-            }
-            start()
-        }
-    }
-
     override fun onDetachedFromWindow() {
-        glassAnimator?.cancel()
+        glassTouch?.reset()
         super.onDetachedFromWindow()
     }
 
