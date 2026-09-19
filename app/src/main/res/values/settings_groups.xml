@@ -1,0 +1,9 @@
+<resources>
+    <string name="settings_expand">Expand</string>
+    <string name="settings_collapse">Collapse</string>
+    <string name="settings_notifications">Notifications and display</string>
+    <string name="settings_vpn_advanced">Advanced VPN settings</string>
+    <string name="show_connection_on_pages">Show connection controls on other pages</string>
+    <string name="show_connection_on_pages_summary">Show connection details while connected; only the button while disconnected.</string>
+    <string name="route_list_help">Tap to edit, hold to reorder, swipe left to delete.</string>
+</resources>

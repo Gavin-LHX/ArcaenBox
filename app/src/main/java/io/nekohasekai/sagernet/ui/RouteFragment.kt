@@ -98,11 +98,11 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
         }).attachToRecyclerView(ruleListView)
     }
 
-    override fun onDestroy() {
+    override fun onDestroyView() {
         if (::ruleAdapter.isInitialized) {
             ProfileManager.removeListener(ruleAdapter)
         }
-        super.onDestroy()
+        super.onDestroyView()
     }
 
     override fun onResume() {
@@ -112,6 +112,16 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_route_mode -> {
+                val modes = resources.getStringArray(R.array.route_preset_entries)
+                MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.preset_title)
+                    .setSingleChoiceItems(modes, RoutePresets.values.indexOf(DataStore.routePreset).coerceAtLeast(0)) { dialog, index ->
+                        DataStore.routePreset = RoutePresets.values[index]
+                        needReload()
+                        runOnDefaultDispatcher { ruleAdapter.reload() }
+                        dialog.dismiss()
+                    }.setNegativeButton(android.R.string.cancel, null).show()
+            }
             R.id.action_import_routes -> routeImport.open()
             R.id.action_export_routes -> routeImport.export()
             R.id.action_new_route -> {
@@ -152,12 +162,6 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
             }
         }
 
-        init {
-            runOnDefaultDispatcher {
-                reload()
-            }
-        }
-
         override fun onCreateViewHolder(
             parent: ViewGroup,
             viewType: Int,
@@ -195,7 +199,7 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
         fun move(from: Int, to: Int) {
             val first = ruleList[from - 1]
             var previousOrder = first.userOrder
-            val (step, range) = if (from < to) Pair(1, from - 1 until to - 1) else Pair(-1, to downTo from - 1)
+            val (step, range) = if (from < to) Pair(1, from - 1 until to - 1) else Pair(-1, from - 1 downTo to)
             for (i in range) {
                 val next = ruleList[i + step]
                 val order = next.userOrder
@@ -239,8 +243,14 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
 
         override suspend fun onAdd(rule: RuleEntity) {
             ruleListView.post {
-                ruleList.add(rule)
-                ruleAdapter.notifyItemInserted(ruleList.size)
+                val index = ruleList.indexOfFirst { it.id == rule.id }
+                if (index < 0) {
+                    ruleList.add(rule)
+                    notifyItemInserted(ruleList.size)
+                } else {
+                    ruleList[index] = rule
+                    notifyItemChanged(index + 1)
+                }
                 needReload()
             }
         }
@@ -278,36 +288,9 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
 
         inner class DocumentHolder(private val binding: LayoutEmptyRouteBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind() {
-                val modes = resources.getStringArray(R.array.route_preset_entries)
                 val mode = RoutePresets.values.indexOf(DataStore.routePreset).coerceAtLeast(0)
-                binding.routePreset.text = getString(R.string.preset_mode, modes[mode])
-                binding.routePreset.setOnClickListener {
-                    MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.preset_title)
-                        .setSingleChoiceItems(modes, mode) { dialog, index ->
-                            DataStore.routePreset = RoutePresets.values[index]
-                            needReload()
-                            runOnDefaultDispatcher { reload() }
-                            dialog.dismiss()
-                        }.setNegativeButton(android.R.string.cancel, null).show()
-                }
-                val values = resources.getStringArray(R.array.destination_strategy_values)
-                val entries = resources.getStringArray(R.array.destination_strategy_entries)
-                val effective = if (!DataStore.resolveDestination) "" else DataStore.destinationStrategy.ifEmpty {
-                    when (DataStore.ipv6Mode) { 0 -> "ipv4_only"; 2 -> "prefer_ipv6"; 3 -> "ipv6_only"; else -> "prefer_ipv4" }
-                }
-                val selected = values.indexOf(effective).coerceAtLeast(0)
-                binding.routeDomainStrategy.text = getString(R.string.route_strategy_value, entries[selected])
-                binding.routeDomainStrategy.setOnClickListener {
-                    MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.route_domain_strategy)
-                        .setSingleChoiceItems(entries, selected) { dialog, index ->
-                            DataStore.destinationStrategy = values[index]
-                            DataStore.resolveDestination = index != 0
-                            needReload()
-                            bind()
-                            dialog.dismiss()
-                        }.setNegativeButton(android.R.string.cancel, null).show()
-                }
-                binding.routeResources.setOnClickListener { startActivity(Intent(requireContext(), AssetsActivity::class.java)) }
+                binding.root.text = if (mode == 0) getString(R.string.route_list_help)
+                    else getString(R.string.preset_mode, resources.getStringArray(R.array.route_preset_entries)[mode])
             }
         }
 
@@ -326,8 +309,6 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
                 profileName.text = rule.displayName()
                 profileType.text = rule.mkSummary()
                 routeOutbound.text = rule.displayOutbound()
-                val label = when (rule.outbound) { 0L -> "proxy"; -1L -> "direct"; -2L -> "block"; else -> "proxy" }
-                routeOutbound.text = "$label · ${rule.displayOutbound()}"
                 routeOutbound.setTextColor(requireContext().getColorAttr(when (rule.outbound) {
                     -2L -> androidx.appcompat.R.attr.colorError
                     -1L -> com.google.android.material.R.attr.colorTertiary

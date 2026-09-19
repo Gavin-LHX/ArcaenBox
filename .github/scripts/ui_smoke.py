@@ -134,6 +134,23 @@ def wait_for(timeout=25, **attrs):
 
 def scroll_for(**attrs):
     """Search long preference lists and forms, stopping at either scroll boundary."""
+    # Advanced preferences remain in the same data store, under foldable headers.
+    if 'text' in attrs:
+        ns = '{http://schemas.android.com/apk/res-auto}'
+        for category in ET.parse('app/src/main/res/xml/global_preferences.xml').getroot():
+            if not category.tag.endswith('ExpandablePreferenceCategory'): continue
+            titles = [STRINGS.get(n.get(ns+'title', '').split('/')[-1]) for n in category]
+            if attrs['text'] in titles:
+                header = scroll_for(text=STRINGS[category.get(ns+'title').split('/')[-1]])
+                if STRINGS['settings_expand'] in header.get('content-desc', ''):
+                    tap(header)
+                else:
+                    # TextView is a child of the accessible, clickable category row.
+                    doc=tree(); parents={c:p for p in doc.iter() for c in p}
+                    header=find(doc,text=STRINGS[category.get(ns+'title').split('/')[-1]])
+                    row=parents.get(header)
+                    if row is not None and STRINGS['settings_expand'] in row.get('content-desc',''): tap(row)
+                break
     doc=tree()
     def exposed(doc):
         node=find(doc,**attrs)
@@ -622,6 +639,8 @@ def main():
         run_check('startup', startup)
         for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about','nav_po0']:
             run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
+        import simplified_ui
+        run_check('simplified-ui', lambda: simplified_ui.check(__import__('sys').modules[__name__]))
         run_check('settings', settings)
         run_check('profile', profile)
         run_check('service', service)

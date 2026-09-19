@@ -42,6 +42,9 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         preferenceManager.preferenceDataStore = DataStore.configurationStore
         DataStore.initGlobal()
         addPreferencesFromResource(R.xml.global_preferences)
+        savedInstanceState?.getStringArrayList("expandedGroups")?.forEach { key ->
+            findPreference<ExpandablePreferenceCategory>(key)?.expanded = true
+        }
 
         findPreference<Preference>("systemVpnSettings")!!.setOnPreferenceClickListener {
             VpnRequestActivity.openSettings(requireContext())
@@ -288,6 +291,15 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         tunImplementation.onPreferenceChangeListener = reloadListener
         acquireWakeLock.onPreferenceChangeListener = reloadListener
         globalCustomConfig.onPreferenceChangeListener = reloadListener
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val expanded = (0 until preferenceScreen.preferenceCount)
+            .map { preferenceScreen.getPreference(it) }
+            .filterIsInstance<ExpandablePreferenceCategory>()
+            .filter { it.expanded }.map { it.key }
+        outState.putStringArrayList("expandedGroups", ArrayList(expanded))
     }
 
     override fun onPause() {

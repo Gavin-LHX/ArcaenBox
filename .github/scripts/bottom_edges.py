@@ -20,9 +20,9 @@ def check(ui):
     original_bottom_bar = None
 
     def bottom_bar_switch():
-        ui.scroll_for(text=ui.STRINGS['show_bottom_bar'])
+        ui.scroll_for(text=ui.STRINGS['show_connection_on_pages'])
         doc = ui.tree()
-        row = ui.find(doc, text=ui.STRINGS['show_bottom_bar'])
+        row = ui.find(doc, text=ui.STRINGS['show_connection_on_pages'])
         parents = {child: parent for parent in doc.iter() for child in parent}
         while row is not None:
             switch = ui.find(row, resource_id=ui.PACKAGE + ':id/material_switch')

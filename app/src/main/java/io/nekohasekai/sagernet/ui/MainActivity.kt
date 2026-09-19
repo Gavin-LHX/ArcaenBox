@@ -320,12 +320,11 @@ class MainActivity : ThemedActivity(),
 
     @SuppressLint("CommitTransaction")
     fun displayFragment(fragment: ToolbarFragment) {
-        if (fragment is ConfigurationFragment) {
-            binding.stats.allowShow = true
+        binding.stats.allowShow = fragment is ConfigurationFragment || DataStore.showBottomBar
+        if (binding.stats.allowShow) {
             binding.stats.performShow()
             binding.fab.show()
-        } else if (!DataStore.showBottomBar) {
-            binding.stats.allowShow = false
+        } else {
             binding.stats.performHide()
             binding.fab.hide()
         }
@@ -338,7 +337,7 @@ class MainActivity : ThemedActivity(),
 
     private fun updateContentSpace() {
         val params = binding.fragmentHolder.layoutParams as android.view.ViewGroup.MarginLayoutParams
-        val bottom = if (binding.stats.allowShow) binding.stats.height else bottomNavigationInset
+        val bottom = if (binding.stats.allowShow && DataStore.serviceState.connected) binding.stats.height else bottomNavigationInset
         if (params.bottomMargin != bottom) {
             params.bottomMargin = bottom
             binding.fragmentHolder.layoutParams = params
@@ -386,6 +385,7 @@ class MainActivity : ThemedActivity(),
 
         binding.fab.changeState(state, DataStore.serviceState, animate)
         binding.stats.changeState(state)
+        updateContentSpace()
         if (msg != null) snackbar(getString(R.string.vpn_error, msg)).show()
     }
 
@@ -446,6 +446,12 @@ class MainActivity : ThemedActivity(),
 
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         when (key) {
+            Key.SHOW_BOTTOM_BAR -> {
+                binding.stats.allowShow = supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment || DataStore.showBottomBar
+                if (binding.stats.allowShow) { binding.stats.performShow(); binding.fab.show() }
+                else { binding.stats.performHide(); binding.fab.hide() }
+                updateContentSpace()
+            }
             Key.SERVICE_MODE -> onBinderDied()
             Key.PROXY_APPS, Key.BYPASS_MODE, Key.INDIVIDUAL -> {
                 if (DataStore.serviceState.canStop) {
