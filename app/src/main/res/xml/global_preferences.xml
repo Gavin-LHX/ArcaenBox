@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory app:key="group_general" app:title="@string/general_settings">
+        <moe.matsuri.nb4a.ui.SimpleMenuPreference app:key="interfaceStyle" app:title="@string/interface_style" app:defaultValue="md3" app:entries="@array/interface_style_names" app:entryValues="@array/interface_style_values" app:useSimpleSummaryProvider="true" app:icon="@drawable/ic_baseline_color_lens_24" />
         <moe.matsuri.nb4a.ui.ColorPickerPreference android:title="@string/theme" app:icon="@drawable/ic_baseline_color_lens_24" app:key="appTheme" />
         <moe.matsuri.nb4a.ui.SimpleMenuPreference app:defaultValue="0" app:entries="@array/night_mode" app:entryValues="@array/int_array_4" app:icon="@drawable/ic_baseline_wb_sunny_24" app:key="nightTheme" app:title="@string/night_mode" app:useSimpleSummaryProvider="true" />
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:icon="@drawable/ic_baseline_center_focus_weak_24" app:key="alwaysShowAddress" app:summary="@string/always_show_address_sum" app:title="@string/always_show_address" />
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="showExitIp" app:title="@string/show_exit_ip" app:defaultValue="true" />
     </PreferenceCategory>
     <moe.matsuri.nb4a.ui.ExpandablePreferenceCategory app:key="group_notifications" app:title="@string/settings_notifications">
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="glassReduceTransparency" app:title="@string/glass_reduce_transparency" app:summary="@string/glass_reduce_transparency_summary" />
         <moe.matsuri.nb4a.ui.SimpleMenuPreference app:defaultValue="1000" app:entries="@array/notification_entry" app:entryValues="@array/notification_value" app:icon="@drawable/ic_baseline_shutter_speed_24" app:key="speedInterval" app:title="@string/speed_interval" app:useSimpleSummaryProvider="true" />
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:defaultValue="true" app:key="profileTrafficStatistics" app:summary="@string/profile_traffic_statistics_summary" app:title="@string/profile_traffic_statistics" />
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:defaultValue="true" app:icon="@drawable/ic_baseline_speed_24" app:key="showDirectSpeed" app:summary="@string/show_direct_speed_sum" app:title="@string/show_direct_speed" app:useSimpleSummaryProvider="true" />

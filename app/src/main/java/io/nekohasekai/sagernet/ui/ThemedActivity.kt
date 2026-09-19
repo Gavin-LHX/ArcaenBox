@@ -19,6 +19,8 @@ import io.nekohasekai.sagernet.ktx.getColorAttr
 import com.google.android.material.snackbar.Snackbar
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.widget.glass.GlassScene
 
 abstract class ThemedActivity : AppCompatActivity {
     constructor() : super()
@@ -26,11 +28,15 @@ abstract class ThemedActivity : AppCompatActivity {
 
     var themeResId = 0
     var uiMode = 0
+    private var interfaceStyle = ""
+    private var reduceTransparency = false
     open val isDialog = false
     // MainActivity lets the bottom bar and drawer paint the navigation safe area.
     protected open val drawBehindBottomNavigationBar = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        interfaceStyle = DataStore.interfaceStyle
+        reduceTransparency = DataStore.glassReduceTransparency
         if (!isDialog) {
             Theme.apply(this)
         } else {
@@ -45,6 +51,7 @@ abstract class ThemedActivity : AppCompatActivity {
         if (!isDialog) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.decorView.setBackgroundColor(getColorAttr(R.attr.colorSurface))
+            if (interfaceStyle == "liquid_glass") window.decorView.background = GlassScene(window.decorView)
             // Older Android versions cannot draw dark system-bar icons.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) window.statusBarColor = Color.BLACK
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) window.navigationBarColor = Color.BLACK
@@ -72,6 +79,13 @@ abstract class ThemedActivity : AppCompatActivity {
                     .build()
             }
             ViewCompat.requestApplyInsets(content)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (interfaceStyle != DataStore.interfaceStyle || reduceTransparency != DataStore.glassReduceTransparency) {
+            ActivityCompat.recreate(this)
         }
     }
 

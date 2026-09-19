@@ -4,14 +4,14 @@
     <include layout="@layout/layout_appbar" android:layout_width="match_parent" android:layout_height="wrap_content" />
     <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:paddingBottom="88dp">
-            <com.google.android.material.card.MaterialCardView style="@style/Widget.Material3.CardView.Filled" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <com.google.android.material.card.MaterialCardView style="?attr/materialCardViewStyle" android:layout_width="match_parent" android:layout_height="wrap_content">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                     <TextView android:id="@+id/core_running_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/core_running" android:textAppearance="?textAppearanceTitleMedium" />
                     <TextView android:id="@+id/core_running" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textAppearance="?textAppearanceHeadlineSmall" android:textIsSelectable="true" />
                     <TextView android:id="@+id/core_details" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textAppearance="?textAppearanceBodySmall" android:textColor="?colorOnSurfaceVariant" android:textIsSelectable="true" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-            <com.google.android.material.card.MaterialCardView style="@style/Widget.Material3.CardView.Filled" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp">
+            <com.google.android.material.card.MaterialCardView style="?attr/materialCardViewStyle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
             <TextView android:id="@+id/core_channel_help" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/core_channel_help" android:textAppearance="?textAppearanceBodyMedium" />
             <com.google.android.material.button.MaterialButtonToggleGroup android:id="@+id/core_channels" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" app:singleSelection="true" app:selectionRequired="true">

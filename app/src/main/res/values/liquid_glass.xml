@@ -1,0 +1,18 @@
+<resources>
+    <string name="interface_style">Interface style</string>
+    <string name="glass_reduce_transparency">Reduce transparency</string>
+    <string name="glass_reduce_transparency_summary">Use solid surfaces in Liquid Glass for clearer text and lower graphics usage.</string>
+    <string-array name="interface_style_names"><item>Material Design 3</item><item>Liquid Glass</item></string-array>
+    <string-array name="interface_style_values"><item>md3</item><item>liquid_glass</item></string-array>
+    <color name="glass_card">#BBFFFFFF</color>
+    <color name="glass_outline">#DCFFFFFF</color>
+    <style name="ThemeOverlay.ArcaenBox.LiquidGlass" parent="">
+        <item name="materialCardViewStyle">@style/Widget.ArcaenBox.GlassCard</item>
+    </style>
+    <style name="Widget.ArcaenBox.GlassCard" parent="Widget.ArcaenBox.Card">
+        <item name="cardBackgroundColor">@color/glass_card</item>
+        <item name="strokeColor">@color/glass_outline</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">24dp</item>
+    </style>
+</resources>

@@ -92,6 +92,11 @@ class MainActivity : ThemedActivity(),
         binding.stats.setOnClickListener { if (DataStore.serviceState.connected) binding.stats.testConnection() }
 
         setContentView(binding.root)
+        if (DataStore.interfaceStyle == "liquid_glass") {
+            binding.drawerLayout.background = io.nekohasekai.sagernet.widget.glass.GlassScene(binding.drawerLayout)
+            navigation.background = io.nekohasekai.sagernet.widget.glass.GlassDrawable(navigation, radiusDp = 0f, sampleContent = true, heavy = true)
+            navigation.elevation = 0f
+        }
         binding.stats.allowShow = savedInstanceState == null || DataStore.showBottomBar ||
             supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment
         if (!binding.stats.allowShow) binding.fab.hide()

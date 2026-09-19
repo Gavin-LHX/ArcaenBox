@@ -96,6 +96,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var isExpert by configurationStore.boolean(Key.APP_EXPERT)
     var appTheme by configurationStore.int(Key.APP_THEME)
+    var interfaceStyle by configurationStore.string(Key.INTERFACE_STYLE) { "md3" }
+    var glassReduceTransparency by configurationStore.boolean(Key.GLASS_REDUCE_TRANSPARENCY)
     var nightTheme by configurationStore.stringToInt(Key.NIGHT_THEME)
     var serviceMode by configurationStore.string(Key.SERVICE_MODE) { Key.MODE_VPN }
 

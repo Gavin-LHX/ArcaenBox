@@ -90,7 +90,7 @@ def assert_connect_button_visible(button):
         raise AssertionError('Connect button is covered despite accessible bounds')
 
 
-def assert_disconnected_footer(doc=None):
+def assert_disconnected_footer(doc=None, flat_background=True):
     """Idle screens show only the A button, without text or a separate bottom strip."""
     import io
     from PIL import Image
@@ -100,6 +100,8 @@ def assert_disconnected_footer(doc=None):
     button = find(doc, resource_id=PACKAGE + ':id/fab')
     assert button is not None, 'Idle connect button missing'
     assert_connect_button_visible(button)
+    if not flat_background:
+        return button
     pixels = Image.open(io.BytesIO(adb('exec-out', 'screencap', '-p', binary=True))).convert('RGB')
     width, height = pixels.size
     top = max(0, bounds(button)[1] - (bounds(button)[3] - bounds(button)[1]))
@@ -364,13 +366,13 @@ def profile():
     adb('shell','input','keyevent','BACK')
 
 
-def service():
+def service(flat_background=True):
     launch()
     # Only the isolated emulator grants VPN consent. No real proxy is used.
     adb('shell', 'appops', 'set', PACKAGE, 'ACTIVATE_VPN', 'allow')
     tap(wait_for(resource_id=PACKAGE + ':id/profile_name'))
     button=wait_for(resource_id=PACKAGE + ':id/fab',enabled='true')
-    assert_disconnected_footer()
+    assert_disconnected_footer(flat_background=flat_background)
     tap(button)
     deadline=time.monotonic()+25
     while time.monotonic()<deadline:
@@ -408,7 +410,7 @@ def service():
         time.sleep(.5)
     else:
         raise AssertionError('VPN foreground service or TUN interface did not stop')
-    assert_disconnected_footer()
+    assert_disconnected_footer(flat_background=flat_background)
     capture('06-light-service-stopped')
 
 
@@ -654,6 +656,8 @@ def main():
         import bottom_edges
         import sys
         run_check('bottom-edges', lambda: bottom_edges.check(sys.modules[__name__]))
+        import liquid_glass_smoke
+        run_check('liquid-glass', lambda: liquid_glass_smoke.check(sys.modules[__name__]))
         if 'core-download' in ONLY_CHECKS:
             run_check('core-download', core_download)
         adb('shell','cmd','uimode','night','yes')

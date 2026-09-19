@@ -37,10 +37,12 @@ object Theme {
 
     fun apply(context: Context) {
         context.setTheme(getTheme())
+        if (DataStore.interfaceStyle == "liquid_glass") context.theme.applyStyle(R.style.ThemeOverlay_ArcaenBox_LiquidGlass, true)
     }
 
     fun applyDialog(context: Context) {
         context.setTheme(getDialogTheme())
+        if (DataStore.interfaceStyle == "liquid_glass") context.theme.applyStyle(R.style.ThemeOverlay_ArcaenBox_LiquidGlass, true)
     }
 
     fun getTheme(): Int {
