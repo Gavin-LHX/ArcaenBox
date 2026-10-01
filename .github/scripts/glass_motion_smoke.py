@@ -122,7 +122,20 @@ def check_switch(ui):
         thumb_radius = round((r-l)*14/52)
         off_center, on_center = l+thumb_radius, r-thumb_radius
         start, end = (on_center,off_center) if checked else (off_center,on_center)
-        adb('shell','input','swipe',str(start),str(sy),str(end),str(sy),str(slow_drag_ms))
+        # Android's timed `input swipe` includes blocking DOWN dispatch in its time
+        # budget and can emit no MOVE events on a busy software-rendered emulator.
+        # Await every event, keeping DOWN held beyond the parent's long-press timeout.
+        adb('shell','input','motionevent','DOWN',str(start),str(sy))
+        try:
+            time.sleep(slow_drag_ms/1000)
+            # Cross native touch slop early enough to retain over half a track of
+            # movement after SwitchCompat transitions from DOWN into DRAGGING.
+            for fraction in (.20, .36, .52, .68, .84, 1.0):
+                px = round(start+(end-start)*fraction)
+                adb('shell','input','motionevent','MOVE',str(px),str(sy))
+                time.sleep(.06)
+        finally:
+            adb('shell','input','motionevent','UP',str(end),str(sy))
         checked = not checked
         state(checked)
         ui.capture(f'glass-motion-switch-drag-{index+1}')

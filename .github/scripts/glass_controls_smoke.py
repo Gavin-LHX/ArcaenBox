@@ -42,10 +42,12 @@ def check(ui):
     l,t,r,b = ui.bounds(pager)
     # Swipe the page's open area, not an export button with its own drag feedback.
     y = b-(b-t)//5
-    start, end = l+(r-l)//5, l+4*(r-l)//5
+    start, end = l+(r-l)//10, l+9*(r-l)//10
     # Android's timed swipe includes synchronous DOWN dispatch in its deadline;
     # a slow emulator frame can exhaust 450 ms before any MOVE is injected.
     # Await every position so this remains a real page drag under that load.
+    # RecyclerView discards the first MOVE while taking ownership. Travel far
+    # enough that the remaining drag exceeds half a page without needing a fling.
     try:
         adb('shell','input','motionevent','DOWN',str(start),str(y))
         for step in range(1, 7):

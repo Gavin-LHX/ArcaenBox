@@ -19,6 +19,7 @@ import androidx.vectordrawable.graphics.drawable.Animatable2Compat
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.progressindicator.BaseProgressIndicator
+import com.google.android.material.shape.RelativeCornerSize
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.getColorAttr
@@ -42,6 +43,11 @@ class ServiceButton @JvmOverloads constructor(
 
     init {
         if (glass != null) {
+            // Match the 56dp glass circle while keeping native ripple, focus and
+            // pressed-state feedback inside the same outline.
+            shapeAppearanceModel = shapeAppearanceModel.toBuilder()
+                .setAllCornerSizes(RelativeCornerSize(.5f))
+                .build()
             backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             imageTintList = ColorStateList.valueOf(context.getColorAttr(R.attr.colorOnSurface))
             compatElevation = 0f
