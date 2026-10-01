@@ -57,13 +57,16 @@ class GlassDrawable(
     }
 
     override fun draw(canvas: Canvas) {
-        if (rect.isEmpty) return
+        if (rect.isEmpty || opacity == 0) return
+        // Composite opacity once, including the captured backdrop. Fading the
+        // individual paints leaves the RenderNode opaque and stacks their alpha.
+        val composite = if (opacity < 255) canvas.saveLayerAlpha(rect, opacity) else canvas.save()
         val save = canvas.save()
         canvas.clipPath(path)
         if (reduced || renderer == null || !canvas.isHardwareAccelerated) {
             paint.shader = null
             paint.color = if (reduced) surface else ColorUtils.blendARGB(surface, if (dark) 0xFF294453.toInt() else Color.WHITE, .45f)
-            paint.alpha = opacity
+            paint.alpha = 255
             canvas.drawPath(path, paint)
         } else if (Build.VERSION.SDK_INT >= 31) {
             canvas.translate(rect.left, rect.top)
@@ -74,7 +77,7 @@ class GlassDrawable(
                 underlay?.invoke(backdrop)
             }
             canvas.translate(-rect.left, -rect.top)
-            paint.shader = wash; paint.alpha = (opacity * (1f - press * .4f)).toInt()
+            paint.shader = wash; paint.alpha = (255 * (1f - press * .4f)).toInt()
             canvas.drawPath(path, paint)
         }
         if (press > 0f && !reduced) {
@@ -84,18 +87,19 @@ class GlassDrawable(
             lightMatrix.postTranslate(rect.left + lightX * rect.width(), rect.top + lightY * rect.height())
             glow.setLocalMatrix(lightMatrix)
             paint.shader = glow
-            paint.alpha = (opacity * press * (if (dark) .35f else .55f)).toInt()
+            paint.alpha = (255 * press * (if (dark) .35f else .55f)).toInt()
             canvas.drawPath(path, paint)
         }
         canvas.restoreToCount(save)
         paint.shader = highlight
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = density * (1f + press * .5f)
-        paint.alpha = opacity
+        paint.alpha = 255
         val edge = RectF(rect).apply { inset(paint.strokeWidth / 2, paint.strokeWidth / 2) }
         canvas.drawRoundRect(edge, radius, radius, paint)
         paint.style = Paint.Style.FILL
         paint.shader = null
+        canvas.restoreToCount(composite)
     }
 
     override fun setAlpha(alpha: Int) {
@@ -103,6 +107,7 @@ class GlassDrawable(
         opacity = alpha
         invalidateSelf()
     }
+    override fun getAlpha() = opacity
     override fun setColorFilter(colorFilter: ColorFilter?) = Unit
     @Deprecated("Deprecated in Android") override fun getOpacity() = PixelFormat.TRANSLUCENT
 }

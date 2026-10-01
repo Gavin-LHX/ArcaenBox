@@ -70,20 +70,7 @@ def _check(ui):
     assert 'isForeground=true' not in adb('shell','dumpsys','activity','services',ui.PACKAGE), 'Cancelled drag started the VPN'
     assert ui.bounds(ui.wait_for(resource_id=ui.PACKAGE+':id/fab')) == (left,top,right,bottom), 'Button hit target moved after release'
 
-    # The same native switch supports tap and thumb dragging; a drag updates its actual state.
-    ui.navigate('nav_route')
-    switch = ui.wait_for(resource_id=ui.PACKAGE+':id/enable', enabled='true')
-    original = switch.get('checked') == 'true'
-    l,t,r,b = ui.bounds(switch)
-    sy = (t+b)//2
-    start, end = (r-12,l+12) if original else (l+12,r-12)
-    adb('shell','input','swipe',str(start),str(sy),str(end),str(sy),'400')
-    changed = ui.wait_for(resource_id=ui.PACKAGE+':id/enable')
-    assert (changed.get('checked') == 'true') != original, 'Glass switch thumb drag did not change the rule'
-    ui.capture('glass-motion-switch-changed')
-    ui.tap(changed)
-    restored = ui.wait_for(resource_id=ui.PACKAGE+':id/enable')
-    assert (restored.get('checked') == 'true') == original, 'Switch tap failed to restore the rule'
+    switch_results = check_switch(ui)
 
     ui.navigate('nav_configuration')
     old = adb('shell','settings','get','global','animator_duration_scale').strip()
@@ -100,4 +87,84 @@ def _check(ui):
         if old == 'null': adb('shell','settings','delete','global','animator_duration_scale')
         else: adb('shell','settings','put','global','animator_duration_scale',old)
     return {'press':True, 'drag_highlight':True, 'spring_return':True, 'cancel_no_connect':True,
-            'switch_drag_and_tap':True, 'system_reduce_motion':True}
+            **switch_results, 'system_reduce_motion':True}
+
+
+def check_switch(ui):
+    """Catch a RecyclerView long press stealing the tap following a thumb drag."""
+    adb = ui.adb
+    assert adb('get-serialno').strip().startswith('emulator-')
+    ui.navigate('nav_route')
+    switch = ui.wait_for(resource_id=ui.PACKAGE+':id/enable', enabled='true')
+    identity = {'resource_id':ui.PACKAGE+':id/enable', 'content_desc':switch.get('content-desc'), 'enabled':'true'}
+    assert identity['content_desc'], 'Rule switch needs a stable accessible identity'
+    original = switch.get('checked') == 'true'
+    original_bounds = ui.bounds(switch)
+    long_press = adb('shell','settings','get','secure','long_press_timeout').strip()
+    slow_drag_ms = max(800, (int(long_press) if long_press.isdigit() else 500) + 250)
+
+    def state(expected):
+        # Wait for the same rule's state; another unchecked rule cannot satisfy this check.
+        node = ui.wait_for(**identity, checked=str(expected).lower())
+        assert ui.bounds(node) == original_bounds, 'Switch gesture moved the rule or its hit target'
+        return node
+
+    # Both directions exceed the parent's long-press timeout. No extra tap is allowed to
+    # dismiss a stray row-drag state before the native switch receives its next tap.
+    checked = original
+    for index in range(2):
+        node = state(checked)
+        l,t,r,b = ui.bounds(node)
+        sy = (t+b)//2
+        start, end = (r-12,l+12) if checked else (l+12,r-12)
+        adb('shell','input','swipe',str(start),str(sy),str(end),str(sy),str(slow_drag_ms))
+        checked = not checked
+        state(checked)
+        ui.capture(f'glass-motion-switch-drag-{index+1}')
+        # Four consecutive taps must all toggle; the fourth leaves the drag's result.
+        for _ in range(4):
+            ui.tap(state(checked))
+            checked = not checked
+            state(checked)
+    assert checked == original, 'Switch sequence did not restore the original rule state'
+    ui.capture('glass-motion-switch-restored')
+
+    def cards():
+        doc = ui.tree()
+        route_list = ui.find(doc, resource_id=ui.PACKAGE+':id/route_list')
+        result = []
+        for card in route_list.iter('node'):
+            if card.get('resource-id') != ui.PACKAGE+':id/content': continue
+            title = ui.find(card, resource_id=ui.PACKAGE+':id/profile_name')
+            if title is not None: result.append((card, title))
+        assert len(result) >= 2, 'Reorder regression needs two visible fixture rules'
+        return result
+
+    def first_two_names():
+        return [title.get('text') for _, title in cards()[:2]]
+
+    def move_first_below_second():
+        first, second = cards()[:2]
+        l,t,r,b = ui.bounds(first[0])
+        _,ty,_,tb = ui.bounds(first[1])
+        px,py = l+(r-l)//3,(ty+tb)//2  # Card title, away from edit and switch.
+        target = ui.bounds(second[0])[3]-20
+        adb('shell','input','motionevent','DOWN',str(px),str(py))
+        try:
+            time.sleep(slow_drag_ms/1000)
+            for y in ((py+target)//2, target):
+                adb('shell','input','motionevent','MOVE',str(px),str(y))
+                time.sleep(.15)
+        finally:
+            adb('shell','input','motionevent','UP',str(px),str(target))
+        time.sleep(.5)
+
+    order = first_two_names()
+    assert order[0] != order[1], 'Reorder fixture rule names must differ'
+    move_first_below_second()
+    assert first_two_names() == order[::-1], 'Ordinary row long-press reorder stopped working'
+    ui.capture('glass-motion-rule-reordered')
+    move_first_below_second()
+    assert first_two_names() == order, 'Reorder did not restore the original fixture order'
+    return {'switch_slow_drag_both_directions':True, 'switch_repeated_taps':True,
+            'switch_stable_hit_target':True, 'rule_long_press_reorder':True}

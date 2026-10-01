@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import com.google.android.material.button.MaterialButton
@@ -17,6 +19,14 @@ class GlassButton @JvmOverloads constructor(
 ) : MaterialButton(context, attrs) {
     private val glass = if (DataStore.interfaceStyle == "liquid_glass") GlassDrawable(this, radiusDp = 28f) else null
     private val touch = glass?.let { GlassTouch(this, it, transform = true) }
+    private val focusPaint = glass?.let {
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 2 * resources.displayMetrics.density
+            color = context.getColorAttr(R.attr.colorPrimary)
+        }
+    }
+    private val focusBounds = RectF()
 
     init {
         if (glass != null) {
@@ -51,6 +61,23 @@ class GlassButton @JvmOverloads constructor(
             }
         }
         super.onDraw(canvas)
+        // The glass is drawn above MaterialButton's background ripple. Keep a
+        // visible focus/hover ring above it for keyboard and pointer navigation.
+        if (isEnabled && (isFocused || isHovered)) focusPaint?.let { paint ->
+            val density = resources.displayMetrics.density
+            val inset = paint.strokeWidth / 2
+            focusBounds.set(1f + inset, 6 * density + inset, width - 1f - inset, height - 6 * density - inset)
+            if (!focusBounds.isEmpty) {
+                paint.alpha = if (isFocused) 255 else 160
+                val radius = minOf(28 * density, focusBounds.width() / 2, focusBounds.height() / 2)
+                canvas.drawRoundRect(focusBounds, radius, radius, paint)
+            }
+        }
+    }
+
+    override fun drawableStateChanged() {
+        super.drawableStateChanged()
+        if (glass != null) invalidate()
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

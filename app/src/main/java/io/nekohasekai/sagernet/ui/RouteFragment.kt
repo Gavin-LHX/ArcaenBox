@@ -1,8 +1,10 @@
 package io.nekohasekai.sagernet.ui
 
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.Toolbar
@@ -50,12 +52,31 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
         ruleListView.adapter = ruleAdapter
         undoManager = UndoSnackbarManager(activity, ruleAdapter)
 
+        // Observe DOWN before ItemTouchHelper. A child switch can disallow interception,
+        // leaving ItemTouchHelper's long-press detector without the corresponding UP.
+        // Keep switch gestures excluded until the next DOWN, including a delayed long press.
+        var switchGesture = false
+        val switchBounds = Rect()
+        ruleListView.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
+            override fun onInterceptTouchEvent(recyclerView: RecyclerView, event: MotionEvent): Boolean {
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    val item = recyclerView.findChildViewUnder(event.x, event.y)
+                    val holder = item?.let { recyclerView.getChildViewHolder(it) } as? RuleAdapter.RuleHolder
+                    switchGesture = holder?.enableSwitch?.let { control ->
+                        control.isEnabled && control.getGlobalVisibleRect(switchBounds) &&
+                            switchBounds.contains(event.rawX.toInt(), event.rawY.toInt())
+                    } == true
+                }
+                return false
+            }
+        })
+
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.START) {
 
             override fun getSwipeDirs(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
-            ) = if (viewHolder is RuleAdapter.DocumentHolder || DataStore.routePreset != "custom") {
+            ) = if (switchGesture || viewHolder is RuleAdapter.DocumentHolder || DataStore.routePreset != "custom") {
                 0
             } else {
                 super.getSwipeDirs(recyclerView, viewHolder)
@@ -64,7 +85,7 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
             override fun getDragDirs(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
-            ) = if (viewHolder is RuleAdapter.DocumentHolder || DataStore.routePreset != "custom") {
+            ) = if (switchGesture || viewHolder is RuleAdapter.DocumentHolder || DataStore.routePreset != "custom") {
                 0
             } else {
                 super.getDragDirs(recyclerView, viewHolder)
