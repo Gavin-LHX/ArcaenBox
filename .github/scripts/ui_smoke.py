@@ -667,6 +667,8 @@ def main():
         run_check('liquid-glass', lambda: liquid_glass_smoke.check(sys.modules[__name__]))
         import glass_controls_smoke
         run_check('glass-controls', lambda: glass_controls_smoke.check(sys.modules[__name__]))
+        import glass_focus_smoke
+        run_check('glass-focus', lambda: glass_focus_smoke.check(sys.modules[__name__]))
         if 'core-download' in ONLY_CHECKS:
             run_check('core-download', core_download)
         adb('shell','cmd','uimode','night','yes')

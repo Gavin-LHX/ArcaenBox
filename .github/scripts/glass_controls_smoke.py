@@ -15,6 +15,7 @@ def check(ui):
         ui.tap(ui.wait_for(text=name, resource_id='android:id/text1'))
         time.sleep(1)
         ui.wait_for(text=ui.STRINGS['interface_style'])
+        ui.wait_for(text=name, resource_id='android:id/summary')
 
     ui.launch()
     style('Liquid Glass')
