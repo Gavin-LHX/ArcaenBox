@@ -42,7 +42,18 @@ def check(ui):
     l,t,r,b = ui.bounds(pager)
     # Swipe the page's open area, not an export button with its own drag feedback.
     y = b-(b-t)//5
-    adb('shell','input','swipe',str(l+(r-l)//5),str(y),str(l+4*(r-l)//5),str(y),'450')
+    start, end = l+(r-l)//5, l+4*(r-l)//5
+    # Android's timed swipe includes synchronous DOWN dispatch in its deadline;
+    # a slow emulator frame can exhaust 450 ms before any MOVE is injected.
+    # Await every position so this remains a real page drag under that load.
+    try:
+        adb('shell','input','motionevent','DOWN',str(start),str(y))
+        for step in range(1, 7):
+            x = start+(end-start)*step//6
+            adb('shell','input','motionevent','MOVE',str(x),str(y))
+            time.sleep(.075)
+    finally:
+        adb('shell','input','motionevent','UP',str(end),str(y))
     ui.wait_for(text=ui.STRINGS['network'], selected='true')
     time.sleep(.5)
     assert ui.find(ui.tree(),resource_id=ui.PACKAGE+':id/action_export') is None
