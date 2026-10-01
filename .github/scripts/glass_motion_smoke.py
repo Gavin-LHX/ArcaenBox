@@ -116,7 +116,12 @@ def check_switch(ui):
         node = state(checked)
         l,t,r,b = ui.bounds(node)
         sy = (t+b)//2
-        start, end = (r-12,l+12) if checked else (l+12,r-12)
+        # Drag between the native thumb centers (28dp thumb / 52dp track).
+        # Starting at the outer right edge can enter Android's system back-gesture
+        # zone, leaving Route instead of sending the gesture to the switch.
+        thumb_radius = round((r-l)*14/52)
+        off_center, on_center = l+thumb_radius, r-thumb_radius
+        start, end = (on_center,off_center) if checked else (off_center,on_center)
         adb('shell','input','swipe',str(start),str(sy),str(end),str(sy),str(slow_drag_ms))
         checked = not checked
         state(checked)
