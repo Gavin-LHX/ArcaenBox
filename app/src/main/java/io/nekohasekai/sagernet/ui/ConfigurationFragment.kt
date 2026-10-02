@@ -14,6 +14,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.Menu
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import io.nekohasekai.sagernet.bg.proto.NodeTestKind
@@ -24,6 +25,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
@@ -1482,8 +1484,20 @@ class ConfigurationFragment @JvmOverloads constructor(
                                 java.text.DateFormat.getDateTimeInstance().format(java.util.Date(result.testedAt)) +
                                 if (result.error.isBlank()) "" else "\n${result.error}"
                         }
-                        MaterialAlertDialogBuilder(view.context).setTitle(proxyEntity.displayName())
-                            .setMessage(details).setPositiveButton(android.R.string.ok, null).show()
+                        val title = proxyEntity.displayName()
+                        MaterialAlertDialogBuilder(view.context).setTitle(title)
+                            .setMessage(details)
+                            .setPositiveButton(android.R.string.ok, null)
+                            .setNeutralButton(R.string.action_copy, null)
+                            .show().apply {
+                                findViewById<TextView>(android.R.id.message)?.setTextIsSelectable(true)
+                                getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                                    val copied = SagerNet.trySetPrimaryClip("$title\n\n$details")
+                                    Toast.makeText(view.context,
+                                        if (copied) R.string.copy_success else R.string.copy_failed,
+                                        Toast.LENGTH_SHORT).show()
+                                }
+                            }
                     }
                 }
 
