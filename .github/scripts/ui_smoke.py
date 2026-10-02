@@ -652,6 +652,8 @@ def main():
         run_check('simplified-ui', lambda: simplified_ui.check(__import__('sys').modules[__name__]))
         run_check('settings', settings)
         run_check('profile', profile)
+        import profile_refresh_smoke
+        run_check('profile-refresh', lambda: profile_refresh_smoke.check(__import__('sys').modules[__name__]))
         run_check('service', service)
         run_check('backup', backup)
         run_check('whitelist', whitelist)

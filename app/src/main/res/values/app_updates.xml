@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_update_title">Update ArcaenBox</string>
+    <string name="app_update_available">Current version: %1$s\nNew version: %2$s\n\nDownload and verify the update in ArcaenBox, then confirm installation in Android.</string>
+    <string name="app_update_download">Download update</string>
+    <string name="app_update_install">Install</string>
+    <string name="app_update_retry">Retry download</string>
+    <string name="app_update_preparing">Preparing a compatible update…</string>
+    <string name="app_update_downloading">Downloading… %1$d%%</string>
+    <string name="app_update_verifying">Verifying download and app signature…</string>
+    <string name="app_update_ready">%1$s · %2$s\n\nThe update is verified and ready to install. Android may first ask you to allow installation from ArcaenBox.</string>
+    <string name="app_update_permission_denied">Installation permission was not granted. Tap Install to open Android settings and try again.</string>
+    <string name="app_update_install_returned">Installation was not completed. You can tap Install to try again.</string>
+    <string name="app_update_installer_missing">Could not open the Android installer or installation settings. Tap Install to retry.</string>
+    <string name="app_update_abi">This release does not contain an APK compatible with this app and device.</string>
+    <string name="app_update_invalid">The update file or release information is invalid. Please retry.</string>
+    <string name="app_update_checksum_missing">This release has no unique SHA-256 checksum for the selected APK. Installation was blocked.</string>
+    <string name="app_update_checksum">The APK checksum does not match. Please download it again.</string>
+    <string name="app_update_package">This APK belongs to another app. Installation was blocked.</string>
+    <string name="app_update_version">This APK does not match the release, or is not newer than the installed version.</string>
+    <string name="app_update_signature">This APK was not signed with the current app signing certificate. Installation was blocked.</string>
+    <string name="app_update_storage">There is not enough free storage, or the update file could not be saved.</string>
+</resources>

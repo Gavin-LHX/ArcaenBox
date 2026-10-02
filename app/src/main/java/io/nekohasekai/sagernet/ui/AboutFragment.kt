@@ -226,7 +226,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                 .setMessage(message).setPositiveButton(android.R.string.ok,null).show()
         }
         fun checkUpdate(checkPreview: Boolean) {
-            if (checking) return
+            if (checking || parentFragmentManager.findFragmentByTag(AppUpdateDialogFragment.TAG) != null) return
             checking = true
             Toast.makeText(requireContext(),R.string.update_checking,Toast.LENGTH_SHORT).show()
             viewLifecycleOwner.lifecycleScope.launch {
@@ -242,8 +242,10 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                     if (available != null && (current == null || available > current)) {
                         MaterialAlertDialogBuilder(context)
                             .setTitle(R.string.update_dialog_title)
-                            .setMessage(getString(R.string.update_dialog_message,SagerNet.appVersionNameForDisplay,release.tag))
-                            .setPositiveButton(R.string.yes) { _, _ -> context.startActivity(Intent(Intent.ACTION_VIEW,release.url.toUri())) }
+                            .setMessage(getString(R.string.app_update_available,SagerNet.appVersionNameForDisplay,release.tag))
+                            .setPositiveButton(R.string.app_update_download) { _, _ ->
+                                AppUpdateDialogFragment.newInstance(release).show(parentFragmentManager, AppUpdateDialogFragment.TAG)
+                            }
                             .setNegativeButton(R.string.no,null).show()
                     } else {
                         updateMessage(R.string.check_update_no)

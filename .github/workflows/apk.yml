@@ -18,6 +18,10 @@ on:
       ui_checks:
         description: Optional focused checks after an existing full UI regression (blank runs all)
         required: false
+      updater_fixture:
+        description: Also build an isolated older-version QA APK for testing the in-app updater
+        type: boolean
+        default: false
       publish:
         description: Publish the verified APKs as a release
         type: boolean
@@ -157,6 +161,20 @@ jobs:
           if-no-files-found: error
       - name: Enable emulator acceleration
         run: sudo chmod a+rw /dev/kvm
+      - name: Build older-version updater QA fixture
+        if: inputs.updater_fixture
+        env:
+          KEYSTORE_PASS: ${{ secrets.ARCAENBOX_KEYSTORE_PASSWORD }}
+          ALIAS_PASS: ${{ secrets.ARCAENBOX_KEYSTORE_PASSWORD }}
+          ALIAS_NAME: arcaenbox
+        run: python3 .github/scripts/build_update_fixture.py
+      - name: Upload updater QA fixture (never publish)
+        if: inputs.updater_fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArcaenBox-updater-QA-fixture
+          path: updater-fixture/
+          if-no-files-found: error
       - name: Verify Material 3 screens on Android 15
         uses: reactivecircus/android-emulator-runner@v2
         env:
