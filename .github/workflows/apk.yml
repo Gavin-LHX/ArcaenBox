@@ -66,6 +66,8 @@ jobs:
           github-token: ${{ github.token }}
       - uses: gradle/actions/setup-gradle@v4
       - name: Prepare assets
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./run init action gradle
       - name: Package built-in protocol components
         if: inputs.builtins_run == ''
