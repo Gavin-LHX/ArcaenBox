@@ -134,10 +134,10 @@ def wait_for(timeout=25, **attrs):
     raise AssertionError(f'Control did not appear: {attrs}')
 
 
-def scroll_for(**attrs):
+def scroll_for(*, expand_categories=True, **attrs):
     """Search long preference lists and forms, stopping at either scroll boundary."""
     # Advanced preferences remain in the same data store, under foldable headers.
-    if 'text' in attrs:
+    if expand_categories and 'text' in attrs:
         ns = '{http://schemas.android.com/apk/res-auto}'
         for category in ET.parse('app/src/main/res/xml/global_preferences.xml').getroot():
             if not category.tag.endswith('ExpandablePreferenceCategory'): continue

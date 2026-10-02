@@ -53,7 +53,9 @@ def check(ui):
     def preference_row(key):
         title = ui.STRINGS[key]
         for _ in range(6):
-            ui.scroll_for(text=title, resource_id='android:id/title')
+            # A node editor has no global-settings foldouts. MTU shares its
+            # label with the global VPN setting, but belongs to this profile.
+            ui.scroll_for(expand_categories=False, text=title, resource_id='android:id/title')
             doc = ui.tree()
             parents = {c: p for p in doc.iter() for c in p}
             row = ui.find(doc, text=title, resource_id='android:id/title')
