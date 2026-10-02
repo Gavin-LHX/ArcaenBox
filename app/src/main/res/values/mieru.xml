@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mieru_handshake_mode">Handshake mode</string>
+    <string name="mieru_automatic">Automatic</string>
+    <string name="mieru_handshake_standard">Standard</string>
+    <string name="mieru_handshake_no_wait">No wait (0-RTT)</string>
+    <string name="mieru_multiplexing">Multiplexing</string>
+    <string name="mieru_multiplexing_off">Off</string>
+    <string name="mieru_multiplexing_low">Low</string>
+    <string name="mieru_multiplexing_middle">Medium</string>
+    <string name="mieru_multiplexing_high">High</string>
+
+    <string-array name="mieru_handshake_mode_names">
+        <item>@string/mieru_automatic</item>
+        <item>@string/mieru_handshake_standard</item>
+        <item>@string/mieru_handshake_no_wait</item>
+    </string-array>
+    <string-array name="mieru_handshake_mode_values" translatable="false">
+        <item>HANDSHAKE_DEFAULT</item>
+        <item>HANDSHAKE_STANDARD</item>
+        <item>HANDSHAKE_NO_WAIT</item>
+    </string-array>
+    <string-array name="mieru_multiplexing_names">
+        <item>@string/mieru_automatic</item>
+        <item>@string/mieru_multiplexing_off</item>
+        <item>@string/mieru_multiplexing_low</item>
+        <item>@string/mieru_multiplexing_middle</item>
+        <item>@string/mieru_multiplexing_high</item>
+    </string-array>
+    <string-array name="mieru_multiplexing_values" translatable="false">
+        <item>MULTIPLEXING_DEFAULT</item>
+        <item>MULTIPLEXING_OFF</item>
+        <item>MULTIPLEXING_LOW</item>
+        <item>MULTIPLEXING_MIDDLE</item>
+        <item>MULTIPLEXING_HIGH</item>
+    </string-array>
+</resources>

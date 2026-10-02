@@ -36,6 +36,22 @@
             app:icon="@drawable/ic_settings_password"
             app:key="serverPassword"
             app:title="@string/password" />
+        <moe.matsuri.nb4a.ui.SimpleMenuPreference
+            app:defaultValue="HANDSHAKE_STANDARD"
+            app:entries="@array/mieru_handshake_mode_names"
+            app:entryValues="@array/mieru_handshake_mode_values"
+            app:icon="@drawable/ic_baseline_compare_arrows_24"
+            app:key="mieruHandshakeMode"
+            app:title="@string/mieru_handshake_mode"
+            app:useSimpleSummaryProvider="true" />
+        <moe.matsuri.nb4a.ui.SimpleMenuPreference
+            app:defaultValue="MULTIPLEXING_LOW"
+            app:entries="@array/mieru_multiplexing_names"
+            app:entryValues="@array/mieru_multiplexing_values"
+            app:icon="@drawable/ic_baseline_add_road_24"
+            app:key="mieruMultiplexing"
+            app:title="@string/mieru_multiplexing"
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:icon="@drawable/baseline_public_24"
             app:key="serverMTU"

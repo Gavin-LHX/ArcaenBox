@@ -7,6 +7,7 @@ import io.nekohasekai.sagernet.fmt.http.parseHttp
 import io.nekohasekai.sagernet.fmt.hysteria.parseHysteria1
 import io.nekohasekai.sagernet.fmt.hysteria.parseHysteria2
 import io.nekohasekai.sagernet.fmt.snell.parseSnell
+import io.nekohasekai.sagernet.fmt.mieru.parseMieru
 import io.nekohasekai.sagernet.fmt.naive.parseNaive
 import io.nekohasekai.sagernet.fmt.parseUniversal
 import io.nekohasekai.sagernet.fmt.shadowsocks.parseShadowsocks
@@ -185,6 +186,8 @@ suspend fun parseProxies(text: String): List<AbstractBean> {
             }
         } else if (startsWith("snell://")) {
             runCatching { entities.add(parseSnell(this)) }.onFailure { Logs.w(it) }
+        } else if (startsWith("mierus://")) {
+            runCatching { entities.add(parseMieru(this)) }.onFailure { Logs.w(it) }
         } else if (startsWith("naive+")) {
             Logs.d("Try parse naive link: $this")
             runCatching {

@@ -28,7 +28,6 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.preference.EditTextPreferenceModifiers
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
-import moe.matsuri.nb4a.ui.SimpleMenuPreference
 
 class MieruSettingsActivity : ProfileSettingsActivity<MieruBean>() {
 
@@ -42,6 +41,8 @@ class MieruSettingsActivity : ProfileSettingsActivity<MieruBean>() {
         DataStore.serverUsername = username
         DataStore.serverPassword = password
         DataStore.serverMTU = mtu
+        DataStore.mieruHandshakeMode = handshakeMode
+        DataStore.mieruMultiplexing = multiplexing
     }
 
     override fun MieruBean.serialize() {
@@ -52,6 +53,8 @@ class MieruSettingsActivity : ProfileSettingsActivity<MieruBean>() {
         username = DataStore.serverUsername
         password = DataStore.serverPassword
         mtu = DataStore.serverMTU
+        handshakeMode = DataStore.mieruHandshakeMode
+        multiplexing = DataStore.mieruMultiplexing
     }
 
     override fun PreferenceFragmentCompat.createPreferences(
@@ -65,12 +68,8 @@ class MieruSettingsActivity : ProfileSettingsActivity<MieruBean>() {
         findPreference<EditTextPreference>(Key.SERVER_PASSWORD)!!.apply {
             summaryProvider = PasswordSummaryProvider
         }
-        val protocol = findPreference<SimpleMenuPreference>(Key.SERVER_PROTOCOL)!!
-        val mtu = findPreference<EditTextPreference>(Key.SERVER_MTU)!!
-        mtu.isVisible = protocol.value.equals("UDP")
-        protocol.setOnPreferenceChangeListener { _, newValue ->
-            mtu.isVisible = newValue.equals("UDP")
-            true
+        findPreference<EditTextPreference>(Key.SERVER_MTU)!!.apply {
+            setOnBindEditTextListener(EditTextPreferenceModifiers.Number)
         }
     }
 

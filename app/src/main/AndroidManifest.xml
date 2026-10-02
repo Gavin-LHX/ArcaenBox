@@ -132,6 +132,7 @@
                 <data android:scheme="trojan" />
                 <data android:scheme="trojan-go" />
                 <data android:scheme="snell" />
+                <data android:scheme="mierus" />
                 <data android:scheme="naive+https" />
                 <data android:scheme="naive+quic" />
                 <data android:scheme="hysteria" />

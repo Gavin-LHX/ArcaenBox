@@ -13,6 +13,7 @@ import io.nekohasekai.sagernet.fmt.hysteria.*
 import io.nekohasekai.sagernet.fmt.internal.ChainBean
 import io.nekohasekai.sagernet.fmt.snell.*
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
+import io.nekohasekai.sagernet.fmt.mieru.toUri
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
 import io.nekohasekai.sagernet.fmt.naive.buildNaiveConfig
@@ -260,6 +261,7 @@ data class ProxyEntity(
             is TrojanBean -> toUriVMessVLESSTrojan(true)
             is TrojanGoBean -> toUri()
             is SnellBean -> toUri()
+            is MieruBean -> toUri()
             is NaiveBean -> toUri()
             is HysteriaBean -> toUri()
             is TuicBean -> toUri()
