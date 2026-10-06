@@ -15,11 +15,14 @@ import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.danielstone.materialaboutlibrary.MaterialAboutFragment
+import com.danielstone.materialaboutlibrary.adapters.MaterialAboutListAdapter
 import com.danielstone.materialaboutlibrary.items.MaterialAboutActionItem
 import com.danielstone.materialaboutlibrary.model.MaterialAboutCard
 import com.danielstone.materialaboutlibrary.model.MaterialAboutList
+import com.danielstone.materialaboutlibrary.util.DefaultViewTypeManager
 import io.nekohasekai.sagernet.BuildConfig
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.databinding.LayoutAboutBinding
@@ -46,32 +49,34 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
         ViewCompat.setOnApplyWindowInsetsListener(view, ListListener)
         toolbar.setTitle(R.string.menu_about)
 
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.about_fragment_holder, AboutContent())
-            .commitAllowingStateLoss()
+        if (childFragmentManager.findFragmentById(R.id.about_fragment_holder) == null) {
+            childFragmentManager.beginTransaction()
+                .replace(R.id.about_fragment_holder, AboutContent())
+                .commit()
+        }
 
-        runOnDefaultDispatcher {
-            val license = view.context.assets.open("LICENSE").bufferedReader().readText()
-            onMainDispatcher {
-                binding.license.text = license
-                Linkify.addLinks(binding.license, Linkify.EMAIL_ADDRESSES or Linkify.WEB_URLS)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val license = withContext(Dispatchers.IO) {
+                view.context.assets.open("LICENSE").bufferedReader().use { it.readText() }
             }
+            binding.license.text = license
+            Linkify.addLinks(binding.license, Linkify.EMAIL_ADDRESSES or Linkify.WEB_URLS)
         }
     }
 
-    class AboutContent : MaterialAboutFragment() {
+    class AboutContent : Fragment(com.danielstone.materialaboutlibrary.R.layout.mal_material_about_content) {
 
         val requestIgnoreBatteryOptimizations = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { (resultCode, _) ->
-            if (resultCode == Activity.RESULT_OK) {
+            if (resultCode == Activity.RESULT_OK && isAdded && view != null && !parentFragmentManager.isStateSaved) {
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.about_fragment_holder, AboutContent())
                     .commitAllowingStateLoss()
             }
         }
 
-        override fun getMaterialAboutList(activityContext: Context): MaterialAboutList {
+        private fun buildAboutList(activityContext: Context): MaterialAboutList {
             return MaterialAboutList.Builder()
                 .addCard(
                     MaterialAboutCard.Builder()
@@ -104,7 +109,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                         .addItem(
                             MaterialAboutActionItem.Builder()
                                 .icon(R.drawable.ic_baseline_layers_24)
-                                .text(getString(R.string.version_x, "sing-box"))
+                                .text(activityContext.getString(R.string.version_x, "sing-box"))
                                 .subText(Libcore.versionBox())
                                 .setOnClickAction { (requireActivity() as MainActivity).displayFragment(CoreUpdatesFragment()) }
                                 .build())
@@ -139,7 +144,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                         MaterialAboutActionItem.Builder()
                                             .icon(R.drawable.ic_baseline_nfc_24)
                                             .text(
-                                                getString(
+                                                activityContext.getString(
                                                     R.string.version_x,
                                                     pluginId
                                                 ) + " (${Plugins.displayExeProvider(pkg.packageName)})"
@@ -215,9 +220,24 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
+            val adapter = MaterialAboutListAdapter(DefaultViewTypeManager())
             view.findViewById<RecyclerView>(R.id.mal_recyclerview).apply {
                 overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+                layoutManager = LinearLayoutManager(context)
+                this.adapter = adapter
             }
+            // The library's AsyncTask can outlive a detached Fragment. Capture
+            // the context while attached and discard work when this view dies.
+            val activityContext = view.context
+            LatestSnapshotLoader(viewLifecycleOwner.lifecycleScope,
+                load = { withContext(Dispatchers.Default) { buildAboutList(activityContext) } },
+                apply = { adapter.setData(it.cards) },
+            ).reload()
+        }
+
+        override fun onDestroyView() {
+            view?.findViewById<RecyclerView>(R.id.mal_recyclerview)?.adapter = null
+            super.onDestroyView()
         }
 
         private var checking = false

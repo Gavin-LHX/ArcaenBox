@@ -659,6 +659,9 @@ def main():
         run_check('whitelist', whitelist)
         run_check('launcher', launcher_icon)
         run_check('app-updates', app_updates)
+        import about_lifecycle_smoke
+        run_check('about-lifecycle', lambda: about_lifecycle_smoke.check(__import__('sys').modules[__name__]))
+        run_check('crash-export', lambda: about_lifecycle_smoke.crash_export(__import__('sys').modules[__name__]))
         run_check('core-switch', core_switch)
         run_check('test-presets', test_presets)
         run_check('vless-import', vless_import)
