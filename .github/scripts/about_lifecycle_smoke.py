@@ -13,7 +13,7 @@ def check(ui):
         ui.navigate('nav_about')
         ui.wait_for(text=ui.STRINGS['check_update_release'])
         dump = ui.adb('shell', 'dumpsys', 'activity', 'top')
-        assert 'mParent=AboutFragment{' in dump, 'About content is not a child of the About page'
+        assert 'mParentFragment=AboutFragment{' in dump, 'About content is not a child of the About page'
         return dump
 
     def leave():
