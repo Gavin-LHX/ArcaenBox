@@ -150,14 +150,12 @@ suspend fun parseProxies(text: String): List<AbstractBean> {
                 throw (SubscriptionFoundException(clashUrl))
             }
         } else if (startsWith("vmess://")) {
-            Logs.d("Try parse v2ray link: $this")
             runCatching {
                 entities.add(parseV2Ray(this))
             }.onFailure {
                 Logs.w(it)
             }
         } else if (startsWith("vless://")) {
-            Logs.d("Try parse vless link: $this")
             runCatching {
                 entities.add(parseV2Ray(this))
             }.onFailure {

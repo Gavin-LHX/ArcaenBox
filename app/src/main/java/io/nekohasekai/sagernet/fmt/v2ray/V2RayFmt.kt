@@ -526,7 +526,7 @@ fun StandardV2RayBean.toUriVMessVLESSTrojan(isTrojan: Boolean): String {
     }
 
     if (name.isNotBlank()) {
-        builder.encodedFragment(name.urlSafe())
+        builder.fragment(name)
     }
 
     return builder.toLink(if (isTrojan) "trojan" else "vless")
