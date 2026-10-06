@@ -80,6 +80,7 @@ Only resolving outbound, i.e. nodes, is supported. Information such as diversion
 Core:
 
 - [SagerNet/sing-box](https://github.com/SagerNet/sing-box)
+- [XTLS/Xray-core](https://github.com/XTLS/Xray-core) — VLESS FinalMask Sudoku
 
 Android GUI:
 

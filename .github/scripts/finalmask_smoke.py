@@ -88,3 +88,6 @@ def check(ui):
         except subprocess.TimeoutExpired: server.kill(); server.wait()
         log.close(); origin.shutdown(); origin.server_close()
         stopped.set(); time.sleep(1.1); udp.close()
+        # Keep runtime proof, not another copy of the upstream executable.
+        (out / 'xray').unlink(missing_ok=True)
+        archive.unlink(missing_ok=True)
