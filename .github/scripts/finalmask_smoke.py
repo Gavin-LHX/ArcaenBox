@@ -13,7 +13,9 @@ from pathlib import Path
 
 def check(ui):
     assert ui.adb('get-serialno').strip().startswith('emulator-'), 'Requires an isolated emulator'
+    evidence_dir = ui.OUT
     import protocol_smoke as p
+    ui.OUT = evidence_dir
     p.ui = ui
     p.OUT = ui.OUT / 'finalmask'
     p.OUT.mkdir(exist_ok=True)
