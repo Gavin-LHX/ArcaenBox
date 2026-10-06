@@ -40,20 +40,21 @@ fun StandardV2RayBean.setTLS(boolean: Boolean) {
 }
 
 fun parseV2Ray(link: String): StandardV2RayBean {
-    // Try parse stupid formats first
-
-    if (!link.contains("?")) {
-        try {
-            return parseV2RayN(link)
-        } catch (e: Exception) {
-            Logs.i("try v2rayN: " + e.readableMessage)
+    // Only legacy VMess payloads are base64. Do not run VLESS or standard
+    // authority-form links through a decoder (or log their credentials).
+    if (link.startsWith("vmess://") && !link.substringBefore("?").contains("@")) {
+        if (!link.contains("?")) {
+            try {
+                return parseV2RayN(link)
+            } catch (e: Exception) {
+                Logs.i("try v2rayN: " + e.readableMessage)
+            }
         }
-    }
-
-    try {
-        return tryResolveVmess4Kitsunebi(link)
-    } catch (e: Exception) {
-        Logs.i("try Kitsunebi: " + e.readableMessage)
+        try {
+            return tryResolveVmess4Kitsunebi(link)
+        } catch (e: Exception) {
+            Logs.i("try Kitsunebi: " + e.readableMessage)
+        }
     }
 
     // "std" format
