@@ -59,7 +59,7 @@ https://matsuridayo.github.io
 * Snell v4/v5（内置，可选择服务端版本 / built-in, selectable server version）
 * Snell v6 RC2（内置测试版 / built-in preview）
 
-Trojan-Go、NaïveProxy、Mieru 和 Snell 无需安装插件。[内置组件版本、Snell v5 兼容范围与构建说明](docs/built-in-protocols.md)。Hysteria 1 的特殊模式仍使用可选插件。
+Trojan-Go、NaïveProxy、Mieru 和 Snell 无需安装插件。[内置组件版本、Snell v5 兼容范围与构建说明](docs/built-in-protocols.md)。[VLESS + FinalMask + Sudoku（TCP）](docs/vless-sudoku.md) 使用内置 Xray，支持含 `fm` 参数的分享链接。Hysteria 1 的特殊模式仍使用可选插件。
 
 Trojan-Go, NaïveProxy, Mieru and Snell ship in the APK. Snell v5 servers use the v4-compatible transport; v5-specific QUIC is not implemented. Special Hysteria 1 modes still use an optional plugin.
 

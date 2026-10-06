@@ -73,8 +73,7 @@ def check(ui):
         ui.tap(ui.scroll_for(text='FinalMask · Sudoku (TCP)', expand_categories=False))
         editor = ui.wait_for(resource_id='android:id/edit')
         assert json.loads(editor.get('text')) == mask, 'Database/editor lost FinalMask settings'
-        ui.adb('shell', 'input', 'keyevent', 'BACK')
-        ui.adb('shell', 'input', 'keyevent', 'BACK')
+        ui.tap(ui.wait_for(resource_id='android:id/button2'))
         p.save()
         p.traffic(name, 'libxray.so', True)
         # Restart validates process cleanup and reload from stored profile data.
