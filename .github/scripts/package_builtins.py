@@ -105,6 +105,21 @@ def main():
         check_elf(data, abi)
         entry['sha256'][abi] = sha(data)
     manifest['components'].append(entry)
+    xray = lock['xray']
+    with tarfile.open(fileobj=io.BytesIO(fetch(xray, cache)), mode='r:gz') as tar:
+        tar.extractall(source, filter='data')
+    checkout = source / ('Xray-core-' + xray['commit'])
+    entry = {k: xray[k] for k in ('name', 'version', 'library', 'source', 'license')}
+    entry['sha256'] = {}
+    for abi, (arch, _, triple) in ABIS.items():
+        output = target / abi / xray['library']
+        env = {**os.environ, 'GOOS': 'android', 'GOARCH': arch, 'GOARM': '7', 'CGO_ENABLED': '1',
+               'GOTOOLCHAIN': xray['toolchain'], 'CC': str(ndk / (triple + '21-clang'))}
+        subprocess.run(['go', 'build', '-trimpath', '-buildmode=pie',
+                        '-ldflags=-s -w -extldflags=-Wl,-z,max-page-size=16384',
+                        '-o', str(output), './main'], cwd=checkout, env=env, check=True)
+        data = output.read_bytes(); check_elf(data, abi); entry['sha256'][abi] = sha(data)
+    manifest['components'].append(entry)
     # The stable Snell channel retains the proven Mihomo v4/v5 adapter. The test
     # channel is an independent, pinned sing-snell client with v6 Beta/RC support.
     snell = lock['snell_preview']
@@ -122,6 +137,7 @@ def main():
     identities = {'libnaive.so': ('naive', 'stable', 24, []),
                   'libtrojan-go.so': ('trojan-go', 'stable', 21, []),
                   'libmieru.so': ('mieru', 'stable', 21, []),
+                  'libxray.so': ('xray', 'stable', 21, []),
                   'libmihomo.so': ('snell', 'stable', 21, [4, 5]),
                   'libsnell.so': ('snell', 'preview', 21, [4, 5, 6])}
     for entry in manifest['components']:
@@ -133,7 +149,7 @@ def main():
     output.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     # Keep exact upstream source and module dependency identities with release evidence.
     shutil.copy(LOCK, ROOT / 'core-build/builtins/versions.json')
-    print('Packaged Trojan-Go, NaiveProxy, Mieru and Snell for all four ABIs')
+    print('Packaged Trojan-Go, NaiveProxy, Mieru, Xray and Snell for all four ABIs')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,5 @@
+<resources>
+    <string name="finalmask_disabled">Off · import a link containing fm or enter Sudoku JSON</string>
+    <string name="finalmask_sudoku_enabled">Sudoku over TCP · Xray</string>
+    <string name="finalmask_editor_hint">Paste the FinalMask JSON object (tcp → sudoku → settings). Clear it to disable. Password, ASCII mode and padding must match the server. Uses the built-in Xray core.</string>
+</resources>

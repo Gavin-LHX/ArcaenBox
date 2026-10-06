@@ -132,6 +132,15 @@ fun parseV2Ray(link: String): StandardV2RayBean {
         bean.parseDuckSoft(url)
     }
 
+    if (url.queryParameterNames.contains("fm")) {
+        require(url.queryParameterValues("fm").size == 1) { "Duplicate FinalMask parameter" }
+        require(url.queryParameter("encryption") in listOf(null, "none")) { "Unsupported VLESS encryption with FinalMask" }
+        bean.finalMask = parseTcpSudokuFinalMask(url.queryParameter("fm") ?: "").toString()
+        if (bean.type == "raw") bean.type = "tcp"
+        bean.initializeDefaultValues()
+        bean.validateFinalMask()
+    }
+
     return bean
 }
 
@@ -429,6 +438,7 @@ fun VMessBean.toV2rayN(): String {
 }
 
 fun StandardV2RayBean.toUriVMessVLESSTrojan(isTrojan: Boolean): String {
+    validateFinalMask()
     // VMess
     if (this is VMessBean && !isVLESS) {
         return toV2rayN()
@@ -444,6 +454,7 @@ fun StandardV2RayBean.toUriVMessVLESSTrojan(isTrojan: Boolean): String {
     if (isVLESS) {
         builder.addQueryParameter("encryption", "none")
         if (encryption != "auto") builder.addQueryParameter("flow", encryption)
+        if (usesFinalMask()) builder.addQueryParameter("fm", finalMask)
     }
 
     when (type) {

@@ -667,6 +667,8 @@ def main():
         run_check('vless-import', vless_import)
         import mieru_import_smoke
         run_check('mieru-import', lambda: mieru_import_smoke.check(__import__('sys').modules[__name__]))
+        import finalmask_smoke
+        run_check('finalmask', lambda: finalmask_smoke.check(__import__('sys').modules[__name__]))
         import bottom_edges
         import sys
         run_check('bottom-edges', lambda: bottom_edges.check(sys.modules[__name__]))

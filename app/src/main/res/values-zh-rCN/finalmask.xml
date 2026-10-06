@@ -1,0 +1,5 @@
+<resources>
+    <string name="finalmask_disabled">关闭 · 导入含 fm 的链接或填写 Sudoku JSON</string>
+    <string name="finalmask_sudoku_enabled">Sudoku TCP 伪装 · Xray</string>
+    <string name="finalmask_editor_hint">粘贴 FinalMask JSON 对象（tcp → sudoku → settings），清空即关闭。密码、ASCII 模式和填充范围需与服务器一致。使用内置 Xray 内核。</string>
+</resources>
