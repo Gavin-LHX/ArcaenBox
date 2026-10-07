@@ -162,12 +162,55 @@ def scroll_for(**attrs):
     raise AssertionError(f'Scrollable control did not appear: {attrs}')
 
 
-def launch():
+def shell_navigation(doc):
+    """Bottom bar (phones) or navigation rail (wide screens) of the redesigned interface."""
+    for view_id in ('bottom_nav', 'nav_rail'):
+        node = find(doc, resource_id=PACKAGE + ':id/' + view_id)
+        if node is not None:
+            return node
+    return None
+
+
+def wait_for_interface(redesigned, timeout=25):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        doc = tree()
+        if find(doc, resource_id=PACKAGE + ':id/toolbar') is not None:
+            if redesigned and shell_navigation(doc) is not None:
+                return doc
+            if not redesigned and find(doc, resource_id=PACKAGE + ':id/drawer_layout') is not None:
+                return doc
+        time.sleep(.4)
+    raise AssertionError('Expected the ' + ('redesigned' if redesigned else 'classic') + ' interface')
+
+
+def shell_tap(label):
+    """Selects a top-level destination of the redesigned interface by its label."""
+    nav = shell_navigation(wait_for_interface(True))
+    tap(find(nav, text=label))
+    wait_for(resource_id=PACKAGE + ':id/toolbar')
+
+
+def launch(interface='classic'):
+    """Starts the app in the classic drawer interface (default) or the redesigned one.
+
+    The drawer checks below predate the redesign and keep verifying the classic
+    fallback; the choice persists, so it is switched through the app's own controls.
+    """
     adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
     adb('shell', 'wm', 'dismiss-keyguard')
     adb('shell', 'am', 'force-stop', PACKAGE)
     adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/io.nekohasekai.sagernet.ui.MainActivity')
     wait_for(resource_id=PACKAGE + ':id/toolbar')
+    redesigned = shell_navigation(tree()) is not None
+    if interface == 'classic' and redesigned:
+        shell_tap(STRINGS['shell_more'])
+        tap(scroll_for(text=STRINGS['classic_ui_switch']))
+        wait_for_interface(False)
+    elif interface == 'redesigned' and not redesigned:
+        navigate('nav_settings')
+        tap(scroll_for(text=STRINGS['classic_ui']))
+        wait_for_interface(True)
 
 
 def capture(name):
@@ -229,6 +272,245 @@ def startup():
     capture('02-light-drawer')
     adb('shell','input','keyevent','BACK')
     wait_for(resource_id=PACKAGE + ':id/toolbar')
+
+
+def redesigned(prefix='20-'):
+    """Default interface: dashboard, bottom navigation, secondary pages and the fallback switch."""
+    launch('redesigned')
+    wait_for(resource_id=PACKAGE + ':id/power_button', enabled='true')
+    assert wait_for(resource_id=PACKAGE + ':id/status_title').get('text') == STRINGS['not_connected']
+    assert find(tree(), resource_id=PACKAGE + ':id/fab') is None, 'Node FAB shown on the dashboard'
+    capture(prefix + 'redesigned-home')
+    for key, name in [('shell_nodes', 'nodes'), ('shell_groups', 'groups'), ('menu_route', 'route'), ('shell_more', 'more')]:
+        shell_tap(STRINGS[key])
+        if key == 'shell_nodes':
+            wait_for(resource_id=PACKAGE + ':id/fab')
+        capture(prefix + 'redesigned-' + name)
+    # Secondary pages open above "More" with a back arrow and return to it.
+    tap(scroll_for(text=STRINGS['settings']))
+    toolbar = wait_for(resource_id=PACKAGE + ':id/toolbar')
+    assert next((n for n in toolbar.iter('node') if n.get('class') == 'android.widget.ImageButton'), None) is not None
+    capture(prefix + 'redesigned-settings')
+    adb('shell', 'input', 'keyevent', 'BACK')
+    scroll_for(text=STRINGS['classic_ui_switch'])
+    adb('shell', 'input', 'keyevent', 'BACK')
+    wait_for(resource_id=PACKAGE + ':id/power_button')
+    # Deep links reach the shared import flow in the redesigned interface too.
+    adb('shell','am','start','-W','-a','android.intent.action.VIEW','-d','socks://127.0.0.1:1080','-p',PACKAGE)
+    wait_for(text=STRINGS['profile_import'])
+    tap(wait_for(resource_id='android:id/button2'))
+    # Fallback: switch to the classic interface and back again.
+    launch('classic')
+    capture(prefix + 'redesigned-fallback-classic')
+    launch('redesigned')
+
+
+def redesigned_wide():
+    """Wide screens use the navigation rail layout."""
+    launch('redesigned')
+    assert find(tree(), resource_id=PACKAGE + ':id/nav_rail') is not None, 'Navigation rail missing'
+    capture('21-landscape-redesigned-home')
+    shell_tap(STRINGS['shell_more'])
+    capture('21-landscape-redesigned-more')
+
+
+def redesigned_regressions():
+    """Restore destinations across shell layouts and keep scroll-controlled FABs on Nodes."""
+    original_size = adb('shell', 'wm', 'size')
+    original_density = adb('shell', 'wm', 'density')
+    original_bottom_bar = None
+    fixture_group = 'Shell-QA-' + str(int(time.time()))
+    group_created = False
+
+    def resize(size, density, navigation_id=None):
+        adb('shell', 'wm', 'size', size)
+        adb('shell', 'wm', 'density', density)
+        if navigation_id is not None:
+            wait_for(resource_id=PACKAGE + ':id/' + navigation_id)
+
+    def selected(destination, content_id):
+        wait_for(resource_id=PACKAGE + ':id/' + content_id)
+        nav = shell_navigation(wait_for_interface(True))
+        item = find(nav, resource_id=PACKAGE + ':id/' + destination)
+        assert item is not None and item.get('selected') == 'true', (
+            'Navigation selection disagrees with restored content: ' + destination)
+
+    def bottom_bar_switch():
+        scroll_for(text=STRINGS['show_bottom_bar'])
+        doc = tree()
+        title = find(doc, text=STRINGS['show_bottom_bar'])
+        parents = {child: parent for parent in doc.iter() for child in parent}
+        while title is not None:
+            switch = find(title, resource_id=PACKAGE + ':id/material_switch')
+            if switch is not None:
+                return switch
+            title = parents.get(title)
+        raise AssertionError('Bottom bar preference missing')
+
+    def swipe_list(view_id, forward):
+        doc = tree()
+        left, top, right, bottom = bounds(find(doc, resource_id=PACKAGE + ':id/' + view_id))
+        nav = find(doc, resource_id=PACKAGE + ':id/bottom_nav')
+        if nav is not None:
+            bottom = min(bottom, bounds(nav)[1])
+        margin = max(8, (bottom-top)//8)
+        start, end = bottom-margin, top+margin
+        if not forward:
+            start, end = end, start
+        adb('shell', 'input', 'swipe', str((left+right)//2), str(start), str(end), '350')
+
+    try:
+        resize('720x1280', '320')
+        launch()
+        navigate('nav_settings')
+        switch = bottom_bar_switch()
+        original_bottom_bar = switch.get('checked')
+        if original_bottom_bar != 'true':
+            tap(switch)
+        launch('redesigned')
+
+        for label, destination, content in [('shell_groups', 'nav_group', 'group_list'),
+                                            ('menu_route', 'nav_route', 'route_list')]:
+            shell_tap(STRINGS[label])
+            selected(destination, content)
+            resize('1280x720', '240', 'nav_rail')
+            selected(destination, content)
+            capture('23-restored-rail-' + destination)
+            resize('720x1280', '320', 'bottom_nav')
+            selected(destination, content)
+            capture('23-restored-bottom-' + destination)
+            adb('shell', 'input', 'keyevent', 'BACK')
+            selected('nav_home', 'power_button')
+            shell_tap(STRINGS[label])
+            shell_tap(STRINGS['shell_home'])
+            selected('nav_home', 'power_button')
+
+        # Restoring the selected tab must leave a secondary page and its back stack intact.
+        shell_tap(STRINGS['shell_more'])
+        tap(scroll_for(text=STRINGS['settings']))
+        for size, density, nav_id in [('1280x720', '240', 'nav_rail'),
+                                     ('720x1280', '320', 'bottom_nav')]:
+            resize(size, density, nav_id)
+            selected('nav_more', 'settings')
+            toolbar = wait_for(resource_id=PACKAGE + ':id/toolbar')
+            assert find(toolbar, text=STRINGS['settings']) is not None, 'Restored Settings page was replaced'
+            assert any(n.get('class') == 'android.widget.ImageButton' for n in toolbar.iter('node')), (
+                'Restored Settings page lost its Back button')
+            capture('23-restored-settings-' + nav_id)
+        adb('shell', 'input', 'keyevent', 'BACK')
+        selected('nav_more', 'more_scroll')
+
+        # A disposable group makes the node scrolling check independent of earlier tests.
+        shell_tap(STRINGS['shell_groups'])
+        tap(wait_for(resource_id=PACKAGE + ':id/action_new_group'))
+        tap(scroll_for(text=STRINGS['group_name']))
+        field = wait_for(resource_id='android:id/edit')
+        adb('shell', 'input', 'keyevent', 'KEYCODE_MOVE_END')
+        for _ in field.get('text', ''):
+            adb('shell', 'input', 'keyevent', 'KEYCODE_DEL')
+        adb('shell', 'input', 'text', fixture_group)
+        tap(wait_for(resource_id='android:id/button1'))
+        tap(wait_for(resource_id=PACKAGE + ':id/action_apply'))
+        wait_for(resource_id=PACKAGE + ':id/group_list')
+        group_created = True
+        shell_tap(STRINGS['shell_nodes'])
+        for _ in range(20):
+            tabs = wait_for(resource_id=PACKAGE + ':id/group_tab')
+            tab = find(tabs, text=fixture_group)
+            if tab is not None:
+                tap(tab)
+                break
+            left, top, right, bottom = bounds(tabs)
+            adb('shell', 'input', 'swipe', str(right-8), str((top+bottom)//2),
+                str(left+8), str((top+bottom)//2), '350')
+        else:
+            raise AssertionError('Fixture group tab missing')
+        # Loopback links are imported through the app; this check never starts the service.
+        for index in range(6):
+            import shlex
+            uri = f'socks://127.0.0.1:9#Shell-Scroll-{index:02d}'
+            adb('shell', 'am', 'start', '-W', '-a', 'android.intent.action.VIEW',
+                '-d', shlex.quote(uri), '-p', PACKAGE)
+            tap(wait_for(resource_id='android:id/button1'))
+            wait_for(resource_id=PACKAGE + ':id/configuration_list')
+
+        resize('720x640', '320', 'bottom_nav')
+        for label, content in [('shell_groups', 'group_list'), ('menu_route', 'route_list')]:
+            shell_tap(STRINGS[label])
+            for forward in (True, False, True, False):
+                swipe_list(content, forward)
+                assert find(tree(), resource_id=PACKAGE + ':id/fab') is None, (
+                    'Scrolling resurrected the node FAB on ' + content)
+            capture('23-scroll-without-fab-' + content)
+
+        shell_tap(STRINGS['shell_nodes'])
+        wait_for(resource_id=PACKAGE + ':id/configuration_list')
+        assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
+        # A short screen can show less than one card, so scroll to an observed
+        # fixture instead of assuming a fixed number of gestures reaches it.
+        last_node = None
+        for _ in range(32):
+            swipe_list('configuration_list', True)
+            last_node = find(tree(), text='Shell-Scroll-05')
+            if last_node is not None:
+                break
+        assert last_node is not None, 'Node fixture list did not scroll'
+        capture('23-node-list-last-fixture')
+        # Bottom padding can move the final title outside the viewport at the
+        # end. Verify its appearance separately, then overscroll to hide the FAB.
+        for _ in range(12):
+            swipe_list('configuration_list', True)
+            if find(tree(), resource_id=PACKAGE + ':id/fab') is None:
+                break
+        assert find(tree(), resource_id=PACKAGE + ':id/fab') is None, 'Node FAB did not hide on overscroll'
+        capture('23-node-fab-hidden-on-overscroll')
+        swipe_list('configuration_list', False)
+        assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
+        capture('23-node-fab-restored-after-scroll')
+    except Exception:
+        # Retain the actual failure before cleanup restores display settings and navigation.
+        # A crash handler can put a system sharesheet in front of the app, so capture()
+        # (which requires a visible app) cannot be used for this diagnostic snapshot.
+        failure = OUT / 'failure-redesigned-regressions-before-cleanup'
+        try:
+            failure.with_suffix('.png').write_bytes(adb('exec-out', 'screencap', '-p', binary=True, check=False))
+            failure.with_suffix('.txt').write_text(
+                adb('shell', 'wm', 'size', check=False) + adb('shell', 'wm', 'density', check=False)
+                + adb('shell', 'dumpsys', 'activity', 'top', check=False), encoding='utf-8')
+        except Exception:
+            pass
+        try:
+            failure.with_suffix('.xml').write_text(ET.tostring(tree(), encoding='unicode'), encoding='utf-8')
+        except Exception:
+            pass
+        raise
+    finally:
+        try:
+            resize('720x1280', '320')
+            if group_created:
+                launch('redesigned')
+                shell_tap(STRINGS['shell_groups'])
+                scroll_for(text=fixture_group)
+                doc = tree()
+                row = find(doc, text=fixture_group)
+                parents = {child: parent for parent in doc.iter() for child in parent}
+                while row is not None and find(row, resource_id=PACKAGE + ':id/edit') is None:
+                    row = parents.get(row)
+                tap(find(row, resource_id=PACKAGE + ':id/edit') if row is not None else None)
+                tap(wait_for(resource_id=PACKAGE + ':id/action_delete'))
+                tap(wait_for(resource_id='android:id/button1'))
+                wait_for(resource_id=PACKAGE + ':id/group_list')
+            if original_bottom_bar is not None:
+                launch()
+                navigate('nav_settings')
+                switch = bottom_bar_switch()
+                if switch.get('checked') != original_bottom_bar:
+                    tap(switch)
+        finally:
+            size = re.search(r'Override size: (\d+x\d+)', original_size)
+            density = re.search(r'Override density: (\d+)', original_density)
+            adb('shell', 'wm', 'size', size.group(1) if size else 'reset')
+            adb('shell', 'wm', 'density', density.group(1) if density else 'reset')
 
 
 def whitelist():
@@ -619,6 +901,7 @@ def main():
         adb('install','-r','-g',str(apk))
         adb('shell','logcat','-c')
         adb('shell','cmd','uimode','night','no')
+        run_check('redesigned', redesigned)
         run_check('startup', startup)
         for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about','nav_po0']:
             run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
@@ -632,6 +915,7 @@ def main():
         run_check('core-switch', core_switch)
         run_check('test-presets', test_presets)
         run_check('vless-import', vless_import)
+        run_check('redesigned-regressions', redesigned_regressions)
         import bottom_edges
         import sys
         run_check('bottom-edges', lambda: bottom_edges.check(sys.modules[__name__]))
@@ -640,6 +924,7 @@ def main():
         adb('shell','cmd','uimode','night','yes')
         for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about','nav_po0']:
             run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))
+        run_check('dark-redesigned', lambda: redesigned('22-dark-'))
 
         adb('shell','cmd','uimode','night','no')
         adb('shell','wm','size','720x1280')
@@ -649,6 +934,7 @@ def main():
         adb('shell','wm','size','1280x720')
         adb('shell','wm','density','240')
         run_check('landscape', landscape)
+        run_check('landscape-redesigned', redesigned_wide)
         assert not FAILURES, FAILURES
         print('UI SMOKE PASSED:', ', '.join(RESULTS))
     finally:

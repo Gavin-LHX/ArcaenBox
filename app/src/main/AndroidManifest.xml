@@ -71,6 +71,13 @@
             android:name="io.nekohasekai.sagernet.ui.BlankActivity"
             android:configChanges="uiMode" />
 
+        <!-- Classic drawer interface; MainActivity forwards here when it is enabled in settings. -->
+        <activity
+            android:name="io.nekohasekai.sagernet.ui.LegacyMainActivity"
+            android:configChanges="uiMode"
+            android:exported="false"
+            android:launchMode="singleTask" />
+
         <activity
             android:name="io.nekohasekai.sagernet.ui.MainActivity"
             android:configChanges="uiMode"

@@ -4,7 +4,7 @@ import android.graphics.Rect
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.nekohasekai.sagernet.database.DataStore
-import io.nekohasekai.sagernet.ui.MainActivity
+import io.nekohasekai.sagernet.ui.MainHostActivity
 
 class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
     LinearLayoutManager(recyclerView.context, RecyclerView.VERTICAL, false) {
@@ -16,8 +16,6 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
         }
     }
 
-    private var listenerDisabled = false
-
     override fun scrollVerticallyBy(
         dx: Int, recycler: RecyclerView.Recycler,
         state: RecyclerView.State
@@ -27,12 +25,10 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
 
         // SagerNet Style
         val scrollRange = super.scrollVerticallyBy(dx, recycler, state)
-        if (listenerDisabled) return scrollRange
-        val activity = recyclerView.context.findActivity() as? MainActivity
-        if (activity == null) {
-            listenerDisabled = true
-            return scrollRange
-        }
+        // A shell can temporarily withhold its FAB while another page is on top.
+        // Re-check it on each scroll so returning to the node list restores this behavior.
+        val fab = (recyclerView.context.findActivity() as? MainHostActivity)?.fabView
+            ?: return scrollRange
 
         val overscroll = dx - scrollRange
         if (overscroll > 0) {
@@ -40,7 +36,7 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
                 (recyclerView.findViewHolderForAdapterPosition(findLastVisibleItemPosition())
                     ?: return scrollRange).itemView
             val itemLocation = Rect().also { view.getGlobalVisibleRect(it) }
-            val fabLocation = Rect().also { activity.binding.fab.getGlobalVisibleRect(it) }
+            val fabLocation = Rect().also { fab.getGlobalVisibleRect(it) }
             if (!itemLocation.contains(fabLocation.left, fabLocation.top) && !itemLocation.contains(
                     fabLocation.right,
                     fabLocation.bottom
@@ -48,7 +44,7 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
             ) {
                 return scrollRange
             }
-            activity.binding.fab.apply {
+            fab.apply {
                 if (isShown) hide()
             }
         } else {
@@ -64,7 +60,7 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
                 return scrollRange
             }*/
 
-            activity.binding.fab.apply {
+            fab.apply {
                 if (!isShown) show()
             }
         }

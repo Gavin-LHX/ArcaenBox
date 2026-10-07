@@ -16,6 +16,8 @@ sing-box / universal proxy toolchain for Android.
 节点卡片提供独立测速菜单，长按可在主列表多选；底栏显示当前代理的真连接延迟和出口 IP。测试地址支持预设与自定义，操作说明见[节点测试与高级设置](docs/node-tests-and-advanced-settings.md)。[1.6.1 测试记录](docs/verification-1.6.1.md)列出节点功能验证；[1.6.2 底部适配验证](docs/verification-1.6.2.md)记录底栏和侧栏延伸到系统导航区域的修复。
 [1.6.3](docs/verification-1.6.3.md) 在未连接时仅保留右下角 A 按钮；连接后显示延迟、出口 IP 和流量信息。
 
+默认使用重新设计的 Material 3 界面（首页仪表盘 + 底部导航 / 宽屏侧边导航栏），原侧栏界面保留为「经典界面」，可在 设置 → 经典界面 或 更多 → 切换到经典界面 回退，详见[新界面说明](docs/ui-redesign.md)。
+
 ## 下载 / Downloads
 
 [![GitHub All Releases](https://img.shields.io/github/downloads/Gavin-LHX/ArcaenBox/total?label=downloads-total&logo=github&style=flat-square)](https://github.com/Gavin-LHX/ArcaenBox/releases)

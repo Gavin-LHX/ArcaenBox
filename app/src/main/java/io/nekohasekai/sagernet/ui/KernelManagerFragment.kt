@@ -23,7 +23,7 @@ class KernelManagerFragment : ToolbarFragment(R.layout.layout_kernel_manager) {
             val button = layoutInflater.inflate(R.layout.item_kernel, list, false).apply {
                 findViewById<TextView>(R.id.kernel_name).text = name
                 setOnClickListener {
-                    (requireActivity() as MainActivity).displayFragment(if (id == "sing-box") CoreUpdatesFragment() else NativeUpdatesFragment.create(id))
+                    (requireActivity() as MainHostActivity).displayFragment(if (id == "sing-box") CoreUpdatesFragment() else NativeUpdatesFragment.create(id))
                 }
             }
             list.addView(button)

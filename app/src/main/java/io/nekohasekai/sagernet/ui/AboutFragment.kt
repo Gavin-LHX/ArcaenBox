@@ -106,11 +106,11 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .icon(R.drawable.ic_baseline_layers_24)
                                 .text(getString(R.string.version_x, "sing-box"))
                                 .subText(Libcore.versionBox())
-                                .setOnClickAction { (requireActivity() as MainActivity).displayFragment(CoreUpdatesFragment()) }
+                                .setOnClickAction { (requireActivity() as MainHostActivity).displayFragment(CoreUpdatesFragment()) }
                                 .build())
                         .addItem(MaterialAboutActionItem.Builder()
                             .text(R.string.kernel_manager)
-                            .setOnClickAction { (requireActivity() as MainActivity).displayFragment(KernelManagerFragment()) }
+                            .setOnClickAction { (requireActivity() as MainHostActivity).displayFragment(KernelManagerFragment()) }
                             .build())
                         .addItem(MaterialAboutActionItem.Builder()
                             .text(R.string.builtin_protocols)
