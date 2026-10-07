@@ -162,12 +162,55 @@ def scroll_for(**attrs):
     raise AssertionError(f'Scrollable control did not appear: {attrs}')
 
 
-def launch():
+def shell_navigation(doc):
+    """Bottom bar (phones) or navigation rail (wide screens) of the redesigned interface."""
+    for view_id in ('bottom_nav', 'nav_rail'):
+        node = find(doc, resource_id=PACKAGE + ':id/' + view_id)
+        if node is not None:
+            return node
+    return None
+
+
+def wait_for_interface(redesigned, timeout=25):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        doc = tree()
+        if find(doc, resource_id=PACKAGE + ':id/toolbar') is not None:
+            if redesigned and shell_navigation(doc) is not None:
+                return doc
+            if not redesigned and find(doc, resource_id=PACKAGE + ':id/drawer_layout') is not None:
+                return doc
+        time.sleep(.4)
+    raise AssertionError('Expected the ' + ('redesigned' if redesigned else 'classic') + ' interface')
+
+
+def shell_tap(label):
+    """Selects a top-level destination of the redesigned interface by its label."""
+    nav = shell_navigation(wait_for_interface(True))
+    tap(find(nav, text=label))
+    wait_for(resource_id=PACKAGE + ':id/toolbar')
+
+
+def launch(interface='classic'):
+    """Starts the app in the classic drawer interface (default) or the redesigned one.
+
+    The drawer checks below predate the redesign and keep verifying the classic
+    fallback; the choice persists, so it is switched through the app's own controls.
+    """
     adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
     adb('shell', 'wm', 'dismiss-keyguard')
     adb('shell', 'am', 'force-stop', PACKAGE)
     adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/io.nekohasekai.sagernet.ui.MainActivity')
     wait_for(resource_id=PACKAGE + ':id/toolbar')
+    redesigned = shell_navigation(tree()) is not None
+    if interface == 'classic' and redesigned:
+        shell_tap(STRINGS['shell_more'])
+        tap(scroll_for(text=STRINGS['classic_ui_switch']))
+        wait_for_interface(False)
+    elif interface == 'redesigned' and not redesigned:
+        navigate('nav_settings')
+        tap(scroll_for(text=STRINGS['classic_ui']))
+        wait_for_interface(True)
 
 
 def capture(name):
@@ -229,6 +272,46 @@ def startup():
     capture('02-light-drawer')
     adb('shell','input','keyevent','BACK')
     wait_for(resource_id=PACKAGE + ':id/toolbar')
+
+
+def redesigned(prefix='20-'):
+    """Default interface: dashboard, bottom navigation, secondary pages and the fallback switch."""
+    launch('redesigned')
+    wait_for(resource_id=PACKAGE + ':id/power_button', enabled='true')
+    assert wait_for(resource_id=PACKAGE + ':id/status_title').get('text') == STRINGS['not_connected']
+    assert find(tree(), resource_id=PACKAGE + ':id/fab') is None, 'Node FAB shown on the dashboard'
+    capture(prefix + 'redesigned-home')
+    for key, name in [('shell_nodes', 'nodes'), ('shell_groups', 'groups'), ('menu_route', 'route'), ('shell_more', 'more')]:
+        shell_tap(STRINGS[key])
+        if key == 'shell_nodes':
+            wait_for(resource_id=PACKAGE + ':id/fab')
+        capture(prefix + 'redesigned-' + name)
+    # Secondary pages open above "More" with a back arrow and return to it.
+    tap(scroll_for(text=STRINGS['settings']))
+    toolbar = wait_for(resource_id=PACKAGE + ':id/toolbar')
+    assert next((n for n in toolbar.iter('node') if n.get('class') == 'android.widget.ImageButton'), None) is not None
+    capture(prefix + 'redesigned-settings')
+    adb('shell', 'input', 'keyevent', 'BACK')
+    wait_for(text=STRINGS['classic_ui_switch'])
+    adb('shell', 'input', 'keyevent', 'BACK')
+    wait_for(resource_id=PACKAGE + ':id/power_button')
+    # Deep links reach the shared import flow in the redesigned interface too.
+    adb('shell','am','start','-W','-a','android.intent.action.VIEW','-d','socks://127.0.0.1:1080','-p',PACKAGE)
+    wait_for(text=STRINGS['profile_import'])
+    tap(wait_for(resource_id='android:id/button2'))
+    # Fallback: switch to the classic interface and back again.
+    launch('classic')
+    capture(prefix + 'redesigned-fallback-classic')
+    launch('redesigned')
+
+
+def redesigned_wide():
+    """Wide screens use the navigation rail layout."""
+    launch('redesigned')
+    assert find(tree(), resource_id=PACKAGE + ':id/nav_rail') is not None, 'Navigation rail missing'
+    capture('21-landscape-redesigned-home')
+    shell_tap(STRINGS['shell_more'])
+    capture('21-landscape-redesigned-more')
 
 
 def whitelist():
@@ -619,6 +702,7 @@ def main():
         adb('install','-r','-g',str(apk))
         adb('shell','logcat','-c')
         adb('shell','cmd','uimode','night','no')
+        run_check('redesigned', redesigned)
         run_check('startup', startup)
         for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about','nav_po0']:
             run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
@@ -640,6 +724,7 @@ def main():
         adb('shell','cmd','uimode','night','yes')
         for name in ['nav_configuration','nav_group','nav_settings','nav_tools','nav_about','nav_po0']:
             run_check('dark-' + name, lambda name=name: destination(name, '09-dark-'))
+        run_check('dark-redesigned', lambda: redesigned('22-dark-'))
 
         adb('shell','cmd','uimode','night','no')
         adb('shell','wm','size','720x1280')
@@ -649,6 +734,7 @@ def main():
         adb('shell','wm','size','1280x720')
         adb('shell','wm','density','240')
         run_check('landscape', landscape)
+        run_check('landscape-redesigned', redesigned_wide)
         assert not FAILURES, FAILURES
         print('UI SMOKE PASSED:', ', '.join(RESULTS))
     finally:

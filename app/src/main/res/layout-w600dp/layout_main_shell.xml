@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tablets, foldables and landscape phones use a navigation rail instead of a bottom bar. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/shell_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <com.google.android.material.navigationrail.NavigationRailView
+        android:id="@+id/nav_rail"
+        style="@style/Widget.Material3.NavigationRailView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        app:labelVisibilityMode="labeled"
+        app:menuGravity="center"
+        app:menu="@menu/main_shell_menu" />
+
+    <io.nekohasekai.sagernet.widget.MainContentLayout
+        android:id="@+id/coordinator"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clipChildren="false">
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_holder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/fabProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="7dp"
+            android:max="1"
+            android:visibility="invisible"
+            app:indicatorColor="?colorPrimary"
+            app:layout_anchor="@+id/fab"
+            app:layout_anchorGravity="center"
+            app:layout_behavior="io.nekohasekai.sagernet.widget.FabProgressBehavior"
+            app:trackCornerRadius="@dimen/mtrl_progress_track_thickness"
+            app:trackThickness="8dp" />
+
+        <io.nekohasekai.sagernet.widget.ServiceButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="24dp"
+            android:elevation="6dp"
+            android:visibility="gone"
+            app:backgroundTint="?colorPrimaryContainer"
+            app:fabCustomSize="56dp"
+            app:fabSize="normal"
+            app:pressedTranslationZ="6dp"
+            app:srcCompat="@drawable/ic_service_idle"
+            app:tint="?colorOnPrimaryContainer" />
+
+    </io.nekohasekai.sagernet.widget.MainContentLayout>
+
+</LinearLayout>

@@ -35,7 +35,7 @@ import java.util.*
 class GroupFragment : ToolbarFragment(R.layout.layout_group),
     Toolbar.OnMenuItemClickListener {
 
-    lateinit var activity: MainActivity
+    lateinit var activity: MainHostActivity
     lateinit var groupListView: RecyclerView
     lateinit var layoutManager: LinearLayoutManager
     lateinit var groupAdapter: GroupAdapter
@@ -43,7 +43,7 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        activity = requireActivity() as MainActivity
+        activity = requireActivity() as MainHostActivity
 
         ViewCompat.setOnApplyWindowInsetsListener(view, ListListener)
         toolbar.setTitle(R.string.menu_group)
@@ -139,7 +139,7 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
                     val profiles = SagerDatabase.proxyDao.getByGroup(selectedGroup.id)
                     val links = profiles.joinToString("\n") { it.toStdLink(compact = true) }
                     try {
-                        (requireActivity() as MainActivity).contentResolver.openOutputStream(
+                        (requireActivity() as MainHostActivity).contentResolver.openOutputStream(
                             data
                         )!!.bufferedWriter().use {
                             it.write(links)

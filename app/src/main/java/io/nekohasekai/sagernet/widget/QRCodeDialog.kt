@@ -19,7 +19,7 @@ import com.google.zxing.WriterException
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.readableMessage
-import io.nekohasekai.sagernet.ui.MainActivity
+import io.nekohasekai.sagernet.ui.MainHostActivity
 import java.nio.charset.StandardCharsets
 import kotlin.math.roundToInt
 
@@ -96,7 +96,7 @@ class QRCodeDialog() : DialogFragment() {
         }
     } catch (e: WriterException) {
         Logs.w(e)
-        (activity as MainActivity).snackbar(e.readableMessage).show()
+        (activity as MainHostActivity).snackbar(e.readableMessage).show()
         dismiss()
         null
     }
