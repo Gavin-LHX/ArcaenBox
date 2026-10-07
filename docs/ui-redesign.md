@@ -16,6 +16,7 @@ is kept unchanged as the **Classic interface** and can be switched back at any t
 | 更多 More | 资源文件、Po0 白名单、sing-box 面板（启用 Clash API 时）、设置、工具、内核管理、日志、切换到经典界面、文档、关于 |
 
 - 手机使用底部导航栏；宽度 ≥ 600dp（平板、折叠屏、横屏）使用侧边导航栏（Navigation Rail），首页与「更多」内容居中限宽。
+- 横竖屏切换会保留当前页面、导航选中项和二级页面的返回栈；连接按钮仅在节点列表中显示。
 - 「更多」中打开的页面显示返回箭头，返回键回到上一页；在非首页按返回键回到首页，在首页按返回键将应用移到后台。
 - 节点编辑器、设置项、数据库和偏好键均未改变，两个界面共享同一份数据。
 
@@ -44,3 +45,6 @@ which forwards to `LegacyMainActivity` while the classic interface is enabled.
 `.github/scripts/ui_smoke.py` 新增 `redesigned`、`dark-redesigned` 与 `landscape-redesigned`
 检查：首页状态、底部导航各目的地、从「更多」进入设置并返回、深链接导入、切换到经典界面再切回，
 以及横屏导航栏布局。原有的侧栏检查通过应用内开关切换到经典界面后继续执行，以确保回退界面可用。
+
+`redesigned-regressions` 检查在底部导航与侧边导航之间切换时的页面恢复、返回行为，
+以及开启底栏设置后，分组与路由页滚动不会重新显示连接按钮。

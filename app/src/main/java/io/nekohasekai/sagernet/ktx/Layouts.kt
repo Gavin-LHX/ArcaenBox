@@ -16,8 +16,6 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
         }
     }
 
-    private var listenerDisabled = false
-
     override fun scrollVerticallyBy(
         dx: Int, recycler: RecyclerView.Recycler,
         state: RecyclerView.State
@@ -27,12 +25,10 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
 
         // SagerNet Style
         val scrollRange = super.scrollVerticallyBy(dx, recycler, state)
-        if (listenerDisabled) return scrollRange
+        // A shell can temporarily withhold its FAB while another page is on top.
+        // Re-check it on each scroll so returning to the node list restores this behavior.
         val fab = (recyclerView.context.findActivity() as? MainHostActivity)?.fabView
-        if (fab == null) {
-            listenerDisabled = true
-            return scrollRange
-        }
+            ?: return scrollRange
 
         val overscroll = dx - scrollRange
         if (overscroll > 0) {

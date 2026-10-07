@@ -31,8 +31,11 @@ class MainActivity : MainHostActivity() {
     private lateinit var navigation: NavigationBarView
     override val drawBehindBottomNavigationBar = true
     private var forwarded = false
+    @IdRes private var selectedDestination = R.id.nav_home
+    private var nodeFabEnabled = false
 
-    override val fabView: FloatingActionButton? get() = if (::binding.isInitialized) binding.fab else null
+    override val fabView: FloatingActionButton?
+        get() = if (::binding.isInitialized && nodeFabEnabled) binding.fab else null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +51,12 @@ class MainActivity : MainHostActivity() {
         binding.fab.initProgress(binding.fabProgress)
         binding.fab.setOnClickListener { toggleService() }
         navigation = binding.bottomNav ?: binding.navRail!!
+        // The bar and rail have different IDs. Restore their shared destination without
+        // firing a navigation transaction or replacing a restored secondary page.
+        navigation.isSaveEnabled = false
+        selectedDestination = savedInstanceState?.getInt(KEY_DESTINATION, R.id.nav_home)
+            ?.takeIf { navigation.menu.findItem(it) != null } ?: R.id.nav_home
+        navigation.selectedItemId = selectedDestination
         navigation.setOnItemSelectedListener { showTopLevel(it.itemId); true }
         navigation.setOnItemReselectedListener { popToTopLevel() }
 
@@ -75,6 +84,11 @@ class MainActivity : MainHostActivity() {
         initHost()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (!forwarded) outState.putInt(KEY_DESTINATION, selectedDestination)
+    }
+
     private fun currentFragment() =
         supportFragmentManager.findFragmentById(R.id.fragment_holder) as? ToolbarFragment
 
@@ -97,6 +111,7 @@ class MainActivity : MainHostActivity() {
             R.id.nav_more -> MoreFragment()
             else -> return
         }
+        selectedDestination = id
         popToTopLevel()
         supportFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
@@ -170,7 +185,8 @@ class MainActivity : MainHostActivity() {
 
     /** The connect button floats over the node list, where nodes are chosen. */
     private fun updateFab(fragment: ToolbarFragment? = currentFragment()) {
-        if (fragment is ConfigurationFragment) binding.fab.show() else binding.fab.hide()
+        nodeFabEnabled = fragment is ConfigurationFragment
+        if (nodeFabEnabled) binding.fab.show() else binding.fab.hide()
     }
 
     override fun refreshNavMenu(clashApi: Boolean) {
@@ -196,6 +212,10 @@ class MainActivity : MainHostActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (super.onKeyDown(keyCode, event)) return true
         return currentFragment()?.onKeyDown(keyCode, event) == true
+    }
+
+    companion object {
+        private const val KEY_DESTINATION = "main.destination"
     }
 
 }
