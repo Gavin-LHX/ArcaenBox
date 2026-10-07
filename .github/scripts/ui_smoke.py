@@ -455,10 +455,17 @@ def redesigned_regressions():
         capture('23-node-fab-restored-after-scroll')
     except Exception:
         # Retain the actual failure before cleanup restores display settings and navigation.
+        # A crash handler can put a system sharesheet in front of the app, so capture()
+        # (which requires a visible app) cannot be used for this diagnostic snapshot.
+        failure = OUT / 'failure-redesigned-regressions-before-cleanup'
+        failure.with_suffix('.png').write_bytes(adb('exec-out', 'screencap', '-p', binary=True, check=False))
         try:
-            capture('failure-redesigned-regressions-before-cleanup')
+            failure.with_suffix('.xml').write_text(ET.tostring(tree(), encoding='unicode'), encoding='utf-8')
         except Exception:
             pass
+        failure.with_suffix('.txt').write_text(
+            adb('shell', 'wm', 'size', check=False) + adb('shell', 'wm', 'density', check=False)
+            + adb('shell', 'dumpsys', 'activity', 'top', check=False), encoding='utf-8')
         raise
     finally:
         try:
