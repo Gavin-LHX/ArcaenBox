@@ -353,7 +353,8 @@ def redesigned_regressions():
         nav = find(doc, resource_id=PACKAGE + ':id/bottom_nav')
         if nav is not None:
             bottom = min(bottom, bounds(nav)[1])
-        start, end = (top + 3*(bottom-top)//4, top + (bottom-top)//4)
+        margin = max(8, (bottom-top)//8)
+        start, end = bottom-margin, top+margin
         if not forward:
             start, end = end, start
         adb('shell', 'input', 'swipe', str((left+right)//2), str(start), str(end), '350')
@@ -445,11 +446,24 @@ def redesigned_regressions():
         shell_tap(STRINGS['shell_nodes'])
         wait_for(resource_id=PACKAGE + ':id/configuration_list')
         assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
-        # Reach the last row, then overscroll it into the FAB to exercise hide/show.
-        for _ in range(10):
+        # A short screen can show less than one card, so scroll to an observed
+        # fixture instead of assuming a fixed number of gestures reaches it.
+        last_node = None
+        for _ in range(32):
             swipe_list('configuration_list', True)
-        assert find(tree(), text='Shell-Scroll-05') is not None, 'Node fixture list did not scroll'
+            last_node = find(tree(), text='Shell-Scroll-05')
+            if last_node is not None:
+                break
+        assert last_node is not None, 'Node fixture list did not scroll'
+        capture('23-node-list-last-fixture')
+        # Bottom padding can move the final title outside the viewport at the
+        # end. Verify its appearance separately, then overscroll to hide the FAB.
+        for _ in range(12):
+            swipe_list('configuration_list', True)
+            if find(tree(), resource_id=PACKAGE + ':id/fab') is None:
+                break
         assert find(tree(), resource_id=PACKAGE + ':id/fab') is None, 'Node FAB did not hide on overscroll'
+        capture('23-node-fab-hidden-on-overscroll')
         swipe_list('configuration_list', False)
         assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
         capture('23-node-fab-restored-after-scroll')
@@ -458,14 +472,17 @@ def redesigned_regressions():
         # A crash handler can put a system sharesheet in front of the app, so capture()
         # (which requires a visible app) cannot be used for this diagnostic snapshot.
         failure = OUT / 'failure-redesigned-regressions-before-cleanup'
-        failure.with_suffix('.png').write_bytes(adb('exec-out', 'screencap', '-p', binary=True, check=False))
+        try:
+            failure.with_suffix('.png').write_bytes(adb('exec-out', 'screencap', '-p', binary=True, check=False))
+            failure.with_suffix('.txt').write_text(
+                adb('shell', 'wm', 'size', check=False) + adb('shell', 'wm', 'density', check=False)
+                + adb('shell', 'dumpsys', 'activity', 'top', check=False), encoding='utf-8')
+        except Exception:
+            pass
         try:
             failure.with_suffix('.xml').write_text(ET.tostring(tree(), encoding='unicode'), encoding='utf-8')
         except Exception:
             pass
-        failure.with_suffix('.txt').write_text(
-            adb('shell', 'wm', 'size', check=False) + adb('shell', 'wm', 'density', check=False)
-            + adb('shell', 'dumpsys', 'activity', 'top', check=False), encoding='utf-8')
         raise
     finally:
         try:
