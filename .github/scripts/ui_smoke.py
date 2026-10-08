@@ -1009,6 +1009,8 @@ def main():
         run_check('liquid-glass', lambda: liquid_glass_smoke.check(sys.modules[__name__]))
         import glass_md3_smoke
         run_check('liquid-glass-md3', lambda: glass_md3_smoke.check(sys.modules[__name__]))
+        import home_glass_smoke
+        run_check('home-glass-md3', lambda: home_glass_smoke.check(sys.modules[__name__]))
         import glass_controls_smoke
         run_check('glass-controls', lambda: glass_controls_smoke.check(sys.modules[__name__]))
         import glass_focus_smoke
