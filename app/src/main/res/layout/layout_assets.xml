@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <com.google.android.material.button.MaterialButton
+        <io.nekohasekai.sagernet.widget.glass.GlassButton
             android:id="@+id/resource_source"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"

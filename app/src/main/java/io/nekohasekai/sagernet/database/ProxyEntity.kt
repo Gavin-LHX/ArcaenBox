@@ -13,6 +13,7 @@ import io.nekohasekai.sagernet.fmt.hysteria.*
 import io.nekohasekai.sagernet.fmt.internal.ChainBean
 import io.nekohasekai.sagernet.fmt.snell.*
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
+import io.nekohasekai.sagernet.fmt.mieru.toUri
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
 import io.nekohasekai.sagernet.fmt.naive.buildNaiveConfig
@@ -260,6 +261,7 @@ data class ProxyEntity(
             is TrojanBean -> toUriVMessVLESSTrojan(true)
             is TrojanGoBean -> toUri()
             is SnellBean -> toUri()
+            is MieruBean -> toUri()
             is NaiveBean -> toUri()
             is HysteriaBean -> toUri()
             is TuicBean -> toUri()
@@ -299,6 +301,11 @@ data class ProxyEntity(
                                 append(bean.buildMieruConfig(port))
                             }
 
+                            is VMessBean -> {
+                                append("\n\n")
+                                append(bean.buildXrayFinalMaskConfig(port))
+                            }
+
                             is NaiveBean -> {
                                 append("\n\n")
                                 append(bean.buildNaiveConfig(port))
@@ -317,6 +324,7 @@ data class ProxyEntity(
 
     fun needExternal(): Boolean {
         return when (type) {
+            TYPE_VMESS -> vmessBean!!.usesFinalMask()
             TYPE_TROJAN_GO -> true
             TYPE_SNELL -> true
             TYPE_MIERU -> true

@@ -17,10 +17,11 @@ def main():
     identities = {'libnaive.so': ('naive', 'stable', 24, []),
                   'libtrojan-go.so': ('trojan-go', 'stable', 21, []),
                   'libmieru.so': ('mieru', 'stable', 21, []),
+                  'libxray.so': ('xray', 'stable', 21, []),
                   'libmihomo.so': ('snell', 'stable', 21, [4, 5]),
                   'libsnell.so': ('snell', 'preview', 21, [4, 5, 6])}
     manifest = {'components': []}
-    for pinned in [*lock['components'], lock['mieru'], lock['snell_preview']]:
+    for pinned in [*lock['components'], lock['mieru'], lock['xray'], lock['snell_preview']]:
         component, channel, sdk, protocols = identities[pinned['library']]
         revision = lock['revisions'][f'{component}:{channel}']
         folder = args.directory/component/channel

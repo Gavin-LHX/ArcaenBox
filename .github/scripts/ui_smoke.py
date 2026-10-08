@@ -20,6 +20,7 @@ MENU = {e.get(ANDROID + 'id').split('/')[-1]: STRINGS[e.get(ANDROID + 'title').s
 RESULTS = []
 FAILURES = []
 ONLY_CHECKS = set(os.environ.get('UI_SMOKE_CHECKS', '').split(',')) - {''}
+DEFAULT_INTERFACE = 'classic'
 
 
 def adb(*args, binary=False, check=True):
@@ -90,7 +91,7 @@ def assert_connect_button_visible(button):
         raise AssertionError('Connect button is covered despite accessible bounds')
 
 
-def assert_disconnected_footer(doc=None):
+def assert_disconnected_footer(doc=None, flat_background=True):
     """Idle screens show only the A button, without text or a separate bottom strip."""
     import io
     from PIL import Image
@@ -100,10 +101,21 @@ def assert_disconnected_footer(doc=None):
     button = find(doc, resource_id=PACKAGE + ':id/fab')
     assert button is not None, 'Idle connect button missing'
     assert_connect_button_visible(button)
+    if not flat_background:
+        return button
     pixels = Image.open(io.BytesIO(adb('exec-out', 'screencap', '-p', binary=True))).convert('RGB')
     width, height = pixels.size
+    nav = shell_navigation(doc)
+    if nav is not None:
+        # The shell has its own navigation surface below the content. Its color
+        # is intentional; an idle footer must leave the content itself uniform.
+        content = find(doc, resource_id=PACKAGE + ':id/coordinator')
+        left, _, right, height = bounds(content)
+        sample_x = (left + 4, right - 4)
+    else:
+        sample_x = (4, width - 4)
     top = max(0, bounds(button)[1] - (bounds(button)[3] - bounds(button)[1]))
-    for x in (4, width - 4):
+    for x in sample_x:
         expected = pixels.getpixel((x, top))
         for y in (bounds(button)[1], bounds(button)[3], height - 2):
             actual = pixels.getpixel((x, min(y, height - 1)))
@@ -132,8 +144,25 @@ def wait_for(timeout=25, **attrs):
     raise AssertionError(f'Control did not appear: {attrs}')
 
 
-def scroll_for(**attrs):
+def scroll_for(*, expand_categories=True, **attrs):
     """Search long preference lists and forms, stopping at either scroll boundary."""
+    # Advanced preferences remain in the same data store, under foldable headers.
+    if expand_categories and 'text' in attrs:
+        ns = '{http://schemas.android.com/apk/res-auto}'
+        for category in ET.parse('app/src/main/res/xml/global_preferences.xml').getroot():
+            if not category.tag.endswith('ExpandablePreferenceCategory'): continue
+            titles = [STRINGS.get(n.get(ns+'title', '').split('/')[-1]) for n in category]
+            if attrs['text'] in titles:
+                header = scroll_for(text=STRINGS[category.get(ns+'title').split('/')[-1]])
+                if STRINGS['settings_expand'] in header.get('content-desc', ''):
+                    tap(header)
+                else:
+                    # TextView is a child of the accessible, clickable category row.
+                    doc=tree(); parents={c:p for p in doc.iter() for c in p}
+                    header=find(doc,text=STRINGS[category.get(ns+'title').split('/')[-1]])
+                    row=parents.get(header)
+                    if row is not None and STRINGS['settings_expand'] in row.get('content-desc',''): tap(row)
+                break
     doc=tree()
     def exposed(doc):
         node=find(doc,**attrs)
@@ -191,12 +220,13 @@ def shell_tap(label):
     wait_for(resource_id=PACKAGE + ':id/toolbar')
 
 
-def launch(interface='classic'):
+def launch(interface=None):
     """Starts the app in the classic drawer interface (default) or the redesigned one.
 
     The drawer checks below predate the redesign and keep verifying the classic
     fallback; the choice persists, so it is switched through the app's own controls.
     """
+    interface = interface or DEFAULT_INTERFACE
     adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
     adb('shell', 'wm', 'dismiss-keyguard')
     adb('shell', 'am', 'force-stop', PACKAGE)
@@ -230,21 +260,57 @@ def open_drawer():
 
 
 def navigate(item):
+    nav = shell_navigation(tree())
+    if nav is not None:
+        # The same destination IDs are exposed by the phone bar and wide rail.
+        target = find(nav, resource_id=PACKAGE + ':id/' + item)
+        if target is not None:
+            tap(target)
+            wait_for(resource_id=PACKAGE + ':id/toolbar')
+        else:
+            shell_tap(STRINGS['shell_more'])
+            wait_for(resource_id=PACKAGE + ':id/more_scroll')
+            tap(scroll_for(text=MENU[item]))
+            wait_for(resource_id=PACKAGE + ':id/toolbar')
+        return
     open_drawer()
     label = MENU[item]
     for direction in ['up', 'down', 'down', 'up']:
         doc = tree()
-        node = find(doc, text=label)
+        drawer = find(doc, resource_id=PACKAGE + ':id/nav_view')
+        assert drawer is not None, 'Navigation drawer is not open'
+        # A composited content layer can remain in the accessibility tree behind
+        # the drawer. Restrict selection to the actual drawer, not its page title.
+        node = find(drawer, text=label)
         if node is not None:
             tap(node)
+            deadline = time.monotonic() + 10
+            while find(tree(), resource_id=PACKAGE + ':id/nav_view') is not None:
+                assert time.monotonic() < deadline, 'Navigation drawer did not close'
+                time.sleep(.2)
             wait_for(resource_id=PACKAGE + ':id/toolbar')
             return
-        drawer = find(doc, resource_id=PACKAGE + ':id/nav_view')
         x1,y1,x2,y2 = bounds(drawer)
         x=(x1+x2)//2; top=y1+(y2-y1)//4; bottom=y1+3*(y2-y1)//4
         start,end=(top,bottom) if direction == 'up' else (bottom,top)
         adb('shell','input','swipe',str(x),str(start),str(x),str(end),'350')
     raise AssertionError(f'Navigation item missing: {label}')
+
+
+def interface_check(check, interface, evidence):
+    """Run shared feature assertions in either host, retaining distinct artifacts."""
+    import sys
+    global DEFAULT_INTERFACE, OUT
+    previous_interface, previous_out = DEFAULT_INTERFACE, OUT
+    start = len(RESULTS)
+    DEFAULT_INTERFACE = interface
+    OUT = previous_out / evidence
+    OUT.mkdir(exist_ok=True)
+    try:
+        check(sys.modules[__name__])
+    finally:
+        RESULTS[start:] = [evidence + '/' + name for name in RESULTS[start:]]
+        DEFAULT_INTERFACE, OUT = previous_interface, previous_out
 
 
 def auto_connect_switch():
@@ -336,9 +402,9 @@ def redesigned_regressions():
             'Navigation selection disagrees with restored content: ' + destination)
 
     def bottom_bar_switch():
-        scroll_for(text=STRINGS['show_bottom_bar'])
+        scroll_for(text=STRINGS['show_connection_on_pages'])
         doc = tree()
-        title = find(doc, text=STRINGS['show_bottom_bar'])
+        title = find(doc, text=STRINGS['show_connection_on_pages'])
         parents = {child: parent for parent in doc.iter() for child in parent}
         while title is not None:
             switch = find(title, resource_id=PACKAGE + ':id/material_switch')
@@ -443,27 +509,50 @@ def redesigned_regressions():
                     'Scrolling resurrected the node FAB on ' + content)
             capture('23-scroll-without-fab-' + content)
 
+        # Keep the short-screen stress above, then give the whole final card room to appear.
+        resize('720x1280', '320', 'bottom_nav')
         shell_tap(STRINGS['shell_nodes'])
         wait_for(resource_id=PACKAGE + ':id/configuration_list')
         assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
-        # A short screen can show less than one card, so scroll to an observed
-        # fixture instead of assuming a fixed number of gestures reaches it.
+        # Reach an observed fixture rather than assuming a fixed number of gestures.
         last_node = None
         for _ in range(32):
             swipe_list('configuration_list', True)
-            last_node = find(tree(), text='Shell-Scroll-05')
+            last_node = find(tree(), resource_id=PACKAGE + ':id/profile_name', text='Shell-Scroll-05')
             if last_node is not None:
                 break
         assert last_node is not None, 'Node fixture list did not scroll'
-        capture('23-node-list-last-fixture')
-        # Bottom padding can move the final title outside the viewport at the
-        # end. Verify its appearance separately, then overscroll to hide the FAB.
+        # Tail padding can keep the card clear without hiding the FAB. Overscroll,
+        # then require the complete card content and either a hidden or nonoverlapping FAB.
         for _ in range(12):
             swipe_list('configuration_list', True)
-            if find(tree(), resource_id=PACKAGE + ':id/fab') is None:
-                break
-        assert find(tree(), resource_id=PACKAGE + ':id/fab') is None, 'Node FAB did not hide on overscroll'
-        capture('23-node-fab-hidden-on-overscroll')
+        doc = tree()
+        last_node = find(doc, resource_id=PACKAGE + ':id/profile_name', text='Shell-Scroll-05')
+        assert last_node is not None, 'Last node title disappeared at the list end'
+        parents = {child: parent for parent in doc.iter() for child in parent}
+        card = last_node
+        while card is not None and card.get('resource-id') != PACKAGE + ':id/content':
+            card = parents.get(card)
+        assert card is not None, 'Last node card missing'
+        protocol = find(card, resource_id=PACKAGE + ':id/profile_type', text='SOCKS5')
+        assert protocol is not None, 'Last node protocol is not visible'
+        left, top, right, bottom = bounds(card)
+        list_left, list_top, list_right, list_bottom = bounds(
+            find(doc, resource_id=PACKAGE + ':id/configuration_list'))
+        assert list_left <= left < right <= list_right and list_top < top < bottom < list_bottom, (
+            'Last node card is clipped by the list viewport')
+        for content in (last_node, protocol):
+            x1, y1, x2, y2 = bounds(content)
+            assert left <= x1 < x2 <= right and top <= y1 < y2 <= bottom, (
+                'Last node title or protocol is clipped')
+        fab = find(doc, resource_id=PACKAGE + ':id/fab')
+        if fab is not None:
+            fab_left, fab_top, fab_right, fab_bottom = bounds(fab)
+            assert right <= fab_left or fab_right <= left or bottom <= fab_top or fab_bottom <= top, (
+                'FAB overlaps the last node card and must hide on overscroll')
+            assert_connect_button_visible(fab)
+        capture('23-node-list-last-fixture')
+        capture('23-node-fab-hidden-for-last-card' if fab is None else '23-node-last-card-clear-of-fab')
         swipe_list('configuration_list', False)
         assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
         capture('23-node-fab-restored-after-scroll')
@@ -599,7 +688,7 @@ def settings():
     tap(auto_connect_switch())
     assert auto_connect_switch().get('checked') == original, 'Switch did not restore'
     capture('04-light-settings-switch')
-    tap(wait_for(text=STRINGS['service_mode']))
+    tap(scroll_for(text=STRINGS['service_mode']))
     wait_for(resource_id=PACKAGE + ':id/select_dialog_listview')
     capture('04-light-single-choice-dialog')
     adb('shell','input','keyevent','BACK')
@@ -629,13 +718,15 @@ def profile():
     adb('shell','input','keyevent','BACK')
 
 
-def service():
+def service(flat_background=True):
     launch()
+    if shell_navigation(tree()) is not None:
+        navigate('nav_configuration')
     # Only the isolated emulator grants VPN consent. No real proxy is used.
     adb('shell', 'appops', 'set', PACKAGE, 'ACTIVATE_VPN', 'allow')
     tap(wait_for(resource_id=PACKAGE + ':id/profile_name'))
     button=wait_for(resource_id=PACKAGE + ':id/fab',enabled='true')
-    assert_disconnected_footer()
+    assert_disconnected_footer(flat_background=flat_background)
     tap(button)
     deadline=time.monotonic()+25
     while time.monotonic()<deadline:
@@ -673,7 +764,7 @@ def service():
         time.sleep(.5)
     else:
         raise AssertionError('VPN foreground service or TUN interface did not stop')
-    assert_disconnected_footer()
+    assert_disconnected_footer(flat_background=flat_background)
     capture('06-light-service-stopped')
 
 
@@ -898,6 +989,9 @@ def main():
         # denies netlink interface inspection to shell; the app still runs as its own UID.
         root_emulator()
         apk=next(Path('dist').glob('*x86_64*.apk'))
+        if os.environ.get('UI_UPGRADE_BASE') or 'upgrade' in ONLY_CHECKS:
+            import upgrade_smoke
+            run_check('upgrade', lambda: upgrade_smoke.check(__import__('sys').modules[__name__], apk))
         adb('install','-r','-g',str(apk))
         adb('shell','logcat','-c')
         adb('shell','cmd','uimode','night','no')
@@ -905,20 +999,46 @@ def main():
         run_check('startup', startup)
         for name in ['nav_group','nav_route','nav_settings','nav_logcat','nav_tools','nav_about','nav_po0']:
             run_check('light-' + name, lambda name=name: destination(name, '03-light-'))
+        import simplified_ui
+        run_check('simplified-ui', lambda: simplified_ui.check(__import__('sys').modules[__name__]))
         run_check('settings', settings)
         run_check('profile', profile)
+        import profile_refresh_smoke
+        run_check('profile-refresh', lambda: profile_refresh_smoke.check(__import__('sys').modules[__name__]))
+        run_check('profile-refresh-md3', lambda: interface_check(profile_refresh_smoke.check, 'redesigned', 'profile-refresh-md3'))
         run_check('service', service)
+        run_check('service-md3', lambda: interface_check(lambda ui: service(), 'redesigned', 'service-md3'))
         run_check('backup', backup)
         run_check('whitelist', whitelist)
         run_check('launcher', launcher_icon)
         run_check('app-updates', app_updates)
+        run_check('app-updates-md3', lambda: interface_check(lambda ui: app_updates(), 'redesigned', 'app-updates-md3'))
+        import about_lifecycle_smoke
+        run_check('about-lifecycle', lambda: about_lifecycle_smoke.check(__import__('sys').modules[__name__]))
+        run_check('about-lifecycle-md3', lambda: interface_check(about_lifecycle_smoke.check, 'redesigned', 'about-lifecycle-md3'))
+        run_check('crash-export', lambda: about_lifecycle_smoke.crash_export(__import__('sys').modules[__name__]))
         run_check('core-switch', core_switch)
         run_check('test-presets', test_presets)
         run_check('vless-import', vless_import)
         run_check('redesigned-regressions', redesigned_regressions)
+        import mieru_import_smoke
+        run_check('mieru-import', lambda: mieru_import_smoke.check(__import__('sys').modules[__name__]))
+        import finalmask_smoke
+        run_check('finalmask', lambda: finalmask_smoke.check(__import__('sys').modules[__name__]))
         import bottom_edges
         import sys
         run_check('bottom-edges', lambda: bottom_edges.check(sys.modules[__name__]))
+        import liquid_glass_smoke
+        run_check('liquid-glass', lambda: liquid_glass_smoke.check(sys.modules[__name__]))
+        import glass_md3_smoke
+        run_check('liquid-glass-md3', lambda: glass_md3_smoke.check(sys.modules[__name__]))
+        import home_glass_smoke
+        run_check('home-glass-md3', lambda: home_glass_smoke.check(sys.modules[__name__]))
+        import glass_controls_smoke
+        run_check('glass-controls', lambda: glass_controls_smoke.check(sys.modules[__name__]))
+        import glass_focus_smoke
+        run_check('glass-focus', lambda: glass_focus_smoke.check(sys.modules[__name__]))
+        run_check('glass-focus-md3', lambda: interface_check(glass_focus_smoke.check, 'redesigned', 'glass-focus-md3'))
         if 'core-download' in ONLY_CHECKS:
             run_check('core-download', core_download)
         adb('shell','cmd','uimode','night','yes')

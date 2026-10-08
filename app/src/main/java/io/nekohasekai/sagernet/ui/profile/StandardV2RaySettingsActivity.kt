@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.preference.EditTextPreference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.Preference
+import android.widget.Toast
+import android.text.InputType
 import io.nekohasekai.sagernet.Key
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.preference.EditTextPreferenceModifiers
@@ -11,6 +14,8 @@ import io.nekohasekai.sagernet.fmt.http.HttpBean
 import io.nekohasekai.sagernet.fmt.trojan.TrojanBean
 import io.nekohasekai.sagernet.fmt.v2ray.StandardV2RayBean
 import io.nekohasekai.sagernet.fmt.v2ray.VMessBean
+import io.nekohasekai.sagernet.fmt.v2ray.validateFinalMask
+import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import moe.matsuri.nb4a.proxy.PreferenceBinding
 import moe.matsuri.nb4a.proxy.PreferenceBindingManager
 import moe.matsuri.nb4a.proxy.Type
@@ -29,6 +34,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
     private val password = pbm.add(PreferenceBinding(Type.Text, "password"))
     private val alterId = pbm.add(PreferenceBinding(Type.TextToInt, "alterId"))
     private val encryption = pbm.add(PreferenceBinding(Type.Text, "encryption"))
+    private val finalMask = pbm.add(PreferenceBinding(Type.Text, "finalMask"))
     private val type = pbm.add(PreferenceBinding(Type.Text, "type"))
     private val host = pbm.add(PreferenceBinding(Type.Text, "host"))
     private val path = pbm.add(PreferenceBinding(Type.Text, "path"))
@@ -64,6 +70,17 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
     override fun StandardV2RayBean.serialize() {
         pbm.fromCacheAll(this)
+        initializeDefaultValues()
+        validateFinalMask()
+    }
+
+    override suspend fun saveAndExit() {
+        try {
+            createEntity().apply { serialize() }
+            super.saveAndExit()
+        } catch (error: IllegalArgumentException) {
+            onMainDispatcher { Toast.makeText(this@StandardV2RaySettingsActivity, error.message, Toast.LENGTH_LONG).show() }
+        }
     }
 
     private lateinit var securityCategory: PreferenceCategory
@@ -107,6 +124,18 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         encryption.preference.isVisible = isVmess || isVless
         username.preference.isVisible = isHttp
         password.preference.isVisible = isHttp
+        finalMask.preference.apply {
+            isVisible = isVless
+            this as EditTextPreference
+            summaryProvider = Preference.SummaryProvider<EditTextPreference> {
+                getString(if (it.text.isNullOrBlank()) R.string.finalmask_disabled else R.string.finalmask_sudoku_enabled)
+            }
+            setOnBindEditTextListener { edit ->
+                edit.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+                edit.setSingleLine(false)
+                edit.minLines = 5
+            }
+        }
 
         if (tmpBean is TrojanBean) {
             uuid.preference.title = resources.getString(R.string.password)

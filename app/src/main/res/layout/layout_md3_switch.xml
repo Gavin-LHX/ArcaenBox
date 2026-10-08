@@ -1,4 +1,4 @@
-<com.google.android.material.materialswitch.MaterialSwitch
+<io.nekohasekai.sagernet.widget.glass.GlassSwitch
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/material_switch"
     android:layout_width="wrap_content" android:layout_height="wrap_content"

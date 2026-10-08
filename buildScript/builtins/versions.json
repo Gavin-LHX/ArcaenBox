@@ -86,6 +86,17 @@
     "url": "https://github.com/enfein/mieru/archive/316cc6606c287d45a321b99ac86a1f2e7f2b785a.tar.gz",
     "sha256": "5b64fbd839b45e1adf1116d8b1c24e56c89e33a4dea12138e2e0c01670750b2c"
   },
+  "xray": {
+    "name": "Xray",
+    "version": "26.3.27",
+    "library": "libxray.so",
+    "source": "https://github.com/XTLS/Xray-core/tree/d2758a023cd7f4174a5a5fa4ff66e487d4342ba0",
+    "license": "MPL-2.0",
+    "commit": "d2758a023cd7f4174a5a5fa4ff66e487d4342ba0",
+    "url": "https://codeload.github.com/XTLS/Xray-core/tar.gz/d2758a023cd7f4174a5a5fa4ff66e487d4342ba0",
+    "sha256": "14fa566ee0a801d3d51144c67018b449f5dcf462ddfacadd032da069787e61f9",
+    "toolchain": "go1.26.1"
+  },
   "snell_preview": {
     "name": "Snell (sing-snell)",
     "version": "sing-snell bc5a12ac736f / adapter 1",
@@ -97,6 +108,7 @@
     "trojan-go:stable": 1,
     "naive:stable": 1,
     "mieru:stable": 1,
+    "xray:stable": 1,
     "snell:stable": 1,
     "snell:preview": 1
   }

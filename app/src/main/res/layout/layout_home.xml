@@ -57,7 +57,7 @@
                             app:indicatorSize="112dp"
                             app:trackThickness="4dp" />
 
-                        <com.google.android.material.button.MaterialButton
+                        <io.nekohasekai.sagernet.widget.glass.GlassButton
                             android:id="@+id/power_button"
                             style="@style/Widget.Material3.Button.Icon"
                             android:layout_width="96dp"
@@ -304,7 +304,7 @@
                         app:drawableStartCompat="@drawable/baseline_public_24"
                         app:drawableTint="?colorOnSurfaceVariant" />
 
-                    <com.google.android.material.button.MaterialButton
+                    <io.nekohasekai.sagernet.widget.glass.GlassButton
                         android:id="@+id/retest_button"
                         style="@style/Widget.Material3.Button.TextButton.Icon"
                         android:layout_width="wrap_content"
@@ -332,28 +332,28 @@
                 android:columnCount="2"
                 android:useDefaultMargins="false">
 
-                <com.google.android.material.button.MaterialButton
+                <io.nekohasekai.sagernet.widget.glass.GlassButton
                     android:id="@+id/action_clipboard"
                     style="@style/Widget.ArcaenBox.ShellAction"
                     android:layout_columnWeight="1"
                     android:text="@string/shell_import_clipboard"
                     app:icon="@drawable/ic_shell_paste" />
 
-                <com.google.android.material.button.MaterialButton
+                <io.nekohasekai.sagernet.widget.glass.GlassButton
                     android:id="@+id/action_scan"
                     style="@style/Widget.ArcaenBox.ShellAction"
                     android:layout_columnWeight="1"
                     android:text="@string/add_profile_methods_scan_qr_code"
                     app:icon="@drawable/ic_image_camera_alt" />
 
-                <com.google.android.material.button.MaterialButton
+                <io.nekohasekai.sagernet.widget.glass.GlassButton
                     android:id="@+id/action_update"
                     style="@style/Widget.ArcaenBox.ShellAction"
                     android:layout_columnWeight="1"
                     android:text="@string/shell_update_subscriptions"
                     app:icon="@drawable/ic_baseline_update_24" />
 
-                <com.google.android.material.button.MaterialButton
+                <io.nekohasekai.sagernet.widget.glass.GlassButton
                     android:id="@+id/action_apps"
                     style="@style/Widget.ArcaenBox.ShellAction"
                     android:layout_columnWeight="1"

@@ -13,6 +13,8 @@ import io.nekohasekai.sagernet.fmt.snell.SnellBean
 import io.nekohasekai.sagernet.fmt.snell.buildSnellConfig
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
+import io.nekohasekai.sagernet.fmt.v2ray.VMessBean
+import io.nekohasekai.sagernet.fmt.v2ray.buildXrayFinalMaskConfig
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
 import io.nekohasekai.sagernet.fmt.naive.buildNaiveConfig
 import io.nekohasekai.sagernet.fmt.trojan_go.TrojanGoBean
@@ -59,6 +61,10 @@ abstract class BoxInstance(
         for ((chain) in config.externalIndex) {
             chain.entries.forEachIndexed { index, (port, profile) ->
                 when (val bean = profile.requireBean()) {
+                    is VMessBean -> {
+                        initPlugin("xray-builtin")
+                        pluginConfigs[port] = profile.type to bean.buildXrayFinalMaskConfig(port)
+                    }
                     is TrojanGoBean -> {
                         initPlugin("trojan-go-plugin")
                         pluginConfigs[port] = profile.type to bean.buildTrojanGoConfig(port)
@@ -153,6 +159,13 @@ abstract class BoxInstance(
                         val commands = initPlugin("mieru-plugin").command("run")
 
                         processes.start(commands, envMap)
+                    }
+
+                    bean is VMessBean -> {
+                        val configFile = File.createTempFile("xray_", ".json", cacheDir)
+                        configFile.writeText(config)
+                        cacheFiles.add(configFile)
+                        processes.start(initPlugin("xray-builtin").command("run", "-config", configFile.absolutePath))
                     }
 
                     bean is NaiveBean -> {

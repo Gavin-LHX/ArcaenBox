@@ -8,6 +8,9 @@ on:
       checks:
         description: Optional comma-separated checks to repeat (blank runs all)
         required: false
+      upgrade_from_run:
+        description: Optional signed older APK run for configuration-preserving upgrade verification
+        required: false
 permissions:
   contents: read
   actions: read
@@ -24,12 +27,23 @@ jobs:
       - uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - uses: actions/download-artifact@v4
         with:
           name: ArcaenBox-APKs
           path: dist
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        if: inputs.upgrade_from_run != ''
+        with:
+          name: ArcaenBox-APKs
+          path: upgrade-base
+          run-id: ${{ inputs.upgrade_from_run }}
+          github-token: ${{ github.token }}
+      - name: Verify upgrade base checksums
+        if: inputs.upgrade_from_run != ''
+        run: cd upgrade-base && sha256sum -c SHA256SUMS.txt
       - name: Record APK source and verify checksums
         env:
           GH_TOKEN: ${{ github.token }}
@@ -46,6 +60,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         env:
           UI_SMOKE_CHECKS: ${{ inputs.checks }}
+          UI_UPGRADE_BASE: ${{ inputs.upgrade_from_run != '' && 'upgrade-base' || '' }}
         with:
           api-level: 35
           arch: x86_64

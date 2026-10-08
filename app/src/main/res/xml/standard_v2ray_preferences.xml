@@ -78,6 +78,11 @@
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
+    <EditTextPreference
+        app:key="finalMask"
+        app:title="FinalMask · Sudoku (TCP)"
+        app:dialogMessage="@string/finalmask_editor_hint" />
+
     <PreferenceCategory
         app:key="serverWsCategory"
         app:title="@string/cag_ws">

@@ -1,6 +1,10 @@
 package io.nekohasekai.sagernet.widget
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Canvas
+import android.graphics.Color
+import android.view.MotionEvent
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.AttributeSet
@@ -15,7 +19,12 @@ import androidx.vectordrawable.graphics.drawable.Animatable2Compat
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.progressindicator.BaseProgressIndicator
+import com.google.android.material.shape.RelativeCornerSize
 import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.ktx.getColorAttr
+import io.nekohasekai.sagernet.widget.glass.GlassDrawable
+import io.nekohasekai.sagernet.widget.glass.GlassTouch
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.ktx.findActivity
 import kotlinx.coroutines.Job
@@ -28,6 +37,39 @@ class ServiceButton @JvmOverloads constructor(
     defStyleAttr: Int = R.attr.floatingActionButtonStyle
 ) :
     FloatingActionButton(context, attrs, defStyleAttr), DynamicAnimation.OnAnimationEndListener {
+
+    private val glass = if (DataStore.interfaceStyle == "liquid_glass") GlassDrawable(this, radiusDp = 28f, sampleContent = true, lens = true) else null
+    private val glassTouch = glass?.let { GlassTouch(this, it, transform = true) }
+
+    init {
+        if (glass != null) {
+            // Match the 56dp glass circle while keeping native ripple, focus and
+            // pressed-state feedback inside the same outline.
+            shapeAppearanceModel = shapeAppearanceModel.toBuilder()
+                .setAllCornerSizes(RelativeCornerSize(.5f))
+                .build()
+            backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            imageTintList = ColorStateList.valueOf(context.getColorAttr(R.attr.colorOnSurface))
+            compatElevation = 0f
+            compatPressedTranslationZ = 0f
+            glass.callback = this
+        }
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        glass?.apply { setBounds(0, 0, width, height); draw(canvas) }
+        super.onDraw(canvas)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        glassTouch?.onTouch(event)
+        return super.onTouchEvent(event)
+    }
+
+    override fun onDetachedFromWindow() {
+        glassTouch?.reset()
+        super.onDetachedFromWindow()
+    }
 
     private val callback = object : Animatable2Compat.AnimationCallback() {
         override fun onAnimationEnd(drawable: Drawable) {

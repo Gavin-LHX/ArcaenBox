@@ -11,6 +11,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
 
     public String uuid;
     public String encryption; // or VLESS flow
+    public String finalMask;
 
     //////// End of VMess & VLESS ////////
 
@@ -71,6 +72,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
         super.initializeDefaultValues();
 
         if (JavaUtil.isNullOrBlank(uuid)) uuid = "";
+        if (finalMask == null) finalMask = "";
 
         if (JavaUtil.isNullOrBlank(type)) type = "tcp";
         else if ("h2".equals(type)) type = "http";
@@ -112,7 +114,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
 
     @Override
     public void serialize(ByteBufferOutput output) {
-        output.writeInt(4);
+        output.writeInt(5);
         super.serialize(output);
         output.writeString(uuid);
         output.writeString(encryption);
@@ -165,6 +167,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
         output.writeBoolean(muxPadding);
         output.writeInt(muxType);
         output.writeInt(muxConcurrency);
+        output.writeString(finalMask);
     }
 
     @Override
@@ -256,6 +259,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
             muxType = input.readInt();
             muxConcurrency = input.readInt();
         }
+        if (version >= 5) finalMask = input.readString();
     }
 
     public boolean isVLESS() {

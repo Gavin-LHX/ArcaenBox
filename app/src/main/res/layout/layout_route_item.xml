@@ -133,7 +133,7 @@
 
             </LinearLayout>
 
-            <com.google.android.material.materialswitch.MaterialSwitch
+            <io.nekohasekai.sagernet.widget.glass.GlassSwitch
                 android:layout_marginBottom="2dp"
                 android:id="@+id/enable"
                 android:layout_marginStart="12dp"

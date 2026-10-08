@@ -121,16 +121,19 @@ class HomeFragment : ToolbarFragment(R.layout.layout_home) {
         binding.statusTitle.setTextColor(onCardColor)
         binding.statusSubtitle.setTextColor(onCardColor)
 
-        // Filled primary button to connect; tonal "on" state while connected.
-        binding.powerButton.backgroundTintList = ColorStateList.valueOf(
-            context.getColorAttr(
-                if (connected) R.attr.colorPrimary
-                else R.attr.colorSurfaceContainerHighest
+        // Keep the glass surface owned by GlassButton across service transitions.
+        val glass = DataStore.interfaceStyle == "liquid_glass"
+        if (!glass) {
+            binding.powerButton.backgroundTintList = ColorStateList.valueOf(
+                context.getColorAttr(
+                    if (connected) R.attr.colorPrimary
+                    else R.attr.colorSurfaceContainerHighest
+                )
             )
-        )
+        }
         binding.powerButton.iconTint = ColorStateList.valueOf(
             context.getColorAttr(
-                if (connected) R.attr.colorOnPrimary
+                if (connected && !glass) R.attr.colorOnPrimary
                 else R.attr.colorPrimary
             )
         )

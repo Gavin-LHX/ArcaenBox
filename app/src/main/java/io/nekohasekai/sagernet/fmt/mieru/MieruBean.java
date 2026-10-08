@@ -34,6 +34,8 @@ public class MieruBean extends AbstractBean {
     public String username;
     public String password;
     public Integer mtu;
+    public String multiplexing;
+    public String handshakeMode;
 
     @Override
     public void initializeDefaultValues() {
@@ -42,6 +44,8 @@ public class MieruBean extends AbstractBean {
         if (username == null) username = "";
         if (password == null) password = "";
         if (mtu == null) mtu = 1400;
+        if (multiplexing == null) multiplexing = "MULTIPLEXING_LOW";
+        if (handshakeMode == null) handshakeMode = "HANDSHAKE_STANDARD";
     }
 
     @Override
@@ -51,14 +55,14 @@ public class MieruBean extends AbstractBean {
 
     @Override
     public void serialize(ByteBufferOutput output) {
-        output.writeInt(0);
+        output.writeInt(1);
         super.serialize(output);
         output.writeString(protocol);
         output.writeString(username);
         output.writeString(password);
-        if (protocol.equals("UDP")) {
-            output.writeInt(mtu);
-        }
+        output.writeInt(mtu);
+        output.writeString(multiplexing);
+        output.writeString(handshakeMode);
     }
 
     @Override
@@ -68,8 +72,12 @@ public class MieruBean extends AbstractBean {
         protocol = input.readString();
         username = input.readString();
         password = input.readString();
-        if (protocol.equals("UDP")) {
+        if (version >= 1 || protocol.equals("UDP")) {
             mtu = input.readInt();
+        }
+        if (version >= 1) {
+            multiplexing = input.readString();
+            handshakeMode = input.readString();
         }
     }
 

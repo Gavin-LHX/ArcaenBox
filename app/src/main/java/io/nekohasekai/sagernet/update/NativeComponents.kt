@@ -20,8 +20,8 @@ data class NativeUpdate(val manifest: ComponentManifest, val metadata: ByteArray
 
 /** Independent channels and immutable packages, shared by the UI and VPN processes. */
 object NativeComponents {
-    val names = linkedMapOf("trojan-go" to "Trojan-Go", "naive" to "NaïveProxy", "mieru" to "Mieru", "snell" to "Snell")
-    val plugins = mapOf("trojan-go-plugin" to "trojan-go", "naive-plugin" to "naive", "mieru-plugin" to "mieru", "snell-builtin" to "snell")
+    val names = linkedMapOf("trojan-go" to "Trojan-Go", "naive" to "NaïveProxy", "mieru" to "Mieru", "snell" to "Snell", "xray" to "Xray")
+    val plugins = mapOf("trojan-go-plugin" to "trojan-go", "naive-plugin" to "naive", "mieru-plugin" to "mieru", "snell-builtin" to "snell", "xray-builtin" to "xray")
     private val context get() = SagerNet.application
     private val root get() = File(context.noBackupFilesDir, "components").apply { mkdirs() }
     private val gson = Gson()

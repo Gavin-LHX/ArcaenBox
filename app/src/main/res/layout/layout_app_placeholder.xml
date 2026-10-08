@@ -17,7 +17,7 @@
         android:textColor="?attr/colorOnBackground"
         android:textSize="16sp" />
 
-    <com.google.android.material.button.MaterialButton
+    <io.nekohasekai.sagernet.widget.glass.GlassButton
         android:id="@+id/open_settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

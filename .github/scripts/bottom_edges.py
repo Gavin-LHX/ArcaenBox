@@ -20,9 +20,9 @@ def check(ui):
     original_bottom_bar = None
 
     def bottom_bar_switch():
-        ui.scroll_for(text=ui.STRINGS['show_bottom_bar'])
+        ui.scroll_for(text=ui.STRINGS['show_connection_on_pages'])
         doc = ui.tree()
-        row = ui.find(doc, text=ui.STRINGS['show_bottom_bar'])
+        row = ui.find(doc, text=ui.STRINGS['show_connection_on_pages'])
         parents = {child: parent for parent in doc.iter() for child in parent}
         while row is not None:
             switch = ui.find(row, resource_id=ui.PACKAGE + ':id/material_switch')
@@ -52,7 +52,19 @@ def check(ui):
             actual = image.getpixel((x, height - 2))
             assert max(abs(a-b) for a,b in zip(expected, actual)) <= 2, (
                 f'{name}: bottom background mismatch at x={x}: {expected} != {actual}')
-        if not drawer:
+        if drawer:
+            # A full-height background alone can hide a menu/system-button overlap.
+            # The menu viewport must stop above the navigation area even though
+            # its containing NavigationView continues to the physical screen edge.
+            menu = ui.find(target, resource_id=ui.PACKAGE + ':id/design_navigation_view')
+            assert menu is not None, f'{name}: drawer menu viewport missing'
+            assert ui.bounds(menu)[3] <= navigation_top, (
+                f'{name}: drawer menu reaches {ui.bounds(menu)[3]}, navigation starts at {navigation_top}')
+            for item in menu.iter('node'):
+                if item.get('resource-id') == ui.PACKAGE + ':id/design_menu_item_text':
+                    assert ui.bounds(item)[3] <= navigation_top, (
+                        f'{name}: drawer item {item.get("text")!r} overlaps system navigation')
+        else:
             button = ui.assert_disconnected_footer(doc)
             assert ui.bounds(button)[3] <= navigation_top, f'{name}: A overlaps navigation'
         if mode == 'gestural':

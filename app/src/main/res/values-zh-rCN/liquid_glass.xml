@@ -1,0 +1,6 @@
+<resources>
+    <string name="interface_style">界面风格</string>
+    <string name="glass_reduce_transparency">降低透明度</string>
+    <string name="glass_reduce_transparency_summary">Liquid Glass 使用实色表面，提高文字清晰度并减少图形开销。</string>
+    <string-array name="interface_style_names"><item>Material Design 3</item><item>Liquid Glass（液态玻璃）</item></string-array>
+</resources>

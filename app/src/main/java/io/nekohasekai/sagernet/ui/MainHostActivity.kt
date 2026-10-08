@@ -12,6 +12,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.fragment.app.FragmentTransaction
 import androidx.preference.PreferenceDataStore
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -47,6 +48,7 @@ import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.parseProxies
 import io.nekohasekai.sagernet.ktx.readableMessage
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
+import io.nekohasekai.sagernet.widget.glass.GlassTouch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import moe.matsuri.nb4a.utils.Util
@@ -78,6 +80,12 @@ abstract class MainHostActivity : ThemedActivity(),
     /** Floating control that list pages keep clear of while scrolling, if the shell shows one. */
     open val fabView: FloatingActionButton? get() = null
 
+    /** Scroll space below lists when the idle FAB floats over their content. */
+    open val listBottomPaddingDp: Int get() = 0
+
+    /** The classic release keeps its FAB fixed; the node shell can hide it on overscroll. */
+    open val fabFollowsListScroll: Boolean get() = false
+
     abstract fun displayFragment(fragment: ToolbarFragment)
 
     abstract fun displayFragmentWithId(@IdRes id: Int): Boolean
@@ -93,6 +101,21 @@ abstract class MainHostActivity : ThemedActivity(),
     protected open fun onSpeedUpdated(txRate: Long, rxRate: Long) {}
 
     protected open fun onSelectedProxyChanged(id: Long) {}
+
+    protected open fun onBottomBarPreferenceChanged() {}
+
+    protected fun beginShellTransaction(secondary: Boolean = false): FragmentTransaction =
+        supportFragmentManager.beginTransaction().apply {
+            if (DataStore.interfaceStyle == "liquid_glass") {
+                if (GlassTouch.motionEnabled(window.decorView)) {
+                    setCustomAnimations(R.anim.glass_enter, R.anim.glass_exit,
+                        R.anim.glass_enter, R.anim.glass_exit)
+                }
+            } else if (secondary) {
+                setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out,
+                    android.R.anim.fade_in, android.R.anim.fade_out)
+            }
+        }
 
     private val groupInterface by lazy { GroupInterfaceAdapter(this) }
 
@@ -412,6 +435,7 @@ abstract class MainHostActivity : ThemedActivity(),
 
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         when (key) {
+            Key.SHOW_BOTTOM_BAR -> onBottomBarPreferenceChanged()
             Key.SERVICE_MODE -> onBinderDied()
             Key.PROFILE_ID -> _selectedProxy.value = DataStore.selectedProxy
             Key.PROXY_APPS, Key.BYPASS_MODE, Key.INDIVIDUAL -> {

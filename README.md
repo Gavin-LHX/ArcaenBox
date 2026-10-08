@@ -18,6 +18,8 @@ sing-box / universal proxy toolchain for Android.
 
 默认使用重新设计的 Material 3 界面（首页仪表盘 + 底部导航 / 宽屏侧边导航栏），原侧栏界面保留为「经典界面」，可在 设置 → 经典界面 或 更多 → 切换到经典界面 回退，详见[新界面说明](docs/ui-redesign.md)。
 
+新版和经典布局均保留 1.7.5 的 Mieru、VLESS/FinalMask/Sudoku TCP、应用内 APK 更新和同名节点导入刷新修复。设置 → 界面样式可独立切换 MD3 与 Liquid Glass；布局切换不改变节点、路由或内核配置。
+
 ## 下载 / Downloads
 
 [![GitHub All Releases](https://img.shields.io/github/downloads/Gavin-LHX/ArcaenBox/total?label=downloads-total&logo=github&style=flat-square)](https://github.com/Gavin-LHX/ArcaenBox/releases)
@@ -56,7 +58,7 @@ https://matsuridayo.github.io
 * Snell v4/v5（内置，可选择服务端版本 / built-in, selectable server version）
 * Snell v6 RC2（内置测试版 / built-in preview）
 
-Trojan-Go、NaïveProxy、Mieru 和 Snell 无需安装插件。[内置组件版本、Snell v5 兼容范围与构建说明](docs/built-in-protocols.md)。Hysteria 1 的特殊模式仍使用可选插件。
+Trojan-Go、NaïveProxy、Mieru 和 Snell 无需安装插件。[内置组件版本、Snell v5 兼容范围与构建说明](docs/built-in-protocols.md)。[VLESS + FinalMask + Sudoku（TCP）](docs/vless-sudoku.md) 使用内置 Xray，支持含 `fm` 参数的分享链接。Hysteria 1 的特殊模式仍使用可选插件。
 
 Trojan-Go, NaïveProxy, Mieru and Snell ship in the APK. Snell v5 servers use the v4-compatible transport; v5-specific QUIC is not implemented. Special Hysteria 1 modes still use an optional plugin.
 
@@ -77,6 +79,7 @@ Only resolving outbound, i.e. nodes, is supported. Information such as diversion
 Core:
 
 - [SagerNet/sing-box](https://github.com/SagerNet/sing-box)
+- [XTLS/Xray-core](https://github.com/XTLS/Xray-core) — VLESS FinalMask Sudoku
 
 Android GUI:
 

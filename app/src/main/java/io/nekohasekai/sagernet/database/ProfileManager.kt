@@ -1,6 +1,7 @@
 package io.nekohasekai.sagernet.database
 
 import android.database.sqlite.SQLiteCantOpenDatabaseException
+import androidx.room.withTransaction
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.aidl.TrafficData
 import io.nekohasekai.sagernet.fmt.AbstractBean
@@ -181,59 +182,38 @@ object ProfileManager {
         }
     }
 
-    suspend fun getRules(): List<RuleEntity> {
+    suspend fun getRules(): List<RuleEntity> = SagerDatabase.instance.withTransaction {
+        val defaults = defaultRules()
         var rules = SagerDatabase.rulesDao.allRules()
         if (rules.isEmpty() && !DataStore.rulesFirstCreate) {
+            // One transaction makes concurrent first reads see one complete set.
+            // Initial rows are loaded as a snapshot, never also appended via onAdd.
+            defaults.forEachIndexed { index, rule -> rule.userOrder = index + 1L }
+            SagerDatabase.rulesDao.insert(defaults)
             DataStore.rulesFirstCreate = true
-            createRule(
-                RuleEntity(
-                    name = app.getString(R.string.route_opt_block_quic),
-                    port = "443",
-                    network = "udp",
-                    outbound = -2
-                )
-            )
-            createRule(
-                RuleEntity(
-                    name = app.getString(R.string.route_opt_block_ads),
-                    domains = "geosite:category-ads-all",
-                    outbound = -2
-                )
-            )
-            val fuckedCountry = mutableListOf("cn:中国")
-            if (Locale.getDefault().country != Locale.CHINA.country) {
-                // 非中文用户
-                fuckedCountry += "ir:Iran"
-                fuckedCountry += "ru:Russia"
-            }
-            for (c in fuckedCountry) {
-                val country = c.substringBefore(":")
-                val displayCountry = c.substringAfter(":")
-                //
-                if (country == "cn") createRule(
-                    RuleEntity(
-                        name = app.getString(R.string.route_play_store, displayCountry),
-                        domains = "googleapis.cn",
-                    ), false
-                )
-                createRule(
-                    RuleEntity(
-                        name = app.getString(R.string.route_bypass_domain, displayCountry),
-                        domains = "geosite:$country",
-                        outbound = -1
-                    ), false
-                )
-                createRule(
-                    RuleEntity(
-                        name = app.getString(R.string.route_bypass_ip, displayCountry),
-                        ip = "geoip:$country",
-                        outbound = -1
-                    ), false
-                )
-            }
             rules = SagerDatabase.rulesDao.allRules()
         }
-        return rules
+        val duplicates = DefaultRuleRepair.duplicates(rules, defaults)
+        if (duplicates.isNotEmpty()) {
+            SagerDatabase.rulesDao.deleteRules(duplicates)
+            val removed = duplicates.map { it.id }.toSet()
+            rules = rules.filterNot { it.id in removed }
+        }
+        rules
     }
 
+    private fun defaultRules(): List<RuleEntity> = buildList {
+        add(RuleEntity(name = app.getString(R.string.route_opt_block_quic), port = "443", network = "udp", outbound = -2))
+        add(RuleEntity(name = app.getString(R.string.route_opt_block_ads), domains = "geosite:category-ads-all", outbound = -2))
+        val countries = mutableListOf("cn" to "中国")
+        if (Locale.getDefault().country != Locale.CHINA.country) {
+            countries += "ir" to "Iran"
+            countries += "ru" to "Russia"
+        }
+        for ((country, displayCountry) in countries) {
+            if (country == "cn") add(RuleEntity(name = app.getString(R.string.route_play_store, displayCountry), domains = "googleapis.cn"))
+            add(RuleEntity(name = app.getString(R.string.route_bypass_domain, displayCountry), domains = "geosite:$country", outbound = -1))
+            add(RuleEntity(name = app.getString(R.string.route_bypass_ip, displayCountry), ip = "geoip:$country", outbound = -1))
+        }
+    }
 }

@@ -7,7 +7,7 @@
     android:background="?attr/colorSurface"
     android:elevation="0dp">
 
-    <com.google.android.material.appbar.MaterialToolbar
+    <io.nekohasekai.sagernet.widget.glass.GlassToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

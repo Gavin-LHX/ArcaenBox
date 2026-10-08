@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Canvas
 import android.text.format.Formatter
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.TooltipCompat
@@ -19,6 +21,7 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.ui.MainHostActivity
 import io.nekohasekai.sagernet.utils.ExitIpLookup
+import io.nekohasekai.sagernet.widget.glass.GlassDrawable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
@@ -40,9 +43,20 @@ class StatsBar @JvmOverloads constructor(
     private var stateJob: Job? = null
     private var exitJob: Job? = null
     private var generation = 0
+    private val glass = if (DataStore.interfaceStyle == "liquid_glass") GlassDrawable(this, radiusDp = 24f, sampleContent = true) else null
     private lateinit var behavior: YourBehavior
 
     var allowShow = true
+
+    override fun onDraw(canvas: Canvas) {
+        if (DataStore.serviceState.connected) glass?.apply { setBounds(0, 0, width, height); draw(canvas) }
+        super.onDraw(canvas)
+    }
+
+    // Toolbar otherwise consumes touches even with no visible/clickable content.
+    // The floating A is a sibling and keeps its own touch target.
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean =
+        DataStore.serviceState.connected && super.dispatchTouchEvent(event)
 
     override fun getBehavior(): YourBehavior {
         if (!this::behavior.isInitialized) behavior = YourBehavior { allowShow }
@@ -105,8 +119,8 @@ class StatsBar @JvmOverloads constructor(
         // Keep the inset-aware anchor laid out so the A button stays in place.
         // Only a live connection needs a visible surface or a tappable status area.
         statsContent.visibility = if (connected) View.VISIBLE else View.INVISIBLE
-        backgroundTint = if (connected) connectedBackgroundTint else ColorStateList.valueOf(Color.TRANSPARENT)
-        elevation = if (connected) connectedElevation else 0f
+        backgroundTint = if (connected && glass == null) connectedBackgroundTint else ColorStateList.valueOf(Color.TRANSPARENT)
+        elevation = if (connected && glass == null) connectedElevation else 0f
         isEnabled = connected
         isClickable = connected
         isFocusable = connected

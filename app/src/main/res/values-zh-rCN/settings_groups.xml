@@ -1,0 +1,9 @@
+<resources>
+    <string name="settings_expand">展开</string>
+    <string name="settings_collapse">收起</string>
+    <string name="settings_notifications">通知与显示</string>
+    <string name="settings_vpn_advanced">VPN 进阶设置</string>
+    <string name="show_connection_on_pages">其他页面显示连接按钮</string>
+    <string name="show_connection_on_pages_summary">连接后同时显示状态信息，未连接时只显示按钮。</string>
+    <string name="route_list_help">点击编辑，长按拖动排序，左滑删除。</string>
+</resources>

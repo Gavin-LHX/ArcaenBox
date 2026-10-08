@@ -10,6 +10,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.core.graphics.Insets
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
@@ -20,6 +21,8 @@ import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutMainBinding
 import io.nekohasekai.sagernet.ktx.launchCustomTab
+import io.nekohasekai.sagernet.widget.glass.GlassDrawable
+import io.nekohasekai.sagernet.widget.glass.GlassScene
 
 /**
  * The classic drawer interface. It is kept unchanged as a fallback for the redesigned
@@ -33,7 +36,10 @@ class LegacyMainActivity : MainHostActivity(),
     override val drawBehindBottomNavigationBar = true
     private var bottomNavigationInset = 0
 
-    override val fabView: FloatingActionButton get() = binding.fab
+    override val fabView: FloatingActionButton? get() =
+        if (::binding.isInitialized && binding.stats.allowShow) binding.fab else null
+    override val listBottomPaddingDp: Int get() =
+        if (::binding.isInitialized && binding.stats.allowShow && !DataStore.serviceState.connected) 80 else 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,8 +66,25 @@ class LegacyMainActivity : MainHostActivity(),
         binding.stats.setOnClickListener { if (DataStore.serviceState.connected) binding.stats.testConnection() }
 
         setContentView(binding.root)
+        if (DataStore.interfaceStyle == "liquid_glass") {
+            binding.drawerLayout.background = GlassScene(binding.drawerLayout)
+            navigation.background = GlassDrawable(navigation, radiusDp = 0f, sampleContent = true, heavy = true)
+            navigation.elevation = 0f
+            binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
+                override fun onDrawerSlide(drawerView: android.view.View, slideOffset: Float) {
+                    navigation.invalidate()
+                }
+            })
+        }
+        binding.stats.allowShow = savedInstanceState == null || DataStore.showBottomBar ||
+            supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment
+        if (!binding.stats.allowShow) binding.fab.hide()
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHolder) { _, insets ->
             bottomNavigationInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            // Keep the drawer surface full height, but lay out its scrolling menu
+            // above the system buttons/gesture area. The background still covers
+            // this padding, including when it is a sampled glass drawable.
+            navigation.updatePadding(bottom = bottomNavigationInset)
             updateContentSpace()
             // The fragment already ends above the complete bar (including its safe area).
             WindowInsetsCompat.Builder(insets)
@@ -96,17 +119,16 @@ class LegacyMainActivity : MainHostActivity(),
 
     @SuppressLint("CommitTransaction")
     override fun displayFragment(fragment: ToolbarFragment) {
-        if (fragment is ConfigurationFragment) {
-            binding.stats.allowShow = true
+        binding.stats.allowShow = fragment is ConfigurationFragment || DataStore.showBottomBar
+        if (binding.stats.allowShow) {
             binding.stats.performShow()
             binding.fab.show()
-        } else if (!DataStore.showBottomBar) {
-            binding.stats.allowShow = false
+        } else {
             binding.stats.performHide()
             binding.fab.hide()
         }
         updateContentSpace()
-        supportFragmentManager.beginTransaction()
+        beginShellTransaction()
             .replace(R.id.fragment_holder, fragment)
             .commitAllowingStateLoss()
         binding.drawerLayout.closeDrawers()
@@ -114,7 +136,7 @@ class LegacyMainActivity : MainHostActivity(),
 
     private fun updateContentSpace() {
         val params = binding.fragmentHolder.layoutParams as android.view.ViewGroup.MarginLayoutParams
-        val bottom = if (binding.stats.allowShow) binding.stats.height else bottomNavigationInset
+        val bottom = if (binding.stats.allowShow && DataStore.serviceState.connected) binding.stats.height else bottomNavigationInset
         if (params.bottomMargin != bottom) {
             params.bottomMargin = bottom
             binding.fragmentHolder.layoutParams = params
@@ -156,6 +178,7 @@ class LegacyMainActivity : MainHostActivity(),
     override fun onServiceStateChanged(state: BaseService.State, animate: Boolean) {
         binding.fab.changeState(state, DataStore.serviceState, animate)
         binding.stats.changeState(state)
+        updateContentSpace()
     }
 
     override fun snackbarInternal(text: CharSequence): Snackbar {
@@ -173,6 +196,19 @@ class LegacyMainActivity : MainHostActivity(),
 
     override fun onSelectedProxyChanged(id: Long) {
         binding.stats.refreshExitIp()
+    }
+
+    override fun onBottomBarPreferenceChanged() {
+        binding.stats.allowShow = supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment ||
+            DataStore.showBottomBar
+        if (binding.stats.allowShow) {
+            binding.stats.performShow()
+            binding.fab.show()
+        } else {
+            binding.stats.performHide()
+            binding.fab.hide()
+        }
+        updateContentSpace()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
