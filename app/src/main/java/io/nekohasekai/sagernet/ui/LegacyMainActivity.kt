@@ -10,6 +10,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.core.graphics.Insets
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
@@ -80,6 +81,10 @@ class LegacyMainActivity : MainHostActivity(),
         if (!binding.stats.allowShow) binding.fab.hide()
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHolder) { _, insets ->
             bottomNavigationInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            // Keep the drawer surface full height, but lay out its scrolling menu
+            // above the system buttons/gesture area. The background still covers
+            // this padding, including when it is a sampled glass drawable.
+            navigation.updatePadding(bottom = bottomNavigationInset)
             updateContentSpace()
             // The fragment already ends above the complete bar (including its safe area).
             WindowInsetsCompat.Builder(insets)

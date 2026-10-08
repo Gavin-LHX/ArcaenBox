@@ -4,6 +4,7 @@ import json
 import re
 import shlex
 import time
+import traceback
 from PIL import Image, ImageChops, ImageStat
 
 
@@ -17,6 +18,7 @@ def check(ui):
     original_style = original_reduce = original_interval = None
     fixture = 'Home-glass-loopback-' + str(int(time.time()))
     imported = False
+    failed = False
 
     def preference(key):
         ui.scroll_for(text=ui.STRINGS[key])
@@ -185,6 +187,8 @@ def check(ui):
         for key in keys:
             adb('shell', 'settings', 'put', 'global', key, '1')
         ui.navigate('nav_home')
+        # The quick-action reference leaves this same Home instance scrolled.
+        expose('power_button')
         ui.wait_for(resource_id=ui.PACKAGE + ':id/status_title', text=ui.STRINGS['not_connected'])
         stopped_before = motion('home-glass-stopped-before')
         adb('shell', 'appops', 'set', ui.PACKAGE, 'ACTIVATE_VPN', 'allow')
@@ -210,6 +214,7 @@ def check(ui):
                    'resting_glass_restored_after_service': True, 'md3_controls_restored': True}
         (ui.OUT / 'home-glass-results.json').write_text(json.dumps(results, indent=2), encoding='utf-8')
     except Exception:
+        failed = True
         try:
             ui.capture('failure-home-glass-before-cleanup')
         except Exception:
@@ -219,13 +224,25 @@ def check(ui):
                 pass
         raise
     finally:
-        # Failed live-state assertions must still release the disposable VPN.
-        adb('shell', 'am', 'force-stop', ui.PACKAGE)
+        cleanup_errors = []
+
+        def cleanup(label, operation):
+            try:
+                operation()
+                return True
+            except Exception as error:
+                cleanup_errors.append((label, error, traceback.format_exc()))
+                return False
+
+        # Restore each setting even if deleting the fixture fails, and keep
+        # any original motion or service assertion as the reported failure.
+        cleanup('stop fixture VPN', lambda: adb('shell', 'am', 'force-stop', ui.PACKAGE))
         for key, value in animations.items():
-            adb('shell', 'settings', 'delete' if value == 'null' else 'put', 'global', key,
-                *([] if value == 'null' else [value]))
-        ui.launch('redesigned')
-        if imported:
+            cleanup('restore ' + key, lambda key=key, value=value:
+                    adb('shell', 'settings', 'delete' if value == 'null' else 'put', 'global', key,
+                        *([] if value == 'null' else [value])))
+
+        def remove_fixture():
             ui.navigate('nav_configuration')
             ui.scroll_for(text=fixture, resource_id=ui.PACKAGE + ':id/profile_name')
             doc = ui.tree()
@@ -239,11 +256,23 @@ def check(ui):
             ui.tap(ui.wait_for(resource_id=ui.PACKAGE + ':id/action_delete'))
             ui.wait_for(text=ui.STRINGS['delete_confirm_prompt'])
             ui.tap(ui.wait_for(resource_id='android:id/button1'))
-            ui.wait_for(resource_id=ui.PACKAGE + ':id/configuration_list')
-            assert ui.find(ui.tree(), text=fixture, resource_id=ui.PACKAGE + ':id/profile_name') is None, 'Home fixture was not removed'
+            # An empty group has no configuration_list in the visible hierarchy.
+            ui.wait_for(resource_id=ui.PACKAGE + ':id/group_pager')
+            deadline = time.monotonic() + 25
+            while ui.find(ui.tree(), text=fixture, resource_id=ui.PACKAGE + ':id/profile_name') is not None:
+                assert time.monotonic() < deadline, 'Home fixture was not removed'
+                time.sleep(.2)
+
+        if cleanup('open fixture cleanup', lambda: ui.launch('redesigned')) and imported:
+            cleanup('remove Home fixture', remove_fixture)
         if original_interval is not None:
-            interval(original_interval)
+            cleanup('restore speed interval', lambda: interval(original_interval))
         if original_reduce is not None:
-            transparency(original_reduce)
+            cleanup('restore transparency', lambda: transparency(original_reduce))
         if original_style is not None:
-            style(original_style)
+            cleanup('restore interface style', lambda: style(original_style))
+        if cleanup_errors:
+            (ui.OUT / 'home-glass-cleanup-errors.txt').write_text(
+                '\n\n'.join(label + '\n' + trace for label, _, trace in cleanup_errors), encoding='utf-8')
+            if not failed:
+                raise cleanup_errors[0][1]

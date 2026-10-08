@@ -138,7 +138,10 @@ def check(ui, candidate):
             ui.wait_for(text=ui.STRINGS['delete_confirm_prompt'])
             ui.tap(ui.wait_for(resource_id='android:id/button1'))
             imported -= 1
-            ui.wait_for(resource_id=ui.PACKAGE + ':id/configuration_list')
+            ui.navigate('nav_configuration')
+            # The empty ungrouped page has no configuration_list after the last deletion.
+            ui.wait_for(resource_id=ui.PACKAGE + ':id/group_pager')
+            expect(imported)
         expect(0)
         if original_style is not None:
             style(original_style)

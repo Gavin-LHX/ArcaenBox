@@ -509,27 +509,50 @@ def redesigned_regressions():
                     'Scrolling resurrected the node FAB on ' + content)
             capture('23-scroll-without-fab-' + content)
 
+        # Keep the short-screen stress above, then give the whole final card room to appear.
+        resize('720x1280', '320', 'bottom_nav')
         shell_tap(STRINGS['shell_nodes'])
         wait_for(resource_id=PACKAGE + ':id/configuration_list')
         assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
-        # A short screen can show less than one card, so scroll to an observed
-        # fixture instead of assuming a fixed number of gestures reaches it.
+        # Reach an observed fixture rather than assuming a fixed number of gestures.
         last_node = None
         for _ in range(32):
             swipe_list('configuration_list', True)
-            last_node = find(tree(), text='Shell-Scroll-05')
+            last_node = find(tree(), resource_id=PACKAGE + ':id/profile_name', text='Shell-Scroll-05')
             if last_node is not None:
                 break
         assert last_node is not None, 'Node fixture list did not scroll'
-        capture('23-node-list-last-fixture')
-        # Bottom padding can move the final title outside the viewport at the
-        # end. Verify its appearance separately, then overscroll to hide the FAB.
+        # Tail padding can keep the card clear without hiding the FAB. Overscroll,
+        # then require the complete card content and either a hidden or nonoverlapping FAB.
         for _ in range(12):
             swipe_list('configuration_list', True)
-            if find(tree(), resource_id=PACKAGE + ':id/fab') is None:
-                break
-        assert find(tree(), resource_id=PACKAGE + ':id/fab') is None, 'Node FAB did not hide on overscroll'
-        capture('23-node-fab-hidden-on-overscroll')
+        doc = tree()
+        last_node = find(doc, resource_id=PACKAGE + ':id/profile_name', text='Shell-Scroll-05')
+        assert last_node is not None, 'Last node title disappeared at the list end'
+        parents = {child: parent for parent in doc.iter() for child in parent}
+        card = last_node
+        while card is not None and card.get('resource-id') != PACKAGE + ':id/content':
+            card = parents.get(card)
+        assert card is not None, 'Last node card missing'
+        protocol = find(card, resource_id=PACKAGE + ':id/profile_type', text='SOCKS5')
+        assert protocol is not None, 'Last node protocol is not visible'
+        left, top, right, bottom = bounds(card)
+        list_left, list_top, list_right, list_bottom = bounds(
+            find(doc, resource_id=PACKAGE + ':id/configuration_list'))
+        assert list_left <= left < right <= list_right and list_top < top < bottom < list_bottom, (
+            'Last node card is clipped by the list viewport')
+        for content in (last_node, protocol):
+            x1, y1, x2, y2 = bounds(content)
+            assert left <= x1 < x2 <= right and top <= y1 < y2 <= bottom, (
+                'Last node title or protocol is clipped')
+        fab = find(doc, resource_id=PACKAGE + ':id/fab')
+        if fab is not None:
+            fab_left, fab_top, fab_right, fab_bottom = bounds(fab)
+            assert right <= fab_left or fab_right <= left or bottom <= fab_top or fab_bottom <= top, (
+                'FAB overlaps the last node card and must hide on overscroll')
+            assert_connect_button_visible(fab)
+        capture('23-node-list-last-fixture')
+        capture('23-node-fab-hidden-for-last-card' if fab is None else '23-node-last-card-clear-of-fab')
         swipe_list('configuration_list', False)
         assert_connect_button_visible(wait_for(resource_id=PACKAGE + ':id/fab'))
         capture('23-node-fab-restored-after-scroll')
