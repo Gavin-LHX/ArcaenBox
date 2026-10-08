@@ -13,7 +13,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--directory', default='core-build/component-updates')
     p.add_argument('--target', required=True)
-    p.add_argument('--component', default='all', choices=['all','trojan-go','naive','mieru','snell'])
+    p.add_argument('--component', default='all', choices=['all','trojan-go','naive','mieru','snell','xray'])
     p.add_argument('--channel', default='all', choices=['all','stable','preview'])
     args = p.parse_args()
     key = serialization.load_der_public_key((ROOT / 'app/src/main/assets/cores/public-key.der').read_bytes())

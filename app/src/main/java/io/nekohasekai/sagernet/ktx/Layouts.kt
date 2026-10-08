@@ -10,6 +10,14 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
     LinearLayoutManager(recyclerView.context, RecyclerView.VERTICAL, false) {
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
+        val host = recyclerView.context.findActivity() as? MainHostActivity
+        if (host != null) {
+            val padding = (host.listBottomPaddingDp * recyclerView.resources.displayMetrics.density).toInt()
+            if (recyclerView.paddingBottom != padding) {
+                recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, padding)
+            }
+            recyclerView.clipToPadding = false
+        }
         try {
             super.onLayoutChildren(recycler, state)
         } catch (ignored: IndexOutOfBoundsException) {
@@ -20,15 +28,16 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
         dx: Int, recycler: RecyclerView.Recycler,
         state: RecyclerView.State
     ): Int {
-        // Matsuri style
-        if (!DataStore.showBottomBar) return super.scrollVerticallyBy(dx, recycler, state)
+        val host = recyclerView.context.findActivity() as? MainHostActivity
+        if (!DataStore.showBottomBar || host?.fabFollowsListScroll != true) {
+            return super.scrollVerticallyBy(dx, recycler, state)
+        }
 
         // SagerNet Style
         val scrollRange = super.scrollVerticallyBy(dx, recycler, state)
         // A shell can temporarily withhold its FAB while another page is on top.
         // Re-check it on each scroll so returning to the node list restores this behavior.
-        val fab = (recyclerView.context.findActivity() as? MainHostActivity)?.fabView
-            ?: return scrollRange
+        val fab = host?.fabView ?: return scrollRange
 
         val overscroll = dx - scrollRange
         if (overscroll > 0) {
@@ -48,18 +57,6 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
                 if (isShown) hide()
             }
         } else {
-            /*val screen = Rect().also { activity.window.decorView.getGlobalVisibleRect(it) }
-            val location = Rect().also { activity.stats.getGlobalVisibleRect(it) }
-            if (screen.bottom < location.bottom) {
-                return scrollRange
-            }
-            val height = location.bottom - location.top
-            val mH = activity.stats.measuredHeight
-
-            if (mH > height) {
-                return scrollRange
-            }*/
-
             fab.apply {
                 if (!isShown) show()
             }

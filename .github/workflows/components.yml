@@ -7,7 +7,7 @@ on:
         required: false
       component:
         type: choice
-        options: [all, trojan-go, naive, mieru, snell]
+        options: [all, trojan-go, naive, mieru, snell, xray]
         default: all
       channel:
         type: choice

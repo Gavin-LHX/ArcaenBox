@@ -97,6 +97,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var isExpert by configurationStore.boolean(Key.APP_EXPERT)
     var appTheme by configurationStore.int(Key.APP_THEME)
+    var interfaceStyle by configurationStore.string(Key.INTERFACE_STYLE) { "md3" }
+    var glassReduceTransparency by configurationStore.boolean(Key.GLASS_REDUCE_TRANSPARENCY)
     var nightTheme by configurationStore.stringToInt(Key.NIGHT_THEME)
     var serviceMode by configurationStore.string(Key.SERVICE_MODE) { Key.MODE_VPN }
 
@@ -234,6 +236,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var snellMode by profileCacheStore.string("snellMode") { "default" }
     var snellReuse by profileCacheStore.boolean("snellReuse")
     var snellObfsHost by profileCacheStore.string("snellObfsHost")
+    var mieruHandshakeMode by profileCacheStore.string("mieruHandshakeMode") { "HANDSHAKE_STANDARD" }
+    var mieruMultiplexing by profileCacheStore.string("mieruMultiplexing") { "MULTIPLEXING_LOW" }
     var serverMTU by profileCacheStore.stringToInt(Key.SERVER_MTU)
     var serverHeaders by profileCacheStore.string(Key.SERVER_HEADERS)
     var serverAllowInsecure by profileCacheStore.boolean(Key.SERVER_ALLOW_INSECURE)

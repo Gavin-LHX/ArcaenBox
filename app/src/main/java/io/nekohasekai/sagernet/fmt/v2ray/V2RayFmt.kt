@@ -40,20 +40,21 @@ fun StandardV2RayBean.setTLS(boolean: Boolean) {
 }
 
 fun parseV2Ray(link: String): StandardV2RayBean {
-    // Try parse stupid formats first
-
-    if (!link.contains("?")) {
-        try {
-            return parseV2RayN(link)
-        } catch (e: Exception) {
-            Logs.i("try v2rayN: " + e.readableMessage)
+    // Only legacy VMess payloads are base64. Do not run VLESS or standard
+    // authority-form links through a decoder (or log their credentials).
+    if (link.startsWith("vmess://") && !link.substringBefore("?").contains("@")) {
+        if (!link.contains("?")) {
+            try {
+                return parseV2RayN(link)
+            } catch (e: Exception) {
+                Logs.i("try v2rayN: " + e.readableMessage)
+            }
         }
-    }
-
-    try {
-        return tryResolveVmess4Kitsunebi(link)
-    } catch (e: Exception) {
-        Logs.i("try Kitsunebi: " + e.readableMessage)
+        try {
+            return tryResolveVmess4Kitsunebi(link)
+        } catch (e: Exception) {
+            Logs.i("try Kitsunebi: " + e.readableMessage)
+        }
     }
 
     // "std" format
@@ -130,6 +131,15 @@ fun parseV2Ray(link: String): StandardV2RayBean {
     } else {
         // also vless format
         bean.parseDuckSoft(url)
+    }
+
+    if (url.queryParameterNames.contains("fm")) {
+        require(url.queryParameterValues("fm").size == 1) { "Duplicate FinalMask parameter" }
+        require(url.queryParameter("encryption") in listOf(null, "none")) { "Unsupported VLESS encryption with FinalMask" }
+        bean.finalMask = parseTcpSudokuFinalMask(url.queryParameter("fm") ?: "").toString()
+        if (bean.type == "raw") bean.type = "tcp"
+        bean.initializeDefaultValues()
+        bean.validateFinalMask()
     }
 
     return bean
@@ -429,6 +439,7 @@ fun VMessBean.toV2rayN(): String {
 }
 
 fun StandardV2RayBean.toUriVMessVLESSTrojan(isTrojan: Boolean): String {
+    validateFinalMask()
     // VMess
     if (this is VMessBean && !isVLESS) {
         return toV2rayN()
@@ -444,6 +455,7 @@ fun StandardV2RayBean.toUriVMessVLESSTrojan(isTrojan: Boolean): String {
     if (isVLESS) {
         builder.addQueryParameter("encryption", "none")
         if (encryption != "auto") builder.addQueryParameter("flow", encryption)
+        if (usesFinalMask()) builder.addQueryParameter("fm", finalMask)
     }
 
     when (type) {
@@ -514,7 +526,7 @@ fun StandardV2RayBean.toUriVMessVLESSTrojan(isTrojan: Boolean): String {
     }
 
     if (name.isNotBlank()) {
-        builder.encodedFragment(name.urlSafe())
+        builder.fragment(name)
     }
 
     return builder.toLink(if (isTrojan) "trojan" else "vless")

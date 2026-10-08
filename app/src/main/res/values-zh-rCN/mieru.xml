@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mieru_handshake_mode">握手模式</string>
+    <string name="mieru_automatic">自动（默认）</string>
+    <string name="mieru_handshake_standard">标准握手</string>
+    <string name="mieru_handshake_no_wait">免等待（0-RTT）</string>
+    <string name="mieru_multiplexing">多路复用</string>
+    <string name="mieru_multiplexing_off">关闭</string>
+    <string name="mieru_multiplexing_low">低</string>
+    <string name="mieru_multiplexing_middle">中</string>
+    <string name="mieru_multiplexing_high">高</string>
+</resources>

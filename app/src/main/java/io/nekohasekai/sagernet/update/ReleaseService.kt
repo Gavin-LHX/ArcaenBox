@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.coroutineContext
 
 class UpdateException(val reason: String) : IOException(reason)
-data class ReleaseAsset(val name: String, val url: String)
+data class ReleaseAsset(val name: String, val url: String, val size: Long = 0)
 data class GithubRelease(val tag: String, val preview: Boolean, val url: String, val assets: List<ReleaseAsset>)
 
 object ReleaseService {
@@ -25,10 +25,10 @@ object ReleaseService {
         .readTimeout(30, TimeUnit.SECONDS).callTimeout(180, TimeUnit.SECONDS)
         .followSslRedirects(false).build()
 
-    private fun client(): OkHttpClient = if (DataStore.serviceState.connected) direct.newBuilder()
+    internal fun client(): OkHttpClient = if (DataStore.serviceState.connected) direct.newBuilder()
         .proxy(Proxy(Proxy.Type.SOCKS, InetSocketAddress("127.0.0.1", DataStore.mixedPort))).build() else direct
 
-    private fun request(url: String): Request {
+    internal fun request(url: String): Request {
         require(url.startsWith("https://api.github.com/repos/$REPOSITORY/releases") || url.startsWith(DOWNLOAD_ROOT))
         return Request.Builder().url(url).header("User-Agent", "ArcaenBox-Updater")
             .header("Accept", if (url.startsWith("https://api.")) "application/vnd.github+json" else "application/octet-stream").build()
@@ -73,7 +73,7 @@ object ReleaseService {
                 if (!url.startsWith("https://github.com/$REPOSITORY/releases/tag/")) return@forEach
                 val assets = r.getAsJsonArray("assets").mapNotNull { a ->
                     val item = a.asJsonObject; val link = item.get("browser_download_url").asString
-                    if (!link.startsWith(DOWNLOAD_ROOT)) null else ReleaseAsset(item.get("name").asString, link)
+                    if (!link.startsWith(DOWNLOAD_ROOT)) null else ReleaseAsset(item.get("name").asString, link, item.get("size")?.asLong ?: 0)
                 }
                 all += GithubRelease(tag,r.get("prerelease").asBoolean,url,assets)
             }

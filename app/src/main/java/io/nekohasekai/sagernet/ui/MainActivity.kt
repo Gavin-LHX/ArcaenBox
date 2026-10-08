@@ -9,6 +9,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -19,6 +20,7 @@ import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutMainShellBinding
 import io.nekohasekai.sagernet.ktx.launchCustomTab
+import io.nekohasekai.sagernet.widget.glass.GlassScene
 
 /**
  * The redesigned Material 3 interface: a bottom navigation bar on phones and a navigation
@@ -36,6 +38,9 @@ class MainActivity : MainHostActivity() {
 
     override val fabView: FloatingActionButton?
         get() = if (::binding.isInitialized && nodeFabEnabled) binding.fab else null
+    override val listBottomPaddingDp: Int
+        get() = if (nodeFabEnabled && !DataStore.serviceState.connected) 80 else 0
+    override val fabFollowsListScroll = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +55,10 @@ class MainActivity : MainHostActivity() {
         binding = LayoutMainShellBinding.inflate(layoutInflater)
         binding.fab.initProgress(binding.fabProgress)
         binding.fab.setOnClickListener { toggleService() }
+        binding.stats.allowShow = false
+        binding.stats.setOnClickListener {
+            if (DataStore.serviceState.connected) binding.stats.testConnection()
+        }
         navigation = binding.bottomNav ?: binding.navRail!!
         // The bar and rail have different IDs. Restore their shared destination without
         // firing a navigation transaction or replacing a restored secondary page.
@@ -61,6 +70,7 @@ class MainActivity : MainHostActivity() {
         navigation.setOnItemReselectedListener { popToTopLevel() }
 
         setContentView(binding.root)
+        if (DataStore.interfaceStyle == "liquid_glass") binding.root.background = GlassScene(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(binding.coordinator) { view, insets ->
             // The bottom bar pads itself for the gesture area; without one the content does.
             val bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
@@ -69,6 +79,7 @@ class MainActivity : MainHostActivity() {
                 .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.NONE)
                 .build()
         }
+        binding.stats.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateContentSpace() }
 
         if (savedInstanceState == null) showTopLevel(R.id.nav_home)
         supportFragmentManager.addOnBackStackChangedListener { updateFab() }
@@ -113,7 +124,7 @@ class MainActivity : MainHostActivity() {
         }
         selectedDestination = id
         popToTopLevel()
-        supportFragmentManager.beginTransaction()
+        beginShellTransaction()
             .setReorderingAllowed(true)
             .replace(R.id.fragment_holder, fragment)
             .commitAllowingStateLoss()
@@ -133,12 +144,8 @@ class MainActivity : MainHostActivity() {
             displayFragmentWithId(id)
             return
         }
-        supportFragmentManager.beginTransaction()
+        beginShellTransaction(secondary = true)
             .setReorderingAllowed(true)
-            .setCustomAnimations(
-                android.R.anim.fade_in, android.R.anim.fade_out,
-                android.R.anim.fade_in, android.R.anim.fade_out,
-            )
             .replace(R.id.fragment_holder, fragment)
             .addToBackStack(null)
             .commitAllowingStateLoss()
@@ -186,7 +193,22 @@ class MainActivity : MainHostActivity() {
     /** The connect button floats over the node list, where nodes are chosen. */
     private fun updateFab(fragment: ToolbarFragment? = currentFragment()) {
         nodeFabEnabled = fragment is ConfigurationFragment
+        binding.stats.isVisible = nodeFabEnabled
+        if (binding.stats.allowShow != nodeFabEnabled) {
+            binding.stats.allowShow = nodeFabEnabled
+            binding.stats.changeState(if (nodeFabEnabled) DataStore.serviceState else BaseService.State.Idle)
+        }
         if (nodeFabEnabled) binding.fab.show() else binding.fab.hide()
+        updateContentSpace()
+    }
+
+    private fun updateContentSpace() {
+        val params = binding.fragmentHolder.layoutParams as android.view.ViewGroup.MarginLayoutParams
+        val bottom = if (nodeFabEnabled && DataStore.serviceState.connected) binding.stats.height else 0
+        if (params.bottomMargin != bottom) {
+            params.bottomMargin = bottom
+            binding.fragmentHolder.layoutParams = params
+        }
     }
 
     override fun refreshNavMenu(clashApi: Boolean) {
@@ -196,6 +218,14 @@ class MainActivity : MainHostActivity() {
     override fun onServiceStateChanged(state: BaseService.State, animate: Boolean) {
         if (forwarded) return
         binding.fab.changeState(state, DataStore.serviceState, animate)
+        binding.stats.changeState(if (nodeFabEnabled) state else BaseService.State.Idle)
+        updateContentSpace()
+    }
+
+    override fun onSpeedUpdated(txRate: Long, rxRate: Long) = binding.stats.updateSpeed(txRate, rxRate)
+
+    override fun onSelectedProxyChanged(id: Long) {
+        if (binding.stats.allowShow && DataStore.serviceState.connected) binding.stats.refreshExitIp()
     }
 
     override fun snackbarInternal(text: CharSequence): Snackbar {

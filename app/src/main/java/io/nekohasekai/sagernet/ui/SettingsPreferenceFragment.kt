@@ -42,6 +42,9 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         preferenceManager.preferenceDataStore = DataStore.configurationStore
         DataStore.initGlobal()
         addPreferencesFromResource(R.xml.global_preferences)
+        savedInstanceState?.getStringArrayList("expandedGroups")?.forEach { key ->
+            findPreference<ExpandablePreferenceCategory>(key)?.expanded = true
+        }
 
         findPreference<Preference>("systemVpnSettings")!!.setOnPreferenceClickListener {
             VpnRequestActivity.openSettings(requireContext())
@@ -162,6 +165,20 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         }
 
         val appTheme = findPreference<ColorPickerPreference>(Key.APP_THEME)!!
+        findPreference<Preference>(Key.INTERFACE_STYLE)!!.setOnPreferenceChangeListener { _, value ->
+            if (value !in listOf("md3", "liquid_glass")) return@setOnPreferenceChangeListener false
+            DataStore.interfaceStyle = value.toString()
+            ActivityCompat.recreate(requireActivity())
+            true
+        }
+        findPreference<Preference>(Key.GLASS_REDUCE_TRANSPARENCY)!!.apply {
+            isEnabled = DataStore.interfaceStyle == "liquid_glass"
+            setOnPreferenceChangeListener { _, value ->
+                DataStore.glassReduceTransparency = value as Boolean
+                ActivityCompat.recreate(requireActivity())
+                true
+            }
+        }
         appTheme.setOnPreferenceChangeListener { _, newTheme ->
             if (DataStore.serviceState.started) {
                 SagerNet.reloadService()
@@ -293,6 +310,15 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         tunImplementation.onPreferenceChangeListener = reloadListener
         acquireWakeLock.onPreferenceChangeListener = reloadListener
         globalCustomConfig.onPreferenceChangeListener = reloadListener
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val expanded = (0 until preferenceScreen.preferenceCount)
+            .map { preferenceScreen.getPreference(it) }
+            .filterIsInstance<ExpandablePreferenceCategory>()
+            .filter { it.expanded }.map { it.key }
+        outState.putStringArrayList("expandedGroups", ArrayList(expanded))
     }
 
     override fun onPause() {

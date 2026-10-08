@@ -10,7 +10,7 @@ data class ComponentManifest(
     val minSdk: Int, val protocols: Set<Int>, val assets: Map<String, CoreAsset>
 ) {
     companion object {
-        val ids = setOf("trojan-go", "naive", "mieru", "snell")
+        val ids = setOf("trojan-go", "naive", "mieru", "snell", "xray")
         fun verify(bytes: ByteArray, signature: ByteArray, publicKey: ByteArray, component: String, channel: String): ComponentManifest {
             try {
                 if (bytes.size > 65536 || signature.size > 1024) throw UpdateException("invalid")

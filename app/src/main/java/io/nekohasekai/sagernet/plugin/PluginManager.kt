@@ -35,7 +35,7 @@ object PluginManager {
     fun init(pluginId: String): InitResult? {
         if (pluginId.isEmpty()) return null
         // These protocols are part of the APK. An installed plugin must never override them.
-        if (pluginId in setOf("trojan-go-plugin", "naive-plugin", "mieru-plugin", "snell-builtin")) {
+        if (pluginId in NativeComponents.plugins) {
             if (pluginId == "naive-plugin" && Build.VERSION.SDK_INT < 24) {
                 throw IOException(SagerNet.application.getString(R.string.builtin_naive_android_version))
             }

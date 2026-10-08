@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_update_title">更新 ArcaenBox</string>
+    <string name="app_update_available">当前版本：%1$s\n新版本：%2$s\n\n将在应用内下载并校验更新，再由 Android 确认安装。</string>
+    <string name="app_update_download">下载更新</string>
+    <string name="app_update_install">安装</string>
+    <string name="app_update_retry">重新下载</string>
+    <string name="app_update_preparing">正在准备适配的更新…</string>
+    <string name="app_update_downloading">正在下载… %1$d%%</string>
+    <string name="app_update_verifying">正在校验文件和应用签名…</string>
+    <string name="app_update_ready">%1$s · %2$s\n\n已通过校验，可以安装。首次安装可能需要在 Android 设置中允许 ArcaenBox 安装应用。</string>
+    <string name="app_update_permission_denied">尚未允许安装应用。点击“安装”可打开 Android 设置并重试。</string>
+    <string name="app_update_install_returned">安装尚未完成，可以再次点击“安装”重试。</string>
+    <string name="app_update_installer_missing">无法打开 Android 安装器或安装权限设置，请点击“安装”重试。</string>
+    <string name="app_update_abi">此版本没有与当前应用和设备兼容的安装包。</string>
+    <string name="app_update_invalid">安装包或更新信息无效，请重试。</string>
+    <string name="app_update_checksum_missing">此版本缺少所选安装包的唯一 SHA-256 校验值，已阻止安装。</string>
+    <string name="app_update_checksum">安装包校验不一致，请重新下载。</string>
+    <string name="app_update_package">安装包属于其他应用，已阻止安装。</string>
+    <string name="app_update_version">安装包与发布版本不符，或版本不高于当前已安装版本。</string>
+    <string name="app_update_signature">安装包签名与当前应用签名不一致，已阻止安装。</string>
+    <string name="app_update_storage">可用存储空间不足，或无法保存安装包。</string>
+</resources>

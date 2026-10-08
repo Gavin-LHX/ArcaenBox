@@ -172,12 +172,12 @@ def resources():
 
 
 def settings_and_routes():
-    ui.launch(); ui.navigate('nav_route')
-    ui.tap(ui.wait_for(resource_id=P+':id/route_domain_strategy'))
+    ui.launch(); ui.navigate('nav_settings')
+    ui.tap(ui.scroll_for(text=ui.STRINGS['route_domain_strategy']))
     ui.tap(ui.wait_for(text='IPv4 first'))
-    ui.wait_for(text=ui.STRINGS['route_strategy_value'].replace('%1$s','IPv4 first'))
+    ui.wait_for(text='IPv4 first')
     ui.capture('route-strategy-and-controls')
-    ui.tap(ui.wait_for(resource_id=P+':id/route_domain_strategy'))
+    ui.tap(ui.scroll_for(text=ui.STRINGS['route_domain_strategy']))
     ui.tap(ui.wait_for(text='AsIs'))
     ui.navigate('nav_settings')
     for title,value in [('udp_timeout_title','60'),('globalMuxStreams','8'),('connection_concurrency','4')]:

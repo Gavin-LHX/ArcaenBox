@@ -11,6 +11,8 @@ object Key {
 
     const val APP_EXPERT = "isExpert"
     const val APP_THEME = "appTheme"
+    const val INTERFACE_STYLE = "interfaceStyle"
+    const val GLASS_REDUCE_TRANSPARENCY = "glassReduceTransparency"
     const val NIGHT_THEME = "nightTheme"
     const val SERVICE_MODE = "serviceMode"
     const val MODE_VPN = "vpn"

@@ -267,8 +267,10 @@ def advanced_settings():
     # Presets show their actual active rules and retain custom rules for switching back.
     ui.launch(); ui.navigate('nav_route')
     for label in ['Bypass mainland China · Whitelist','Proxy listed domains · Blacklist','Global proxy','Custom rules']:
-        ui.tap(ui.wait_for(resource_id=P+':id/route_preset'))
-        ui.tap(ui.wait_for(text=label)); ui.wait_for(text='Routing: '+label)
+        ui.tap(ui.wait_for(content_desc='More options'))
+        ui.tap(ui.wait_for(text=ui.STRINGS['preset_title']))
+        ui.tap(ui.wait_for(text=label))
+        ui.wait_for(text=ui.STRINGS['route_list_help'] if label == 'Custom rules' else 'Routing: '+label)
         ui.capture('route-preset-'+label.split()[0])
     # Restore the options so the other protocol checks retain their expected defaults.
     ui.navigate('nav_settings')
@@ -306,7 +308,7 @@ def route_import():
     # Cancelling the preview leaves every existing rule intact.
     ui.tap(ui.wait_for(resource_id='android:id/button2')); assert rule_rows()==before
     choose_file(fixture); ui.tap(ui.wait_for(resource_id='android:id/button1'))
-    ui.wait_for(text='Routing: Custom rules')
+    ui.wait_for(text=ui.STRINGS['route_list_help'])
     after=rule_rows(); assert after[:len(before)]==before and len(after)==len(before)+3, after
     assert after[-3][1]=='full:example.test' and after[-2][3:] == ('8443','udp',-2), after
     bad=ui.OUT/'unsupported-routing.json'
@@ -318,7 +320,7 @@ def route_import():
     ui.tap(ui.wait_for(content_desc='More options'))
     ui.tap(ui.wait_for(text=ui.STRINGS['route_export']))
     ui.tap(ui.wait_for(resource_id='android:id/button1'))
-    ui.wait_for(resource_id=P+':id/route_preset')
+    ui.wait_for(resource_id=P+':id/route_help')
     exported=json.loads(ui.adb('shell','cat','/sdcard/Download/ArcaenBox-routes.json'))
     assert exported['format']=='arcaenbox-route-rules' and len(exported['rules'])==len(after)
     assert exported['rules'][-3]['outbound']=='direct' and exported['rules'][-2]['outbound']=='block'

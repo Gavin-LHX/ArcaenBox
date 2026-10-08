@@ -85,7 +85,7 @@
                 android:contentDescription="@string/delete"
                 app:tint="?attr/colorOnSurfaceVariant"
                 app:srcCompat="@drawable/ic_action_delete" />
-            <com.google.android.material.button.MaterialButton
+            <io.nekohasekai.sagernet.widget.glass.GlassButton
                 android:id="@+id/rules_update"
                 style="?attr/borderlessButtonStyle"
                 android:layout_width="wrap_content"

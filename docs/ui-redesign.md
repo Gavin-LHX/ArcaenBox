@@ -10,7 +10,7 @@ is kept unchanged as the **Classic interface** and can be switched back at any t
 | 目的地 Destination | 内容 Content |
 | --- | --- |
 | 首页 Home | 连接开关与状态、实时上传/下载速率、当前节点、真连接延迟与出口 IP、快捷操作（剪贴板导入、扫码、更新订阅、分应用代理） |
-| 节点 Nodes | 节点列表（与经典界面相同的分组、测速、多选、编辑功能），右下角为连接按钮 |
+| 节点 Nodes | 节点列表（与经典界面相同的分组、测速、多选、编辑功能），右下角为连接按钮；连接后显示真延迟、出口 IP 和速率 |
 | 分组 Groups | 分组与订阅管理 |
 | 路由 Route | 路由规则 |
 | 更多 More | 资源文件、Po0 白名单、sing-box 面板（启用 Clash API 时）、设置、工具、内核管理、日志、切换到经典界面、文档、关于 |
@@ -33,6 +33,10 @@ keys are shared by both interfaces.
 The choice is stored in the `classicUi` preference (default off). The launcher entry,
 shortcuts, notification, Quick Settings tile and import links always open `MainActivity`,
 which forwards to `LegacyMainActivity` while the classic interface is enabled.
+
+## 界面风格 / Visual style
+
+新版与经典布局均支持设置中的 MD3 / Liquid Glass 选项。布局和视觉风格分别保存；切换不清空配置、不主动重启代理。高级设置继续采用折叠分组。
 
 ## 实现 / Implementation
 
