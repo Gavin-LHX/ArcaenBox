@@ -94,4 +94,6 @@
     <string name="route_asset_no_update">沒有更新</string>
     <string name="insecure">不安全</string>
     <string name="connection_test_icmp_ping_unavailable">ICMPing 不可用</string>
+    <string name="liquid_glass">液態玻璃</string>
+    <string name="liquid_glass_summary">底欄和連線按鈕以折射玻璃效果顯示在節點清單上方。需要 Android 12 以上，折射效果需要 Android 13。</string>
 </resources>

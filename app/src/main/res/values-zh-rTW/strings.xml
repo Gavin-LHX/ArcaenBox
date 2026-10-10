@@ -413,4 +413,6 @@
     <string name="backup_summary">如果路由規則不與設定檔一起備份，則自訂出站將丟失。</string>
     <string name="backup_not_file">不是一個備份檔案，預計 .json，但 %s</string>
     <string name="packet_encoding">封包編碼</string>
+    <string name="liquid_glass">液態玻璃</string>
+    <string name="liquid_glass_summary">底欄和連線按鈕以折射玻璃效果顯示在節點清單上方。需要 Android 12 以上，折射效果需要 Android 13。</string>
 </resources>

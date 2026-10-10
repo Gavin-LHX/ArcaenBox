@@ -9,6 +9,7 @@
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="showGroupInNotification" app:title="@string/show_group_in_notification" />
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:icon="@drawable/ic_baseline_center_focus_weak_24" app:key="alwaysShowAddress" app:summary="@string/always_show_address_sum" app:title="@string/always_show_address" />
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="showBottomBar" app:title="@string/show_bottom_bar" />
+        <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:defaultValue="true" app:key="liquidGlass" app:summary="@string/liquid_glass_summary" app:title="@string/liquid_glass" />
         <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:key="showExitIp" app:title="@string/show_exit_ip" app:defaultValue="true" />
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/vpn_settings_group">

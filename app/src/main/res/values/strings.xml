@@ -612,4 +612,6 @@
     <string name="po0_tokens_required">Enter at least one machine token</string>
     <string name="po0_slot_help">Po0 whitelists IPv4 /24 networks, normally up to 5 entries. Full lists evict the oldest ordinary entry. An optional @0–@4 token suffix pins a slot and can replace its old network; use a dedicated slot and remove any conflicting old slot in the console first. Mobile devices normally do not need a fixed slot. Clear tokens, turn off automatic updates and save to remove this setup.</string>
     <string name="po0_guide">Token setup and tutorial</string>
+    <string name="liquid_glass">Liquid glass</string>
+    <string name="liquid_glass_summary">Show the bottom bar and connect button as refracting glass over the node list. Needs Android 12 or later; refraction needs Android 13.</string>
 </resources>

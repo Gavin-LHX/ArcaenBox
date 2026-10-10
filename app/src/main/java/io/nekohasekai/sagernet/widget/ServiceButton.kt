@@ -1,13 +1,19 @@
 package io.nekohasekai.sagernet.widget
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.AttributeSet
 import android.view.PointerIcon
 import android.view.View
+import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.TooltipCompat
+import androidx.core.graphics.ColorUtils
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -17,7 +23,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.progressindicator.BaseProgressIndicator
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.bg.BaseService
+import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.ktx.dp2pxf
 import io.nekohasekai.sagernet.ktx.findActivity
+import io.nekohasekai.sagernet.ktx.getColorAttr
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import java.util.*
@@ -79,6 +88,27 @@ class ServiceButton @JvmOverloads constructor(
     private val iconStopping by lazy { AnimatedState(R.drawable.ic_service_stopping) }
     private val animationQueue = ArrayDeque<AnimatedState>()
 
+    private val surfaceTint = backgroundTintList
+    private val glass = if (Build.VERSION.SDK_INT >= 31 && DataStore.liquidGlass) {
+        LiquidGlass(this) {
+            // The bar is drawn into the backdrop too, so the button sits on frosted glass.
+            val container = parent as? ViewGroup ?: return@LiquidGlass emptyList()
+            listOfNotNull(container.findViewById(R.id.fragment_holder), container.findViewById(R.id.stats))
+        }.apply {
+            tint = ColorUtils.setAlphaComponent(
+                surfaceTint?.defaultColor ?: context.getColorAttr(R.attr.colorPrimaryContainer), 166
+            )
+            backdropColor = context.getColorAttr(android.R.attr.colorBackground)
+            blurRadius = dp2pxf(2)
+            refractionHeight = dp2pxf(12)
+            refractionAmount = dp2pxf(24)
+        }
+    } else null
+
+    init {
+        if (glass != null) backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+    }
+
     private var checked = false
     private var delayedAnimation: Job? = null
     private lateinit var progress: BaseProgressIndicator<*>
@@ -97,6 +127,28 @@ class ServiceButton @JvmOverloads constructor(
     private fun hideProgress() {
         delayedAnimation?.cancel()
         progress.hide()
+    }
+
+    override fun draw(canvas: Canvas) {
+        if (Build.VERSION.SDK_INT >= 31 && glass != null) {
+            glass.cornerRadius = minOf(width, height) / 2f
+            if (!glass.draw(canvas)) {
+                // Software rendering cannot record the backdrop; keep the solid button.
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = glass.tint or (0xFF shl 24) }
+                canvas.drawCircle(width / 2f, height / 2f, glass.cornerRadius, paint)
+            }
+        }
+        super.draw(canvas)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (Build.VERSION.SDK_INT >= 31) glass?.attach()
+    }
+
+    override fun onDetachedFromWindow() {
+        if (Build.VERSION.SDK_INT >= 31) glass?.detach()
+        super.onDetachedFromWindow()
     }
 
     override fun onCreateDrawableState(extraSpace: Int): IntArray {

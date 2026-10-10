@@ -51,6 +51,8 @@ import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.parseProxies
 import io.nekohasekai.sagernet.ktx.readableMessage
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
+import io.nekohasekai.sagernet.widget.isLiquidGlassEnabled
+import kotlinx.coroutines.flow.MutableStateFlow
 import moe.matsuri.nb4a.utils.Util
 
 class MainActivity : ThemedActivity(),
@@ -63,6 +65,12 @@ class MainActivity : ThemedActivity(),
     override val drawBehindBottomNavigationBar = true
     private var bottomNavigationInset = 0
 
+    /** Whether the current page scrolls under the liquid glass bar instead of ending above it. */
+    private var contentUnderBar = false
+
+    /** How far the bottom bar overlaps the page; lists pad their end by this much. */
+    val contentOverlap = MutableStateFlow(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -73,6 +81,9 @@ class MainActivity : ThemedActivity(),
 
         if (savedInstanceState == null) {
             displayFragmentWithId(R.id.nav_configuration)
+        } else {
+            contentUnderBar = isLiquidGlassEnabled &&
+                    supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment
         }
         onBackPressedDispatcher.addCallback {
             if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -329,6 +340,8 @@ class MainActivity : ThemedActivity(),
             binding.stats.performHide()
             binding.fab.hide()
         }
+        // Only the node list pads itself for the bar; other pages keep ending above it.
+        contentUnderBar = isLiquidGlassEnabled && fragment is ConfigurationFragment
         updateContentSpace()
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_holder, fragment)
@@ -338,11 +351,17 @@ class MainActivity : ThemedActivity(),
 
     private fun updateContentSpace() {
         val params = binding.fragmentHolder.layoutParams as android.view.ViewGroup.MarginLayoutParams
-        val bottom = if (binding.stats.allowShow) binding.stats.height else bottomNavigationInset
+        val underBar = contentUnderBar && binding.stats.allowShow
+        val bottom = when {
+            underBar -> 0
+            binding.stats.allowShow -> binding.stats.height
+            else -> bottomNavigationInset
+        }
         if (params.bottomMargin != bottom) {
             params.bottomMargin = bottom
             binding.fragmentHolder.layoutParams = params
         }
+        contentOverlap.value = if (underBar) binding.stats.height else 0
     }
 
     fun displayFragmentWithId(@IdRes id: Int): Boolean {

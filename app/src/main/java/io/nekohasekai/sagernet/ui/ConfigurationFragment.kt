@@ -32,6 +32,7 @@ import androidx.core.net.toUri
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.size
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceDataStore
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -1022,6 +1023,16 @@ class ConfigurationFragment @JvmOverloads constructor(
             GroupManager.addListener(adapter!!)
             configurationListView.adapter = adapter
             configurationListView.setItemViewCacheSize(20)
+
+            (activity as? MainActivity)?.let { main ->
+                // With liquid glass the list runs under the bottom bar; keep its end reachable.
+                val basePadding = configurationListView.paddingBottom
+                viewLifecycleOwner.lifecycleScope.launch {
+                    main.contentOverlap.collect {
+                        configurationListView.updatePadding(bottom = basePadding + it)
+                    }
+                }
+            }
 
             if (!select) {
 

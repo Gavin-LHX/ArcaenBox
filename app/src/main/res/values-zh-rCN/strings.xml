@@ -532,4 +532,6 @@
     <string name="po0_tokens_required">请至少填写一个机器 Token</string>
     <string name="po0_slot_help">Po0 按 IPv4 /24 网段加白，通常最多 5 条；满额后淘汰最旧的普通记录。Token 后可加 @0–@4 固定槽位，会替换该槽位的旧网段；请使用独立槽位，并先在控制台删除冲突的旧槽位。手机通常无需固定槽位。清空 Token、关闭自动加白并保存即可移除配置。</string>
     <string name="po0_guide">Token 获取与使用教程</string>
+    <string name="liquid_glass">液态玻璃</string>
+    <string name="liquid_glass_summary">底栏和连接按钮以折射玻璃效果显示在节点列表上方。需要 Android 12 及以上，折射效果需要 Android 13。</string>
 </resources>

@@ -16,6 +16,7 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.preference.EditTextPreferenceModifiers
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.widget.isLiquidGlassSupported
 import moe.matsuri.nb4a.ui.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
@@ -173,6 +174,15 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
                 ActivityCompat.recreate(this)
             }
             true
+        }
+
+        findPreference<SwitchPreference>(Key.LIQUID_GLASS)!!.apply {
+            isVisible = isLiquidGlassSupported
+            setOnPreferenceChangeListener { _, _ ->
+                // The main screen picks its surfaces when it is created.
+                ActivityCompat.recreate(requireActivity())
+                true
+            }
         }
 
         val nightTheme = findPreference<SimpleMenuPreference>(Key.NIGHT_THEME)!!

@@ -3,13 +3,17 @@ package io.nekohasekai.sagernet.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Canvas
 import android.graphics.Color
+import android.os.Build
 import android.text.format.Formatter
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.TooltipCompat
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.shape.MaterialShapeDrawable
@@ -41,6 +45,21 @@ class StatsBar @JvmOverloads constructor(
     private var exitJob: Job? = null
     private var generation = 0
     private lateinit var behavior: YourBehavior
+
+    private val glass = if (Build.VERSION.SDK_INT >= 31 && DataStore.liquidGlass) {
+        LiquidGlass(this) {
+            listOfNotNull((parent as? ViewGroup)?.findViewById(R.id.fragment_holder))
+        }.apply {
+            tint = ColorUtils.setAlphaComponent(
+                connectedBackgroundTint?.defaultColor ?: context.getColorAttr(R.attr.colorSurfaceContainer), 140
+            )
+            backdropColor = context.getColorAttr(android.R.attr.colorBackground)
+            // Only the top edge bends the list; the sides and bottom meet the screen edges.
+            val hidden = refractionHeight + blurRadius
+            bleed.set(hidden, 0f, hidden, hidden)
+        }
+    } else null
+    private var glassVisible = false
 
     var allowShow = true
 
@@ -105,7 +124,9 @@ class StatsBar @JvmOverloads constructor(
         // Keep the inset-aware anchor laid out so the A button stays in place.
         // Only a live connection needs a visible surface or a tappable status area.
         statsContent.visibility = if (connected) View.VISIBLE else View.INVISIBLE
-        backgroundTint = if (connected) connectedBackgroundTint else ColorStateList.valueOf(Color.TRANSPARENT)
+        backgroundTint = if (connected && glass == null) connectedBackgroundTint else ColorStateList.valueOf(Color.TRANSPARENT)
+        glassVisible = connected && glass != null
+        invalidate()
         elevation = if (connected) connectedElevation else 0f
         isEnabled = connected
         isClickable = connected
@@ -178,8 +199,22 @@ class StatsBar @JvmOverloads constructor(
         }
     }
 
+    override fun draw(canvas: Canvas) {
+        if (Build.VERSION.SDK_INT >= 31 && glassVisible && glass?.draw(canvas) == false) {
+            // Software rendering cannot record the backdrop; keep the solid surface.
+            canvas.drawColor(connectedBackgroundTint?.defaultColor ?: context.getColorAttr(R.attr.colorSurfaceContainer))
+        }
+        super.draw(canvas)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (Build.VERSION.SDK_INT >= 31) glass?.attach()
+    }
+
     override fun onDetachedFromWindow() {
         stateJob?.cancel(); exitJob?.cancel(); generation++
+        if (Build.VERSION.SDK_INT >= 31) glass?.detach()
         super.onDetachedFromWindow()
     }
 }

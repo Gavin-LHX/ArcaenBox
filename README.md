@@ -15,6 +15,7 @@ sing-box / universal proxy toolchain for Android.
 
 节点卡片提供独立测速菜单，长按可在主列表多选；底栏显示当前代理的真连接延迟和出口 IP。测试地址支持预设与自定义，操作说明见[节点测试与高级设置](docs/node-tests-and-advanced-settings.md)。[1.6.1 测试记录](docs/verification-1.6.1.md)列出节点功能验证；[1.6.2 底部适配验证](docs/verification-1.6.2.md)记录底栏和侧栏延伸到系统导航区域的修复。
 [1.6.3](docs/verification-1.6.3.md) 在未连接时仅保留右下角 A 按钮；连接后显示延迟、出口 IP 和流量信息。
+底栏和 A 按钮默认以[液态玻璃](https://github.com/Kyant0/AndroidLiquidGlass)效果显示在节点列表上方（Android 12 起为磨砂，Android 13 起带折射），布局不变，可在 设置 → 液态玻璃 关闭。
 
 ## 下载 / Downloads
 
