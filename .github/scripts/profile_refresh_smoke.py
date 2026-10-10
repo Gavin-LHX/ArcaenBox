@@ -83,7 +83,6 @@ def check(ui):
                 ui.adb('shell', 'settings', 'delete' if value == 'null' else 'put',
                        'system', key, *([] if value == 'null' else [value]))
         ui.launch()
-        ui.navigate('nav_configuration')
         expect(2)
         ui.capture('profile-refresh-cold-reopen')
         stopped()

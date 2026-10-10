@@ -73,7 +73,7 @@ class GlassDrawable(
             renderer.draw(canvas, rect.width().toInt().coerceAtLeast(1), rect.height().toInt().coerceAtLeast(1), radius, press) { backdrop ->
                 backdrop.translate(-rect.left, -rect.top)
                 scene.draw(backdrop)
-                if (sampleContent) drawContentBackdrop(backdrop)
+                if (sampleContent) view.rootView.findViewById<MainContentLayout>(R.id.fragment_holder)?.drawGlassBackdrop(backdrop, view)
                 underlay?.invoke(backdrop)
             }
             canvas.translate(-rect.left, -rect.top)
@@ -100,24 +100,6 @@ class GlassDrawable(
         paint.style = Paint.Style.FILL
         paint.shader = null
         canvas.restoreToCount(composite)
-    }
-
-    private fun drawContentBackdrop(canvas: Canvas) {
-        // The modern shell uses a FragmentContainerView for fragment_holder.
-        // Its backdrop is a separate content-only sibling of the floating controls;
-        // the classic shell still records fragment_holder itself.
-        val root = view.rootView
-        val source = (root.findViewById<View>(R.id.glass_content) as? MainContentLayout)
-            ?: (root.findViewById<View>(R.id.fragment_holder) as? MainContentLayout)
-            ?: return
-        // Never draw a RenderNode into a glass surface recorded inside that same
-        // node. A nested control can always fall back to the shared GlassScene.
-        var ancestor: View? = view
-        while (ancestor != null) {
-            if (ancestor === source) return
-            ancestor = ancestor.parent as? View
-        }
-        source.drawGlassBackdrop(canvas, view)
     }
 
     override fun setAlpha(alpha: Int) {

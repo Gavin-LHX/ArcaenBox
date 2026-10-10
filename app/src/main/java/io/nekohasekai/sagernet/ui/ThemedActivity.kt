@@ -31,7 +31,7 @@ abstract class ThemedActivity : AppCompatActivity {
     private var interfaceStyle = ""
     private var reduceTransparency = false
     open val isDialog = false
-    // The main shells let their bottom bar, rail or drawer paint the navigation safe area.
+    // MainActivity lets the bottom bar and drawer paint the navigation safe area.
     protected open val drawBehindBottomNavigationBar = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,7 +70,7 @@ abstract class ThemedActivity : AppCompatActivity {
                 val bottomOwnedByChildren = drawBehindBottomNavigationBar && keyboard.bottom <= bars.bottom
                 view.updatePadding(left = bars.left, top = bars.top, right = bars.right,
                     bottom = if (bottomOwnedByChildren) 0 else maxOf(bars.bottom, keyboard.bottom))
-                // Only the main shells pass the bottom safe area to their navigation.
+                // Only MainActivity passes the bottom safe area to its bar and drawer.
                 // Other activities keep the existing content/keyboard inset ownership.
                 WindowInsetsCompat.Builder(insets)
                     .setInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime(), Insets.NONE)

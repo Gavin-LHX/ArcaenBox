@@ -11,8 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.*
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,12 +26,7 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.widget.ListListener
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import io.nekohasekai.sagernet.widget.UndoSnackbarManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import moe.matsuri.nb4a.utils.Util
 import moe.matsuri.nb4a.utils.toBytesString
 import java.lang.NumberFormatException
@@ -42,7 +35,7 @@ import java.util.*
 class GroupFragment : ToolbarFragment(R.layout.layout_group),
     Toolbar.OnMenuItemClickListener {
 
-    lateinit var activity: MainHostActivity
+    lateinit var activity: MainActivity
     lateinit var groupListView: RecyclerView
     lateinit var layoutManager: LinearLayoutManager
     lateinit var groupAdapter: GroupAdapter
@@ -50,7 +43,7 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        activity = requireActivity() as MainHostActivity
+        activity = requireActivity() as MainActivity
 
         ViewCompat.setOnApplyWindowInsetsListener(view, ListListener)
         toolbar.setTitle(R.string.menu_group)
@@ -146,7 +139,7 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
                     val profiles = SagerDatabase.proxyDao.getByGroup(selectedGroup.id)
                     val links = profiles.joinToString("\n") { it.toStdLink(compact = true) }
                     try {
-                        (requireActivity() as MainHostActivity).contentResolver.openOutputStream(
+                        (requireActivity() as MainActivity).contentResolver.openOutputStream(
                             data
                         )!!.bufferedWriter().use {
                             it.write(links)
@@ -170,19 +163,13 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
         UndoSnackbarManager.Interface<ProxyGroup> {
 
         val groupList = ArrayList<ProxyGroup>()
-        private val viewLifecycle = viewLifecycleOwner.lifecycle
-        private val viewScope = viewLifecycleOwner.lifecycleScope
 
         suspend fun reload() {
-            val groups = withContext(Dispatchers.IO) {
-                SagerDatabase.groupDao.allGroups().toMutableList().apply {
-                    if (size > 1 && SagerDatabase.proxyDao.countByGroup(find { it.ungrouped }!!.id) == 0L) removeAll { it.ungrouped }
-                }
-            }
-            onMainDispatcher {
-                if (viewLifecycle.currentState == Lifecycle.State.DESTROYED) return@onMainDispatcher
-                groupList.clear()
-                groupList.addAll(groups)
+            val groups = SagerDatabase.groupDao.allGroups().toMutableList()
+            if (groups.size > 1 && SagerDatabase.proxyDao.countByGroup(groups.find { it.ungrouped }!!.id) == 0L) groups.removeAll { it.ungrouped }
+            groupList.clear()
+            groupList.addAll(groups)
+            groupListView.post {
                 notifyDataSetChanged()
             }
         }
@@ -190,7 +177,7 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
         init {
             setHasStableIds(true)
 
-            viewScope.launch {
+            runOnDefaultDispatcher {
                 reload()
             }
         }
@@ -201,11 +188,6 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
         override fun onBindViewHolder(holder: GroupHolder, position: Int) {
             holder.bind(groupList[position])
-        }
-
-        override fun onViewRecycled(holder: GroupHolder) {
-            holder.cancelPendingBind()
-            super.onViewRecycled(holder)
         }
 
         override fun getItemCount(): Int {
@@ -320,13 +302,12 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
     }
 
-    override fun onDestroyView() {
+    override fun onDestroy() {
         if (::groupAdapter.isInitialized) {
             GroupManager.removeListener(groupAdapter)
-            groupListView.adapter = null
         }
 
-        super.onDestroyView()
+        super.onDestroy()
 
         if (!::undoManager.isInitialized) return
         undoManager.flush()
@@ -345,13 +326,6 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
         val optionsButton = binding.options
         val updateButton = binding.groupUpdate
         val subscriptionUpdateProgress = binding.subscriptionUpdateProgress
-        private val viewScope = viewLifecycleOwner.lifecycleScope
-        private var bindJob: Job? = null
-
-        fun cancelPendingBind() {
-            bindJob?.cancel()
-            bindJob = null
-        }
 
         override fun onMenuItemClick(item: MenuItem): Boolean {
 
@@ -405,7 +379,6 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
 
         fun bind(group: ProxyGroup) {
-            cancelPendingBind()
             proxyGroup = group
 
             itemView.setOnClickListener { }
@@ -538,35 +511,34 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
             groupUser.text = subscription?.username ?: ""
 
-            bindJob = viewScope.launch {
-                val size = withContext(Dispatchers.IO) {
-                    SagerDatabase.proxyDao.countByGroup(group.id)
-                }
-                ensureActive()
-                if (proxyGroup !== group) return@launch
-                @Suppress("DEPRECATION") when (group.type) {
-                    GroupType.BASIC -> {
-                        if (size == 0L) {
-                            groupStatus.setText(R.string.group_status_empty)
-                        } else {
-                            groupStatus.text = getString(R.string.group_status_proxies, size)
-                        }
-                    }
-
-                    GroupType.SUBSCRIPTION -> {
-                        groupStatus.text = if (size == 0L) {
-                            getString(R.string.group_status_empty_subscription)
-                        } else {
-                            val date = Date(group.subscription!!.lastUpdated * 1000L)
-                            getString(
-                                R.string.group_status_proxies_subscription,
-                                size,
-                                "${date.month + 1} - ${date.date}"
-                            )
+            runOnDefaultDispatcher {
+                val size = SagerDatabase.proxyDao.countByGroup(group.id)
+                onMainDispatcher {
+                    @Suppress("DEPRECATION") when (group.type) {
+                        GroupType.BASIC -> {
+                            if (size == 0L) {
+                                groupStatus.setText(R.string.group_status_empty)
+                            } else {
+                                groupStatus.text = getString(R.string.group_status_proxies, size)
+                            }
                         }
 
+                        GroupType.SUBSCRIPTION -> {
+                            groupStatus.text = if (size == 0L) {
+                                getString(R.string.group_status_empty_subscription)
+                            } else {
+                                val date = Date(group.subscription!!.lastUpdated * 1000L)
+                                getString(
+                                    R.string.group_status_proxies_subscription,
+                                    size,
+                                    "${date.month + 1} - ${date.date}"
+                                )
+                            }
+
+                        }
                     }
                 }
+
             }
 
         }

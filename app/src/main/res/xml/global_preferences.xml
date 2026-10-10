@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory app:key="group_general" app:title="@string/general_settings">
-        <moe.matsuri.nb4a.ui.MaterialSwitchPreference app:defaultValue="false" app:icon="@drawable/ic_shell_swap" app:key="classicUi" app:summary="@string/classic_ui_summary" app:title="@string/classic_ui" />
         <moe.matsuri.nb4a.ui.SimpleMenuPreference app:key="interfaceStyle" app:title="@string/interface_style" app:defaultValue="md3" app:entries="@array/interface_style_names" app:entryValues="@array/interface_style_values" app:useSimpleSummaryProvider="true" app:icon="@drawable/ic_baseline_color_lens_24" />
         <moe.matsuri.nb4a.ui.ColorPickerPreference android:title="@string/theme" app:icon="@drawable/ic_baseline_color_lens_24" app:key="appTheme" />
         <moe.matsuri.nb4a.ui.SimpleMenuPreference app:defaultValue="0" app:entries="@array/night_mode" app:entryValues="@array/int_array_4" app:icon="@drawable/ic_baseline_wb_sunny_24" app:key="nightTheme" app:title="@string/night_mode" app:useSimpleSummaryProvider="true" />

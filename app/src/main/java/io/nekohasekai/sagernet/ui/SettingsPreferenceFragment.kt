@@ -192,11 +192,6 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
-        findPreference<SwitchPreference>(Key.CLASSIC_UI)!!.setOnPreferenceChangeListener { _, newValue ->
-            ClassicUi.switch(requireActivity(), newValue as Boolean)
-            true
-        }
-
         val nightTheme = findPreference<SimpleMenuPreference>(Key.NIGHT_THEME)!!
         nightTheme.setOnPreferenceChangeListener { _, newTheme ->
             Theme.currentNightMode = (newTheme as String).toInt()
@@ -285,7 +280,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val acquireWakeLock = findPreference<SwitchPreference>(Key.ACQUIRE_WAKE_LOCK)!!
         val enableClashAPI = findPreference<SwitchPreference>(Key.ENABLE_CLASH_API)!!
         enableClashAPI.setOnPreferenceChangeListener { _, newValue ->
-            (activity as MainHostActivity?)?.refreshNavMenu(newValue as Boolean)
+            (activity as MainActivity?)?.refreshNavMenu(newValue as Boolean)
             needReload()
             true
         }
