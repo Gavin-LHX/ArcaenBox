@@ -4,8 +4,6 @@
 
 当前 NaïveProxy 官方二进制最低要求 Android 7.0（API 24）。应用在较旧系统上仍可使用其他协议；选择 NaïveProxy 时会显示版本要求。
 
-从 `1.7.5-arcaenbox.1` 起，内置 Xray 支持 [VLESS + FinalMask + Sudoku（TCP）](vless-sudoku.md)，无需另装插件。普通 VLESS 节点仍使用 sing-box。
-
 添加节点 → 手动输入 → Snell，可选择服务端 v4、v5 或 v6，设置 PSK、UDP 转发、连接复用。v4/v5 支持可选的 HTTP/TLS 混淆。版本选择保存在节点、备份和分享链接中。支持 `snell://PSK@host:port?version=4`、`version=5`、`version=6&mode=default` 及 Clash YAML 节点导入。不支持的版本和混淆参数会报错。
 
 Snell 正式渠道使用 mihomo 的实现。其 v5 选项通过服务端的 v4 兼容协议连接，支持 TCP 和经 TCP 转发的 UDP；不实现 v5 独有的 QUIC 传输。应用设置中也显示此限制。
@@ -23,11 +21,10 @@ Snell 正式渠道使用 mihomo 的实现。其 v5 选项通过服务端的 v4 �
 | Trojan-Go | 0.10.6 | [源码提交](https://github.com/p4gefau1t/trojan-go/tree/2dc60f52e79ff8b910e78e444f1e80678e936450)，GPL-3.0；[SagerNet 打包源码](https://github.com/SagerNet/SagerNet/tree/trojan-go-plugin-0.10.6/plugin/trojan-go) |
 | NaïveProxy | 150.0.7871.63-1 | [源码与构建工作流](https://github.com/klzgrad/naiveproxy/tree/v150.0.7871.63-1)，BSD-3-Clause 与 Chromium 第三方许可 |
 | Mieru | 3.36.1 | [源码提交](https://github.com/enfein/mieru/tree/316cc6606c287d45a321b99ac86a1f2e7f2b785a)，GPL-3.0 |
-| Xray（FinalMask Sudoku） | 26.3.27 | [源码提交](https://github.com/XTLS/Xray-core/tree/d2758a023cd7f4174a5a5fa4ff66e487d4342ba0)，MPL-2.0 |
 | mihomo（Snell） | 1.19.30 | [源码与构建工作流](https://github.com/MetaCubeX/mihomo/tree/v1.19.30)，GPL-3.0 |
 | sing-snell（Snell 测试渠道） | bc5a12ac736f / adapter 1 | [锁定的源码提交](https://github.com/SagerNet/sing-snell/tree/bc5a12ac736f235b2de2926ecd2791cc925e6b8c)，GPL-3.0-or-later；本项目适配器位于 `buildScript/snell-client` |
 
-Mieru、Xray 和 Snell 测试渠道使用锁定源码在 CI 中通过 Go 和 Android NDK 编译四种架构。其余客户端提取自表中版本的官方 Android 发布物。重建需要 Android SDK、NDK 25.0.8775105、Go（脚本为 Xray 指定 Go 1.26.1）、Python 3.12+ 和 curl：
+Mieru 和 Snell 测试渠道使用锁定源码在 CI 中通过 Go 和 Android NDK 编译四种架构。其余客户端提取自表中版本的官方 Android 发布物。重建需要 Android SDK、NDK 25.0.8775105、Go 1.25、Python 3.12+ 和 curl：
 
 ```sh
 export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/25.0.8775105"

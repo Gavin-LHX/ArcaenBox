@@ -5,7 +5,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.7.6-arcaenbox.1
+        default: v1.6.0-arcaenbox.1
       stable_core_run:
         description: Native Cores run containing the verified stable AAR
         required: true

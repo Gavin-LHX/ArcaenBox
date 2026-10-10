@@ -8,23 +8,24 @@
 
 sing-box / universal proxy toolchain for Android.
 
-一款使用 sing-box 的 Android 通用代理软件。
-由 NekoBox 二开得来。
+一款使用 sing-box 的 Android 通用代理软件.
 
 侧栏提供 [Po0 防火墙白名单](docs/po0-whitelist.md)，支持多机器 Token、手动加白与自动更新。
 
 节点卡片提供独立测速菜单，长按可在主列表多选；底栏显示当前代理的真连接延迟和出口 IP。测试地址支持预设与自定义，操作说明见[节点测试与高级设置](docs/node-tests-and-advanced-settings.md)。[1.6.1 测试记录](docs/verification-1.6.1.md)列出节点功能验证；[1.6.2 底部适配验证](docs/verification-1.6.2.md)记录底栏和侧栏延伸到系统导航区域的修复。
+
 [1.6.3](docs/verification-1.6.3.md) 在未连接时仅保留右下角 A 按钮；连接后显示延迟、出口 IP 和流量信息。
-
-默认使用重新设计的 Material 3 界面（首页仪表盘 + 底部导航 / 宽屏侧边导航栏），原侧栏界面保留为「经典界面」，可在 设置 → 经典界面 或 更多 → 切换到经典界面 回退，详见[新界面说明](docs/ui-redesign.md)。
-
-新版和经典布局均保留 1.7.5 的 Mieru、VLESS/FinalMask/Sudoku TCP、应用内 APK 更新和同名节点导入刷新修复。设置 → 界面样式可独立切换 MD3 与 Liquid Glass；布局切换不改变节点、路由或内核配置。
 
 ## 下载 / Downloads
 
 [![GitHub All Releases](https://img.shields.io/github/downloads/Gavin-LHX/ArcaenBox/total?label=downloads-total&logo=github&style=flat-square)](https://github.com/Gavin-LHX/ArcaenBox/releases)
 
 [GitHub Releases 下载](https://github.com/Gavin-LHX/ArcaenBox/releases)
+
+**上游项目的 Google Play 版本自 2024 年 5 月起已被第三方控制，为非开源版本，请不要下载。**
+
+**The upstream Google Play version has been controlled by a third party since May 2024 and is a non-open
+source version. Please do not download it.**
 
 ## 更新日志 / Changelog
 
@@ -79,7 +80,6 @@ Only resolving outbound, i.e. nodes, is supported. Information such as diversion
 Core:
 
 - [SagerNet/sing-box](https://github.com/SagerNet/sing-box)
-- [XTLS/Xray-core](https://github.com/XTLS/Xray-core) — VLESS FinalMask Sudoku
 
 Android GUI:
 

@@ -2,8 +2,6 @@
 
 From 1.7.5, import a `vless://` link with its URL-encoded `fm` JSON parameter. The existing VLESS editor exposes **FinalMask · Sudoku (TCP)** for inspecting or changing this JSON. Leaving it empty disables FinalMask.
 
-If the node was imported by an older version that discarded `fm`, reimport the original link after upgrading; the omitted Sudoku password cannot be recovered from the old saved node. [1.7.5 verification](verification-1.7.5.md) records the build and Android traffic checks.
-
 ```json
 {"tcp":[{"type":"sudoku","settings":{"password":"replace-with-server-password","ascii":"prefer_ascii","paddingMin":0,"paddingMax":3}}]}
 ```

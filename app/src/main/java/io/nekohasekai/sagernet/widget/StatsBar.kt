@@ -19,7 +19,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.*
-import io.nekohasekai.sagernet.ui.MainHostActivity
+import io.nekohasekai.sagernet.ui.MainActivity
 import io.nekohasekai.sagernet.utils.ExitIpLookup
 import io.nekohasekai.sagernet.widget.glass.GlassDrawable
 import kotlinx.coroutines.CancellationException
@@ -110,7 +110,7 @@ class StatsBar @JvmOverloads constructor(
     }
 
     fun changeState(state: BaseService.State) {
-        val activity = context.findActivity() as MainHostActivity
+        val activity = context.findActivity() as MainActivity
         stateJob?.cancel()
         exitJob?.cancel()
         generation++
@@ -160,7 +160,7 @@ class StatsBar @JvmOverloads constructor(
         exitJob?.cancel()
         val epoch = ++generation
         if (!DataStore.serviceState.connected) return
-        val activity = context.findActivity() as MainHostActivity
+        val activity = context.findActivity() as MainActivity
         isEnabled = true
         setStatus(context.getText(R.string.status_latency_pending))
         exitIpText.visibility = if (DataStore.showExitIp) View.VISIBLE else View.GONE

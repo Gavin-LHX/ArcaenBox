@@ -69,8 +69,7 @@ def check(ui):
     ui.launch(); ui.navigate('nav_settings')
     assert ui.find(ui.tree(), text=ui.STRINGS['speed_interval']) is None, 'Notifications expanded by default'
     ui.tap(ui.scroll_for(text=ui.STRINGS['settings_notifications']))
-    # Expanded rows can start below the viewport after the shell/style controls.
-    ui.scroll_for(text=ui.STRINGS['speed_interval']); ui.capture('settings-expanded')
+    ui.wait_for(text=ui.STRINGS['speed_interval']); ui.capture('settings-expanded')
     ui.tap(ui.scroll_for(text=ui.STRINGS['settings_notifications']))
     assert ui.find(ui.tree(), text=ui.STRINGS['speed_interval']) is None, 'Cannot collapse settings'
     ui.capture('settings-collapsed')

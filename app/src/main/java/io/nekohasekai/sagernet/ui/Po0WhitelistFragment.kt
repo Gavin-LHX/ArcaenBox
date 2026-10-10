@@ -88,7 +88,7 @@ class Po0WhitelistFragment : ToolbarFragment(R.layout.layout_po0_whitelist) {
                 }
                 pending = addNow || automatic
                 render(state)
-                (activity as? MainHostActivity)?.snackbar(getString(R.string.po0_saved))?.show()
+                (activity as? MainActivity)?.snackbar(getString(R.string.po0_saved))?.show()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
