@@ -72,7 +72,7 @@ not saved into activity-instance state or autofill.
 
 该协议遵循 [相关教程](https://wiki.uuuz.de/guide/tutorials/po0fw-whitelist.html)
 及其 [上游实现](https://github.com/w0ven/po0fw):
-`POST https://124.221.69.228/api/防火墙/<token>/add[?slot=N]`, 空请求体。
+`POST https://124.221.69.228/api/firewall/<token>/add[?slot=N]`, 空请求体。
 IPv4 端点呈现一个公开受信任的 IP 证书。普通证书
 并保持主机名验证启用。请求不能重定向，使用系统
 HTTP 代理，或回退到 VPN：套接字和 DNS 绑定到明确检查的
@@ -87,7 +87,7 @@ sing-box 路由列表。它使用一个纯直接出站和一个仅限 IP 的匹�
 生成的规则由系统自动管理，不会添加到可编辑区域
 用户规则数据库。添加第一个标记或清除所有标记将重新加载
 已经连接过一次代理以应用/移除它。后续更新不会重新加载它。
-工人验证物理网络本身，因为 WorkManager 的默认
+服务会验证物理网络本身，因为 WorkManager 的默认
 网络验证可能报告一个无法使用的 VPN，而物理连接是正常的。
 
 成功需要启用的防火墙和返回的当前出口
@@ -97,7 +97,7 @@ sing-box 路由列表。它使用一个纯直接出站和一个仅限 IP 的匹�
 请求 URL 和令牌值永远不会出现在结果消息或日志中。
 
 标记使用 AES-GCM 加密，每项保存的密钥由专用密钥封装
-Android 密钥库 RSA 密钥（同时兼容 Android 5）。州使用原子
+Android 密钥库 RSA 密钥（同时兼容 Android 5）。状态使用原子
 文件以及`noBackupFilesDir`下的跨进程锁；它被排除在 Android 之外
 备份和 ArcaenBox 配置导出。在用户界面中，令牌被屏蔽，并且是
 未保存到活动实例状态或自动填充。
