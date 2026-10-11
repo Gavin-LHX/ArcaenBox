@@ -4,6 +4,7 @@
 Open **Po0 firewall whitelist** in the navigation drawer. In the Po0 console,
 open the machine's firewall page and copy its add script. Paste only its
 `pgnfw_…` token into ArcaenBox. Separate multiple machines with commas.
+
 在导航抽屉中打开 **Po0 防火墙白名单**。
 在 Po0 控制台打开机器的防火墙页面并复制其添加脚本。仅粘贴其
 `pgnfw_…` 标识符转换到 ArcaenBox。多个机器之间用逗号分隔。
