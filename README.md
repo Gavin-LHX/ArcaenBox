@@ -6,9 +6,11 @@
 [![Releases](https://img.shields.io/github/v/release/Gavin-LHX/ArcaenBox)](https://github.com/Gavin-LHX/ArcaenBox/releases)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-sing-box / universal proxy toolchain for Android.
+sing-box / universal proxy toolchain for Android.Forked from NekoBox.
 
-一款使用 sing-box 的 Android 通用代理软件.
+一款使用 sing-box 的 Android 通用代理软件.由 NekoBox 分支而来.
+
+The sidebar provides [Po0 Firewall Whitelist](docs/po0-whitelist.md), supporting multi-machine tokens, manual whitelisting, and automatic updates.
 
 侧栏提供 [Po0 防火墙白名单](docs/po0-whitelist.md)，支持多机器 Token、手动加白与自动更新。
 
