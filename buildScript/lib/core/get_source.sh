@@ -26,6 +26,7 @@ p.write_text(s.replace(old,'experimentalOptions.CacheFile.Enabled'))
 PY
 fi
 git apply "$SRC_ROOT/buildScript/lib/core/patches/core-compat.patch"
+git apply "$SRC_ROOT/buildScript/lib/core/patches/reality-mlkem.patch"
 popd
 
 ####

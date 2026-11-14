@@ -102,7 +102,8 @@ jobs:
           test -n "$SIGNING_KEYSTORE"
           printf '%s' "$SIGNING_KEYSTORE" | base64 --decode > release.keystore
           python3 -m pip install cryptography
-          python3 .github/scripts/package_cores.py --stable core-build/stable/libcore.aar --preview core-build/preview/libcore.aar --keystore release.keystore
+          source buildScript/lib/core/get_source_env.sh
+          python3 .github/scripts/package_cores.py --stable core-build/stable/libcore.aar --preview core-build/preview/libcore.aar --revision "$CORE_REVISION" --keystore release.keystore
           python3 .github/scripts/package_components.py --keystore release.keystore
           ./gradlew --no-daemon app:testOssReleaseUnitTest app:assembleOssRelease
       - name: Verify APK signatures, application name and package
