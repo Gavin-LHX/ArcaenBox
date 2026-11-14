@@ -3,10 +3,13 @@ on:
   workflow_dispatch:
     inputs:
       source_run:
-        description: Successful signed APK run to publish without rebuilding
+        description: Signed APK run that passed the build and signature steps
         required: true
       expected_sha:
-        description: Commit tested by the signed APK run
+        description: Commit used to build the signed APKs
+        required: true
+      verification_run:
+        description: Successful UI run that tested those exact APKs
         required: true
 permissions:
   actions: read
@@ -19,6 +22,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       SOURCE_RUN: ${{ inputs.source_run }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
+      VERIFICATION_RUN: ${{ inputs.verification_run }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,11 +30,18 @@ jobs:
       - name: Verify signed build source and REALITY smoke results
         run: |
           set -euo pipefail
-          [[ "$SOURCE_RUN" =~ ^[0-9]+$ && "$EXPECTED_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ && "$VERIFICATION_RUN" =~ ^[0-9]+$ && "$EXPECTED_SHA" =~ ^[a-f0-9]{40}$ ]]
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > run.json
-          jq -e --arg sha "$EXPECTED_SHA" '.head_sha == $sha and .conclusion == "success" and .path == ".github/workflows/apk.yml"' run.json
-          git diff --exit-code "$EXPECTED_SHA" HEAD -- . ':!.github/workflows/publish-verified-apks.yml'
-          gh run download "$SOURCE_RUN" -n ArcaenBox-UI-verification -D evidence
+          jq -e --arg sha "$EXPECTED_SHA" '.head_sha == $sha and .status == "completed" and .path == ".github/workflows/apk.yml"' run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/jobs" | jq -e '
+            any(.jobs[]; .name == "apk" and
+              any(.steps[]; .name == "Build signed release APKs" and .conclusion == "success") and
+              any(.steps[]; .name == "Verify APK signatures, application name and package" and .conclusion == "success"))'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VERIFICATION_RUN" | jq -e --arg sha "$(git rev-parse HEAD)" '
+            .head_sha == $sha and .conclusion == "success" and .path == ".github/workflows/ui.yml"'
+          git diff --exit-code "$EXPECTED_SHA" HEAD -- . ':!.github/workflows/publish-verified-apks.yml' ':!.github/scripts/reality_smoke.py'
+          gh run download "$VERIFICATION_RUN" -n ArcaenBox-UI-verification -D evidence
+          jq -e --argjson run "$SOURCE_RUN" --arg sha "$EXPECTED_SHA" '.id == $run and .head_sha == $sha' evidence/apk-source.json
           jq -e 'length == 0' evidence/failures.json
           jq -e 'length == 2 and ([.[].channel] | sort) == ["preview","stable"] and all(.[]; .http_status == 200)' evidence/reality/results.json
       - uses: actions/download-artifact@v4

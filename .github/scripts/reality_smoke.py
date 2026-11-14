@@ -19,6 +19,7 @@ def encode(data):
 
 
 def check(ui):
+    from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
     assert ui.adb('get-serialno').strip().startswith('emulator-')
@@ -54,6 +55,9 @@ def check(ui):
                         '-subj', '/CN=reality.test', '-keyout', str(root / 'tls.key'),
                         '-out', str(root / 'tls.crt')], check=True, capture_output=True)
         key = X25519PrivateKey.generate()
+        private_key = key.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw,
+                                       serialization.NoEncryption())
+        public_key = key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
         user, sid, flow = str(uuid.uuid4()), '0123456789abcdef', 'xtls-rprx-vision'
         origin = cleanup.enter_context(http.server.ThreadingHTTPServer(('127.0.0.1', 18888), Origin))
         threading.Thread(target=origin.serve_forever, daemon=True).start()
@@ -64,7 +68,7 @@ def check(ui):
             'settings': {'clients': [{'id': user, 'flow': flow}], 'decryption': 'none'},
             'streamSettings': {'network': 'raw', 'security': 'reality', 'realitySettings': {
                 'target': f'127.0.0.1:{target_port}', 'serverNames': ['reality.test'],
-                'privateKey': encode(key.private_bytes_raw()), 'shortIds': [sid]}}}],
+                'privateKey': encode(private_key), 'shortIds': [sid]}}}],
             'outbounds': [{'protocol': 'freedom', 'settings': {'finalRules': [
                 {'action': 'allow', 'ip': ['127.0.0.1/32'], 'port': '18888'}]}}]}
         (root / 'xray.json').write_text(json.dumps(config))
@@ -90,7 +94,7 @@ def check(ui):
         cleanup.callback(ui.adb, 'forward', '--remove', 'tcp:12080', check=False)
         uri = f'vless://{user}@10.0.2.2:{reality_port}?' + urllib.parse.urlencode({
             'type': 'tcp', 'security': 'reality', 'encryption': 'none', 'flow': flow,
-            'sni': 'reality.test', 'fp': 'chrome', 'pbk': encode(key.public_key().public_bytes_raw()), 'sid': sid})
+            'sni': 'reality.test', 'fp': 'chrome', 'pbk': encode(public_key), 'sid': sid})
         name = 'REALITY-MLKEM'
         p.import_uri(uri, name)
         for channel, version in [('stable', '1.14.0'), ('preview', '1.15.0-alpha.2')]:
@@ -104,7 +108,7 @@ def check(ui):
                 ui.launch()
                 ui.open_core()
             details = ui.wait_for(resource_id=ui.PACKAGE + ':id/core_details').get('text', '')
-            assert version in details, details
+            assert f'{version} / r4' in details, details
             offset = log.stat().st_size
             button = p.start_profile(name)
             try:
