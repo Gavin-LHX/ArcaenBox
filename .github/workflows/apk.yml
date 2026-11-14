@@ -212,5 +212,11 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          printf '%s\n' 'ArcaenBox for Android. Default primary color: #DCEEF1.' 'Package: com.arcaenbox.android. Can be installed alongside the old moe.nb4a application; export and import configuration to migrate.' 'Signed release APKs for arm64-v8a, armeabi-v7a, x86, and x86_64.' 'This build uses the existing dedicated ArcaenBox signing key.' > /tmp/release-notes.md
-          gh release create "$RELEASE_TAG" dist/* --target "$GITHUB_SHA" --title "ArcaenBox $RELEASE_TAG" --notes-file /tmp/release-notes.md
+          version=$(sed -n 's/^VERSION_NAME=//p' nb4a.properties)
+          test "$RELEASE_TAG" = "v$version"
+          notes="docs/releases/$version.md"
+          if [[ ! -f "$notes" ]]; then
+            notes=/tmp/release-notes.md
+            printf '%s\n' 'Signed ArcaenBox APKs for arm64-v8a, armeabi-v7a, x86, and x86_64.' > "$notes"
+          fi
+          gh release create "$RELEASE_TAG" dist/* --target "$GITHUB_SHA" --title "ArcaenBox $RELEASE_TAG" --notes-file "$notes"
