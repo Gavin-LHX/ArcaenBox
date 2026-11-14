@@ -1,0 +1,52 @@
+name: Publish verified ArcaenBox APKs
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Successful signed APK run to publish without rebuilding
+        required: true
+      expected_sha:
+        description: Commit tested by the signed APK run
+        required: true
+permissions:
+  actions: read
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN: ${{ inputs.source_run }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify signed build source and REALITY smoke results
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ && "$EXPECTED_SHA" =~ ^[a-f0-9]{40}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > run.json
+          jq -e --arg sha "$EXPECTED_SHA" '.head_sha == $sha and .conclusion == "success" and .path == ".github/workflows/apk.yml"' run.json
+          git diff --exit-code "$EXPECTED_SHA" HEAD -- . ':!.github/workflows/publish-verified-apks.yml'
+          gh run download "$SOURCE_RUN" -n ArcaenBox-UI-verification -D evidence
+          jq -e 'length == 0' evidence/failures.json
+          jq -e 'length == 2 and ([.[].channel] | sort) == ["preview","stable"] and all(.[]; .http_status == 200)' evidence/reality/results.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: ArcaenBox-APKs
+          path: dist
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+      - name: Publish the checked release assets
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^VERSION_NAME=//p' nb4a.properties)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-arcaenbox\.[0-9]+$ ]]
+          for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+            test -f "dist/ArcaenBox-$version-$abi.apk"
+          done
+          test "$(find dist -maxdepth 1 -type f | wc -l)" = 5
+          (cd dist; sha256sum --strict -c SHA256SUMS.txt)
+          gh release create "v$version" dist/* --target "$EXPECTED_SHA" --title "ArcaenBox v$version" --notes-file "docs/releases/$version.md"
