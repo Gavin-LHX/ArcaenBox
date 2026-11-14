@@ -3,6 +3,7 @@ import hashlib
 import http.server
 import json
 import re
+import ssl
 import subprocess
 import threading
 import time
@@ -52,8 +53,27 @@ def check(ui):
         (root / 'xray').chmod(0o700)
         # Use a local TLS 1.3 fallback so authentication never depends on the internet.
         subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
-                        '-subj', '/CN=reality.test', '-keyout', str(root / 'tls.key'),
+                        '-subj', '/CN=reality.test', '-addext', 'subjectAltName=DNS:reality.test',
+                        '-keyout', str(root / 'tls.key'),
                         '-out', str(root / 'tls.crt')], check=True, capture_output=True)
+        tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        tls.minimum_version = ssl.TLSVersion.TLSv1_3
+        tls.load_cert_chain(root / 'tls.crt', root / 'tls.key')
+        tls.set_alpn_protocols(['http/1.1'])
+
+        class TLSOrigin(http.server.ThreadingHTTPServer):
+            def process_request_thread(self, request, address):
+                try:
+                    request.settimeout(5)
+                    request = tls.wrap_socket(request, server_side=True)
+                except OSError:
+                    request.close()
+                    return
+                super().process_request_thread(request, address)
+
+        fallback = cleanup.enter_context(TLSOrigin(('127.0.0.1', 0), Origin))
+        threading.Thread(target=fallback.serve_forever, daemon=True).start()
+        cleanup.callback(fallback.shutdown)
         key = X25519PrivateKey.generate()
         private_key = key.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw,
                                        serialization.NoEncryption())
@@ -62,8 +82,8 @@ def check(ui):
         origin = cleanup.enter_context(http.server.ThreadingHTTPServer(('127.0.0.1', 18888), Origin))
         threading.Thread(target=origin.serve_forever, daemon=True).start()
         cleanup.callback(origin.shutdown)
-        target_port, reality_port = 18444, 18443
-        config = {'log': {'loglevel': 'info'}, 'inbounds': [{
+        target_port, reality_port = fallback.server_port, 18443
+        config = {'log': {'loglevel': 'debug'}, 'inbounds': [{
             'listen': '127.0.0.1', 'port': reality_port, 'protocol': 'vless',
             'settings': {'clients': [{'id': user, 'flow': flow}], 'decryption': 'none'},
             'streamSettings': {'network': 'raw', 'security': 'reality', 'realitySettings': {
@@ -85,17 +105,16 @@ def check(ui):
             cleanup.callback(stop)
             return proc
 
-        fallback = start(['openssl', 's_server', '-accept', f'127.0.0.1:{target_port}', '-tls1_3',
-                          '-cert', str(root / 'tls.crt'), '-key', str(root / 'tls.key'), '-www'], out / 'tls.log')
         log = out / 'xray.log'
         server = start([str(root / 'xray'), 'run', '-c', str(root / 'xray.json')], log)
         time.sleep(1)
-        assert fallback.poll() is None and server.poll() is None, 'REALITY fixtures failed to start'
+        assert server.poll() is None, 'REALITY fixture failed to start'
         cleanup.callback(ui.adb, 'forward', '--remove', 'tcp:12080', check=False)
         uri = f'vless://{user}@10.0.2.2:{reality_port}?' + urllib.parse.urlencode({
             'type': 'tcp', 'security': 'reality', 'encryption': 'none', 'flow': flow,
             'sni': 'reality.test', 'fp': 'chrome', 'pbk': encode(public_key), 'sid': sid})
         name = 'REALITY-MLKEM'
+        ui.enable_debug_logs()
         p.import_uri(uri, name)
         for channel, version in [('stable', '1.14.0'), ('preview', '1.15.0-alpha.2')]:
             ui.launch()
@@ -117,12 +136,17 @@ def check(ui):
                     client.sendall(b'GET / HTTP/1.0\r\nHost: localhost\r\n\r\n')
                     with client.makefile('rb') as stream:
                         response = stream.read()
-                assert response.startswith(b'HTTP/1.0 200') and p.PAYLOAD in response
+                assert b' 200 ' in response.split(b'\r\n', 1)[0] and p.PAYLOAD in response, (
+                    f'{channel}: unexpected HTTP response {response[:140]!r}')
                 with log.open('rb') as stream:
                     stream.seek(offset)
                     assert b'accepted tcp:127.0.0.1:18888' in stream.read(), 'Request did not traverse Xray'
                 results.append({'channel': channel, 'core': version, 'server': '26.10.21', 'http_status': 200})
             finally:
+                data = ui.adb('shell', 'cat', '/data/user/0/' + ui.PACKAGE + '/cache/neko.log', check=False)
+                # Keep only the failure classification; never attach temporary profile credentials.
+                (out / (channel + '-errors.txt')).write_text('\n'.join(
+                    line for line in data.splitlines() if ('reality verification failed' in line or 'x509:' in line)))
                 ui.tap(button)
                 for _ in range(30):
                     if not re.search(r'\btun\d+:', ui.adb('shell', 'ip', '-o', 'link', 'show')):
